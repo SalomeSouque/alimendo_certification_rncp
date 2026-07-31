@@ -5,15 +5,55 @@ services:
     image: postgres:17-alpine
     env_file: 
       - .env
-    ports : 
+    ports: 
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432" 
     volumes: 
       - pgdata:/var/lib/postgresql/data 
     healthcheck:
-     test: ["CMD-SHELL", "pg_isready -U alimendo -d alimendo"]
+     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
      interval: 10s 
      timeout: 5s
      retries: 5
+  chromadb: 
+    image: chromadb/chroma:1.5.9
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+    ports: 
+      - "127.0.0.1:${CHROMADB_PORT:-8001}:8000" 
+    volumes: 
+      - chroma_data:/data
+
+  ollama:
+    profiles: ["ai"]
+    image: ollama/ollama:0.6.2
+    ports:
+      - "127.0.0.1:${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+
+  frontend:
+    profiles: ["app"]
+    build: ./frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - api
+  
+  api:
+    profiles: ["app"]
+    build: ./backend 
+    ports:
+      - "127.0.0.1:${FASTAPI_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    env_file:
+      - .env
 
 volumes:
   pgdata:
+  chroma_data:
+  ollama_models:
