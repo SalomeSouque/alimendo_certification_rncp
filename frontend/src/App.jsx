@@ -30,6 +30,11 @@ export default function App() {
       <Route path="/aliment-frais" element={<AlimentFrais />} />
       <Route path="/" element={<Home />} />
       <Route path="/chatbot" element={<Chatbot />} />
+      
+
+      {/* Routes pas encore portées : placeholder friendly au lieu d'un écran blanc */}
+      <Route path="/" element={<Placeholder titre="Accueil" />} />
+      <Route path="*" element={<Placeholder titre="Cette page" />} />
     </Routes>
   );
 }
