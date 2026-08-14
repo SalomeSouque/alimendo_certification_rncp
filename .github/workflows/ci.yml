@@ -1,0 +1,47 @@
+name: CI
+
+# Quand la pipeline se déclenche
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  frontend:
+    name: Frontend (lint, test, build)
+    runs-on: ubuntu-latest
+
+    # Toutes les commandes s'exécutent depuis frontend/
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      # 1. Récupère ton code sur la machine GitHub
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      # 2. Installe Node (même version que toi)
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # 3. Installe les dépendances de façon reproductible
+      - name: Installer les dépendances
+        run: npm ci
+
+      # 4. Lint
+      - name: Lint
+        run: npm run lint
+
+      # 5. Tests
+      - name: Tests
+        run: npm run test
+
+      # 6. Build
+      - name: Build
+        run: npm run build
