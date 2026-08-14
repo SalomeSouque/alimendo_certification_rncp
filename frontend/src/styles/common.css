@@ -1,0 +1,227 @@
+/* =========================================================
+   Alimendo — styles communs à toutes les pages
+   (tokens, reset, header, footer, boutons, FAB, trait jaune)
+   ========================================================= */
+
+:root {
+  --bg: #fafaf8;
+  --bg-semi: rgb(from var(--bg) r g b / 0.6); 
+  --ink: #1e2423;
+  --muted: #5a6960;
+  --muted-2: #7a8a83;
+  --green: #3d7a5a;
+  --green-deep: #2a5540;
+  --green-soft: #e3efe7;
+  --border: #d4ddd8;
+  --blue: #4a6fa5;
+  --footer-bg: #f4f6f5;
+  --yellow: #f4c542;
+  --salmon: #d68e73;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scrollbar-width: none;        
+          -ms-overflow-style: none; 
+        }
+    html::-webkit-scrollbar { display: none; }
+
+html, body { overflow-x: clip; }
+
+
+body {
+  font-family: 'Poppins', system-ui, sans-serif;
+  background-color: var(--bg);
+  color: var(--ink);
+  height: 100%;
+}
+
+/* ---- Frame : reproduction fidèle de la maquette Figma (1728px) ---- */
+.frame {
+  position: relative;
+  margin: 0 auto;
+  background: var(--bg);
+}
+
+/* ---- Trait jaune décoratif (asset SVG, derrière le contenu) ---- */
+.wave {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  height: auto;
+}
+
+
+.frame > section,
+.frame > main,
+.frame > footer { position: relative; z-index: 1; }
+
+/* ---------------- Header ---------------- */
+.header {
+  display: flex;
+  align-items: center;
+  height: 71px;
+  padding: 0 48px;
+  background: var(--bg-semi);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+  z-index: 999;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.header-logo { width: 48px; height: 48px; flex: none; }
+.header-logo img { width: 100%; height: 100%; display: block; }
+.header-brand {
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  color: var(--green-deep);
+  margin-left: 14px;
+  text-decoration: none;
+}
+.header-tagline {
+  margin-left: 18px;
+  padding-left: 18px;
+  border-left: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--muted-2);
+}
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  margin-left: auto;
+}
+.header-nav a {
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 500;
+}
+.header-nav a.active { color: var(--green-deep); font-weight: 600; }
+.btn-connect {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  padding: 7px 16px;
+  border-radius: 6px;
+  color: var(--muted-2) ;
+  font-weight: 500;
+}
+.btn-connect img { width: 14px; height: 14px; }
+.btn-connect:hover {  background-color: var(--green); color: #fff; }
+
+/* ---------------- Boutons ---------------- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background-color: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 16px 26px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  width: fit-content;
+  cursor: pointer;
+}
+.btn-primary .arrow { font-size: 18px; line-height: 1; }
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: #fff;
+  color: var(--green-deep);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 26px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  width: fit-content;
+  cursor: pointer;
+}
+
+/* ---------------- Titres de section ---------------- */
+.step-label { font-size: 15px; color: var(--green); font-weight: 600; margin-bottom: 10px; }
+.section-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400;
+  font-size: 46px;
+  line-height: 1.12;
+  color: var(--ink);
+  max-width: 560px;
+  margin-bottom: 22px;
+}
+.section-body {
+  font-size: 19px;
+  color: var(--muted);
+  max-width: 560px;
+  line-height: 1.55;
+  margin-bottom: 28px;
+}
+
+/* ---------------- Footer ---------------- */
+.footer {
+  margin-top: 400px;
+  background-color: var(--footer-bg);
+  border-top: 1px solid var(--border);
+  padding: 100px 48px 100px;
+  text-align: center;
+}
+.footer-logo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 18px; }
+.footer-logo img { width: 48px; height: 48px; }
+.footer-brand { font-weight: 800; font-size: 16px; letter-spacing: 1.5px; color: var(--green-deep); }
+.footer-links { display: flex; justify-content: center; gap: 26px; margin-bottom: 18px; }
+.footer-links a { font-size: 14px; color: var(--blue); text-decoration: none; }
+.footer-disclaimer { font-size: 13px; color: var(--muted-2); max-width: 640px; margin: 0 auto 12px; line-height: 1.6; }
+.footer-copyright { font-size: 13px; color: var(--muted-2); }
+
+/* ---------------- FAB ---------------- */
+.chat-fab {
+  position: fixed;
+  bottom: 26px; right: 26px;
+  display: inline-flex; align-items: center; gap: 8px;
+  background-color: var(--green);
+  color: #fff; border: none;
+  border-radius: 999px;
+  padding: 11px 22px;
+  font-family: inherit; font-size: 15px; font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(30, 36, 35, 0.22);
+  z-index: 1000;
+}
+.chat-fab img { width: 18px; height: 18px; }
+
+/* ---- Barre de score (réutilisée sur plusieurs pages) ---- */
+.score-bar {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #3d7a5a 0%, #7fae8f 42%, #d9b48f 66%, #d68a63 100%);
+}
+.score-knob {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px; height: 20px;
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+
+@media (max-width: 1728px) {
+  body { overflow-x: auto; }
+}
