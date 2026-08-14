@@ -1,0 +1,50 @@
+.savoir-main { padding: 84px 0 120px; }
+.savoir-col { width: 621px; margin: 0 auto; }
+
+.savoir-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400;
+  font-size: 52px;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.savoir-subtitle { font-size: 17px; color: var(--muted); margin-bottom: 34px; }
+
+.accordion {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 14px 40px rgba(30, 36, 35, 0.06);
+  overflow: hidden;
+  margin-top: 60px;
+}
+.acc-item { border-top: 1px solid var(--border); }
+.acc-item:first-child { border-top: none; }
+
+.acc-item > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 26px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.acc-item > summary::-webkit-details-marker { display: none; }
+.acc-item > summary .chev {
+  width: 16px; height: 16px; flex: none;
+  transition: transform .2s ease;
+}
+.acc-item[open] > summary .chev { transform: rotate(180deg); }
+
+.acc-body {
+  padding: 0 26px 26px;
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.wave-savoir { top: 3%; left: -4%; width: 112%; }

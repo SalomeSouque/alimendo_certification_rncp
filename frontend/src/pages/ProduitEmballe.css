@@ -1,0 +1,28 @@
+.emb-main { padding: 138px 0 120px; text-align: center; }
+.emb-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400; font-size: 46px; color: var(--ink); margin-bottom: 12px;
+}
+.emb-subtitle { font-size: 18px; color: var(--muted); margin-bottom: 48px; }
+
+.or-sep {
+  width: 464px; margin: 34px auto 30px;
+  display: flex; align-items: center; gap: 18px;
+  color: var(--muted-2); font-size: 15px;
+}
+.or-sep::before, .or-sep::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+.manual { display: flex; justify-content: center; gap: 14px; }
+.manual input {
+  width: 352px; height: 52px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 18px;
+  font-family: inherit; font-size: 16px; color: var(--ink);
+  background: #fff; outline: none;
+}
+.manual input:focus { border-color: var(--green); }
+.manual input::placeholder { color: var(--muted-2); }
+.manual .btn-primary { padding: 0 28px; height: 52px; }
+
+.emb-note { margin-top: 34px; font-size: 15px; color: var(--muted-2); }

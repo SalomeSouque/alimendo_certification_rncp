@@ -1,0 +1,159 @@
+.wave-home { top: 289px; left: -133px; width: 112%; }
+
+/* Hero */
+.hero { padding: 90px 193px 0; min-height: 855px; }
+.hero-tag { font-size: 15px; color: var(--muted-2); margin-bottom: 18px; }
+.hero-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400;
+  font-size: 48px;
+  line-height: 1.1;
+  color: var(--ink);
+  max-width: 640px;
+  margin-bottom: 26px;
+}
+.hero-description {
+  font-size: 19px;
+  color: var(--muted);
+  max-width: 545px;
+  line-height: 1.55;
+  margin-bottom: 34px;
+}
+.hero-buttons { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+
+.hero-image {
+  position: absolute;
+  top: 222px;
+  left: 61%;
+  width: 876px;
+  height: 532px;
+  pointer-events: none;
+}
+.hero-image img { width: 100%; height: 100%; display: block; }
+
+/* Étape 1 */
+.section-step1 { padding: 100px 193px 0; }
+.section-step1 .section-title { max-width: 760px; }
+.method-cards { display: flex; gap: 16px; margin-top: 20px; }
+.method-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 22px 14px 14px;
+}
+.method-icon {
+  width: 48px; height: 48px; flex: none;
+  background: var(--green-soft);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.method-icon img { width: 22px; height: 22px; }
+.method-card-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.method-card-subtitle { font-size: 14px; color: var(--muted); }
+
+/* Étape 2 — composition libre (cartes positionnées dans la section) */
+.section-step2 {
+  position: relative;      /* ancre les cartes absolues ci-dessous */
+  padding: 140px 193px 0;
+  min-height: 620px;       /* réserve la hauteur de la zone visuelle */
+}
+.step2-text { max-width: 600px; margin-top: 130px;}   /* le texte occupe la gauche */
+.step2-text .section-title { max-width: 700px; }
+
+/* La zone visuelle ne pousse plus rien : chaque enfant est positionné librement */
+.step2-visual { }
+
+.card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(30, 36, 35, 0.08);
+}
+
+/* --- Image orange : le point de repère central --- */
+.orange-img {
+  position: absolute;
+  top: 400px;
+  right: 250px;
+  width: 350px;
+  height: 260px;
+  z-index: 1;
+}
+.orange-img img { width: 100%; height: 100%; display: block; object-fit: contain; }
+
+/* --- Carte Orange (aliment) --- */
+.card-aliment {
+  position: absolute;
+  top: 200px;
+  left: 55%;
+  width: 168px;
+  padding: 16px 20px;
+  z-index: 2;
+}
+.card-aliment .lbl { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted-2); margin-bottom: 6px; }
+.card-aliment .val { font-size: 20px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.card-aliment .sub { font-size: 14px; color: var(--muted); }
+
+/* --- Carte Micro-nutriment --- */
+.card-micro {
+  position: absolute;
+  top: 100px;
+  right: 80px;
+  width: 258px;
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px;
+  z-index: 2;
+}
+.card-micro .ic {
+  width: 44px; height: 44px; flex: none;
+  background: var(--green-soft); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.card-micro .ic img { width: 18px; height: 20px; }
+.card-micro .t { font-size: 16px; font-weight: 700; color: var(--ink); line-height: 1.2; white-space: nowrap; }
+.card-micro .s { font-size: 14px; color: var(--muted); }
+
+/* --- Carte Score --- */
+.card-score {
+  position: absolute;
+  top: 500px;
+  left: 42%;
+  width: 450px;
+  padding: 20px 26px;
+  z-index: 2;
+}
+.card-score .lbl { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted-2); margin-bottom: 14px; }
+.card-score .score-bar { margin-bottom: 14px; }
+.card-score .score-knob { left: 16%; }
+.card-score .caption { font-size: 20px; font-weight: 600; color: var(--ink); }
+
+/* Pourquoi */
+.section-pourquoi { padding: 330px 139px 0; }
+.pourquoi-card {
+  position: relative;
+  background: #fff;
+  border-radius: 14px;
+  border-left: 3px solid var(--blue);
+  box-shadow: 0 10px 30px rgba(30, 36, 35, 0.05);
+  padding: 41px 41px;
+  max-width: 879px;
+}
+.pourquoi-label { font-size: 15px; color: var(--blue); font-weight: 600; margin-bottom: 10px; }
+.pourquoi-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400; font-size: 46px; color: var(--ink); margin-bottom: 22px;
+}
+.pourquoi-body { font-size: 17px; color: var(--muted); line-height: 1.7; margin-bottom: 34px; max-width: 700px; }
+.pourquoi-buttons { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+
+/* Chatbot */
+.section-chatbot { padding: 242px 204px 0; text-align: right; }
+.chatbot-label { font-size: 15px; color: var(--green); font-weight: 600; margin-bottom: 10px; }
+.chatbot-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400; font-size: 46px; color: var(--ink); margin-bottom: 24px;
+}
+.chatbot-body { font-size: 19px; color: var(--muted); line-height: 1.55; max-width: 680px; margin-left: auto; margin-bottom: 30px; }
+.chatbot-cta { display: flex; justify-content: flex-end; }

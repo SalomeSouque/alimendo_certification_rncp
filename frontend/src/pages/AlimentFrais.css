@@ -1,0 +1,10 @@
+.frais-main { padding: 138px 0 120px; text-align: center; }
+.frais-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400; font-size: 46px; color: var(--ink); margin-bottom: 12px;
+}
+.frais-subtitle {
+  font-size: 18px; color: var(--muted);
+  max-width: 520px; margin: 0 auto 48px; line-height: 1.5;
+}
+.frais-note { margin-top: 34px; font-size: 15px; color: var(--muted-2); }

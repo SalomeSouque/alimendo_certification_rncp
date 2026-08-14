@@ -1,0 +1,70 @@
+.analyse-main { padding: 160px 0 120px; text-align: center; }
+
+.analyse-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400;
+  font-size: 46px;
+  color: var(--ink);
+  margin-bottom: 56px;
+}
+
+.choice-cards {
+  display: flex;
+  justify-content: center;
+  gap: 35px;
+  margin-bottom: 44px;
+}
+.choice-card {
+  width: 374px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 12px 34px rgba(30, 36, 35, 0.06);
+  padding: 46px 30px;
+  text-decoration: none;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.choice-card:hover { transform: translateY(-3px); box-shadow: 0 18px 44px rgba(30, 36, 35, 0.10); }
+.choice-icon {
+  width: 64px; height: 64px; margin: 0 auto 22px;
+  background: var(--green-soft);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.choice-icon img { width: 28px; height: 28px; }
+.choice-card h2 {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400; font-size: 24px; color: var(--ink); margin-bottom: 10px;
+}
+.choice-card p { font-size: 16px; color: var(--muted); }
+
+.search-bar {
+  width: 456px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 8px 8px 22px;
+}
+.search-bar .loupe { width: 16px; height: 16px; flex: none; }
+.search-bar input {
+  flex: 1;
+  border: none; outline: none;
+  font-family: inherit; font-size: 16px; color: var(--ink);
+  background: transparent;
+}
+.search-bar input::placeholder { color: var(--muted-2); }
+.search-go {
+  width: 42px; height: 42px; flex: none;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.search-go img { width: 16px; height: 16px; }
+
+.analyse-note { margin-top: 24px; font-size: 15px; color: var(--muted-2); }
