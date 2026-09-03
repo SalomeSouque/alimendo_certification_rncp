@@ -87,8 +87,8 @@ export default function Chatbot() {
             </button>
           </form>
           <p className="chat-disclaimer">
-            Réponses informatives et sourcées — elles ne remplacent pas l'avis d'un professionnel de santé.<br />
-            · Projet étudiant ·
+            Réponses informatives et sourcées, elles ne remplacent pas l'avis d'un professionnel de santé.<br />
+            Projet étudiant
           </p>
         </div>
       </div>

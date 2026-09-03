@@ -36,7 +36,7 @@ export default function Layout({ children, wave = null }) {
           Cet outil ne remplace pas un suivi médical. Consultez un professionnel de santé
           pour toute décision relative à votre pathologie.
         </p>
-        <p className="footer-copyright">© 2026 Alimendo · Projet étudiant</p>
+        <p className="footer-copyright">© 2026 Alimendo - Projet étudiant</p>
       </footer>
 
       <Link to="/chatbot" className="chat-fab">
