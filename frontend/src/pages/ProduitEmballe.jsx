@@ -6,7 +6,13 @@ import './ProduitEmballe.css';
 export default function ProduitEmballe() {
   return (
     <Layout>
+      <p style={{ marginLeft: '2rem', marginTop: '2rem' }}>
+          <Link to="/analyser" className="btn-back">
+            &larr; Retour
+          </Link>
+        </p>
       <main className="emb-main">
+        
         <h1 className="emb-title">Produit emballé</h1>
         <p className="emb-subtitle">Photographiez le code-barre, ou saisissez-le à la main.</p>
 
