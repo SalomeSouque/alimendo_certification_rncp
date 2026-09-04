@@ -61,10 +61,11 @@ export default function Authentification() {
 
             <div className="field">
               <label htmlFor="motdepasse">Mot de passe</label>
-              <div className="input-wrap">
+              <div className="input-wrap ">
                 <input
                   type={motDePasseVisible ? 'text' : 'password'}
                   value={password} onChange={(e) => setPassword(e.target.value)}
+                  style={{width: "90%"}}
                 />
                 <button
                   type="button"
@@ -72,7 +73,7 @@ export default function Authentification() {
                   aria-label={motDePasseVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                   onClick={() => setMotDePasseVisible((v) => !v)}
                 >
-                  <img src="/assets/eye.svg" alt="" />
+                  <img src= {motDePasseVisible ? "/assets/eye_close.svg" : "/assets/eye_open.svg"} />
                 </button>
               </div>
             </div>

@@ -1,5 +1,5 @@
 .savoir-main { padding: 84px 0 120px; }
-.savoir-col { width: 621px; margin: 0 auto; }
+.savoir-col { width: 800px; margin: 0 auto; }
 
 .savoir-title {
   font-family: 'Bagel Fat One', system-ui, cursive;
@@ -8,7 +8,7 @@
   color: var(--ink);
   margin-bottom: 10px;
 }
-.savoir-subtitle { font-size: 17px; color: var(--muted); margin-bottom: 34px; }
+.savoir-subtitle { font-size: 19px; color: var(--muted); margin-bottom: 34px; }
 
 .accordion {
   background: #fff;
@@ -29,7 +29,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 22px 26px;
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 600;
   color: var(--ink);
 }
@@ -48,3 +48,11 @@
 }
 
 .wave-savoir { top: 3%; left: -4%; width: 112%; }
+.link-ressource {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--green);
+  font-style: italic
+}

@@ -243,6 +243,8 @@ button.btn-auth:hover {
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
 }
 
-@media (max-width: 1728px) {
+@media (max-width: 640px) {
   body { overflow-x: auto; }
 }
+
+
