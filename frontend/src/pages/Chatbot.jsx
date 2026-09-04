@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import Header from '../components/Header.jsx';
 import './Chatbot.css';
 
 // Conversation de démo au chargement (remplacée par un état vide quand le RAG sera branché)
@@ -15,6 +17,7 @@ export default function Chatbot() {
   const [saisie, setSaisie] = useState('');
   const [enAttente, setEnAttente] = useState(false);
   const finDuFil = useRef(null);
+  const { isAuthenticated, logout } = useAuth();
 
   // Fait défiler le fil vers le bas à chaque nouveau message
   useEffect(() => {
@@ -46,19 +49,7 @@ export default function Chatbot() {
 
   return (
     <div className="chatbot-page">
-      {/* Header repris du Layout mais sans le reste (page plein écran, pas de footer/FAB) */}
-      <header className="header">
-        <div className="header-logo"><img src="/assets/Logo.svg" alt="Logo Alimendo" /></div>
-        <Link to="/" className="header-brand">ALIMENDO</Link>
-        <span className="header-tagline">alimentation &amp; endométriose, en clair</span>
-        <nav className="header-nav">
-          <Link to="/">Accueil</Link>
-          <Link to="/analyser">Analyser un aliment</Link>
-          <Link to="/chatbot" className="active">Chatbot</Link>
-          <Link to="/en-savoir-plus">En savoir plus</Link>
-          <Link to="/connexion" className="btn-connect">Se connecter</Link>
-        </nav>
-      </header>
+      <Header />
 
       <div className="chat-app">
         <div className="chat-thread">

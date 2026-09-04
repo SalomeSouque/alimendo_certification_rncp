@@ -102,18 +102,30 @@ body {
   font-weight: 500;
 }
 .header-nav a.active { color: var(--green-deep); font-weight: 600; }
-.btn-connect {
+.btn-auth,
+a.btn-auth,
+button.btn-auth {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   border: 1px solid var(--border);
   padding: 7px 16px;
   border-radius: 6px;
-  color: var(--muted-2) ;
+  color: var(--muted-2);
   font-weight: 500;
+
+  background: transparent;
+  font: inherit;
+  font-weight: 500;   /* remis APRÈS `font: inherit` qui le réinitialise */
+  cursor: pointer;
+  appearance: none;   /* neutralise le rendu natif du bouton (Safari surtout) */
 }
-.btn-connect img { width: 14px; height: 14px; }
-.btn-connect:hover {  background-color: var(--green); color: #fff; }
+.btn-auth:hover,
+a.btn-auth:hover,
+button.btn-auth:hover {
+  background-color: var(--green);
+  color: #fff;
+}
 
 /* ---------------- Boutons ---------------- */
 .btn-primary {
@@ -150,6 +162,15 @@ body {
   text-decoration: none;
   width: fit-content;
   cursor: pointer;
+}
+
+.btn-back {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--green);
+  text-decoration: none;
 }
 
 /* ---------------- Titres de section ---------------- */
