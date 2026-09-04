@@ -1,6 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header.jsx';
 import './Chatbot.css';
 
@@ -22,7 +20,6 @@ export default function Chatbot() {
   const [saisie, setSaisie] = useState('');
   const [enAttente, setEnAttente] = useState(false);
   const finDuFil = useRef(null);
-  const { isAuthenticated, logout } = useAuth();
 
   // Fait défiler le fil vers le bas à chaque nouveau message
   useEffect(() => {

@@ -2,7 +2,7 @@ import { useAuth } from '../context/AuthContext';
 import { NavLink, Link } from 'react-router-dom';
 
 export default function Header() {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   return (
     <header className="header">
     <div className="header-logo">
