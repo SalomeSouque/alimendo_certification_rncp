@@ -8,7 +8,12 @@ import './Chatbot.css';
 const messagesInitiaux = [
   {
     role: 'bot',
-    texte: `Bonjour. Je réponds aux questions générales sur l'alimentation et l'endométriose, en m'appuyant sur des sources. Pour un aliment précis, l'analyse donnera un résultat plus fiable.`,
+    paragraphes: [
+      "Bonjour,",
+      "Je suis un assistant documentaire : je réponds à des questions générales sur l'endométriose et sur ce que la recherche dit de l'alimentation, en citant mes sources.",
+      "En revanche, je ne pose aucun diagnostic et je ne remplace pas un professionnel de santé.",
+      "Pour le score d'un aliment précis, utilisez le scan ou la recherche",
+    ],
   },
 ];
 
@@ -55,7 +60,10 @@ export default function Chatbot() {
         <div className="chat-thread">
           {messages.map((msg, i) =>
             msg.role === 'bot' ? (
-              <div className="msg-bot" key={i}>{msg.texte}</div>
+              <div className="msg-bot" key={i}>{
+                msg.paragraphes.map((p, i) => (
+                <p key={i} Style="margin-top: 10px">{p}</p>
+              ))}</div>
             ) : (
               <div className="msg-user" key={i}>{msg.texte}</div>
             )

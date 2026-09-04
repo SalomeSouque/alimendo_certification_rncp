@@ -48,9 +48,8 @@ export default function Authentification() {
         <div className="auth-card">
           <img className="auth-logo" src="/assets/Logo.svg" alt="Logo Alimendo" />
           <h1 className="auth-title">
-            Oups, cette fonctionnalité<br />demande un compte.
+            Connexion
           </h1>
-          <p className="auth-subtitle">Connectez-vous pour y accéder.</p>
 
           <form onSubmit={handleSubmit}>
             <div className="field">
