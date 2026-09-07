@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
 import AnalyseZone from '../components/AnalyseZone.jsx';
 import './AlimentFrais.css';
@@ -5,6 +6,11 @@ import './AlimentFrais.css';
 export default function AlimentFrais() {
   return (
     <Layout>
+      <p style={{ marginLeft: '2rem', marginTop: '2rem' }}>
+          <Link to="/analyser" className="btn-back">
+            &larr; Retour
+          </Link>
+      </p>
       <main className="frais-main">
         <h1 className="frais-title">Aliment frais</h1>
         <p className="frais-subtitle">

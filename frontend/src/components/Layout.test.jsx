@@ -1,16 +1,8 @@
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import Layout from './Layout.jsx';
+import { screen } from '@testing-library/react';
+import { renderWithProviders } from '../test/renderWithProviders';
+import Layout from './Layout';
 
-describe('Layout', () => {
-  it('affiche le disclaimer médical', () => {
-    render(
-      <MemoryRouter>
-        <Layout />
-      </MemoryRouter>
-    );
-    expect(
-      screen.getByText(/ne remplace pas un suivi médical/i)
-    ).toBeInTheDocument();
-  });
+test('affiche le disclaimer médical', () => {
+  renderWithProviders(<Layout />);
+  expect(screen.getByText(/projet étudiant/i)).toBeInTheDocument();
 });

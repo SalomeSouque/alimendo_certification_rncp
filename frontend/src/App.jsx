@@ -8,6 +8,7 @@ import ProduitEmballe from './pages/ProduitEmballe.jsx';
 import AlimentFrais from './pages/AlimentFrais.jsx';
 import Home from './pages/Home.jsx';
 import Chatbot from './pages/Chatbot.jsx';
+import AuthGate from './components/AuthGate';
 
 function Placeholder({ titre }) {
   return (
@@ -22,16 +23,30 @@ function Placeholder({ titre }) {
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<Home />} />
       <Route path="/aliment" element={<Aliment />} />
       <Route path="/en-savoir-plus" element={<EnSavoirPlus />} />
       <Route path="/connexion" element={<Authentification />} />
       <Route path="/analyser" element={<Analyser />} />
       <Route path="/produit-emballe" element={<ProduitEmballe />} />
-      <Route path="/aliment-frais" element={<AlimentFrais />} />
-      <Route path="/" element={<Home />} />
-      <Route path="/chatbot" element={<Chatbot />} />
-      
 
+      <Route 
+        path="/aliment-frais" 
+        element={
+          <AuthGate feature="aliment-frais">
+            <AlimentFrais />
+          </AuthGate> 
+        } 
+      />
+      <Route 
+        path="/chatbot" 
+        element={
+          <AuthGate feature="chatbot">
+            <Chatbot />
+          </AuthGate>
+        } 
+      />
+      
       {/* Routes pas encore portées : placeholder friendly au lieu d'un écran blanc */}
       <Route path="/" element={<Placeholder titre="Accueil" />} />
       <Route path="*" element={<Placeholder titre="Cette page" />} />

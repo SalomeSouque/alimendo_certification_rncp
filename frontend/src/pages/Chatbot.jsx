@@ -1,12 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import Header from '../components/Header.jsx';
 import './Chatbot.css';
 
 // Conversation de démo au chargement (remplacée par un état vide quand le RAG sera branché)
 const messagesInitiaux = [
   {
     role: 'bot',
-    texte: `Bonjour. Je réponds aux questions générales sur l'alimentation et l'endométriose, en m'appuyant sur des sources. Pour un aliment précis, l'analyse donnera un résultat plus fiable.`,
+    paragraphes: [
+      "Bonjour,",
+      "Je suis un assistant documentaire : je réponds à des questions générales sur l'endométriose et sur ce que la recherche dit de l'alimentation, en citant mes sources.",
+      "En revanche, je ne pose aucun diagnostic et je ne remplace pas un professionnel de santé.",
+      "Pour le score d'un aliment précis, utilisez le scan ou la recherche",
+    ],
   },
 ];
 
@@ -46,25 +51,16 @@ export default function Chatbot() {
 
   return (
     <div className="chatbot-page">
-      {/* Header repris du Layout mais sans le reste (page plein écran, pas de footer/FAB) */}
-      <header className="header">
-        <div className="header-logo"><img src="/assets/Logo.svg" alt="Logo Alimendo" /></div>
-        <Link to="/" className="header-brand">ALIMENDO</Link>
-        <span className="header-tagline">alimentation &amp; endométriose, en clair</span>
-        <nav className="header-nav">
-          <Link to="/">Accueil</Link>
-          <Link to="/analyser">Analyser un aliment</Link>
-          <Link to="/chatbot" className="active">Chatbot</Link>
-          <Link to="/en-savoir-plus">En savoir plus</Link>
-          <Link to="/connexion" className="btn-connect">Se connecter</Link>
-        </nav>
-      </header>
+      <Header />
 
       <div className="chat-app">
         <div className="chat-thread">
           {messages.map((msg, i) =>
             msg.role === 'bot' ? (
-              <div className="msg-bot" key={i}>{msg.texte}</div>
+              <div className="msg-bot" key={i}>{
+                msg.paragraphes.map((p, i) => (
+                <p key={i} Style="margin-top: 10px">{p}</p>
+              ))}</div>
             ) : (
               <div className="msg-user" key={i}>{msg.texte}</div>
             )
