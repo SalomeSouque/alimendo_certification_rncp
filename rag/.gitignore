@@ -1,5 +1,4 @@
 data/raw/*
-!data/raw/*.synthese.md
 !data/raw/_collecte_log.csv
 data/processed/
 data/chroma/

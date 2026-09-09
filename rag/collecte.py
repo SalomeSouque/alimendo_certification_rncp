@@ -125,7 +125,7 @@ def do_download(row: dict, out_dir: Path, force: bool) -> dict:
 def do_manual_synthesis(row: dict, out_dir: Path, force: bool) -> dict:
     """Source protégée : crée un stub de synthèse à rédiger à la main.
 
-    On ne télécharge JAMAIS le corps de ces pages (S6, S9). On prépare un
+    On ne télécharge JAMAIS le corps de ces pages (S6, S8). On prépare un
     fichier .md à compléter en reformulation originale, avec lien + attribution.
     """
     src_id = row["id_source"]
