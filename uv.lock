@@ -117,6 +117,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
     { name = "psycopg", extra = ["binary"] },
+    { name = "python-dotenv" },
     { name = "uvicorn" },
 ]
 
@@ -136,6 +137,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.141.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.5" },
+    { name = "python-dotenv", specifier = ">=1.2.3" },
     { name = "uvicorn", specifier = ">=0.52.4" },
 ]
 
