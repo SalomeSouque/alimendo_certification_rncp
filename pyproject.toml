@@ -17,6 +17,11 @@ dev = [
     "ruff>=0.16.6",
 ]
 ingestion = [
+    "chromadb>=1.5.9",
+    "langchain-text-splitters>=1.1.2",
+    "pdfplumber>=0.11.10",
     "pypdf>=6.18.0",
     "requests>=2.34.2",
+    "sentence-transformers>=6.0.1",
+    "trafilatura>=2.2.0",
 ]
