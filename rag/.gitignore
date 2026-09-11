@@ -1,0 +1,7 @@
+data/raw/*
+!data/raw/_collecte_log.csv
+data/processed/
+data/chroma/
+
+# Artefacts CSV
+.~lock*
