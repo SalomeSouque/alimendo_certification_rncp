@@ -83,7 +83,7 @@ def test_jeton_signe_avec_une_autre_cle_rejete():
     settings = get_security_settings()
     token_falsifie = jwt.encode(
         {"sub": "1", "email": "pirate@example.com", "role": "admin"},
-        "une-autre-cle",
+        "une-autre-cle-de-au-moin-32-octets",
         algorithm=settings.jwt_algorithm,
     )
 

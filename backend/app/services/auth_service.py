@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.models import Utilisateur
-from app.repositories import utilisateur_repository
+from app.repositories import user_repository
 from app.schemas.auth import TokenResponse, UtilisateurPublic
 
 logger = logging.getLogger(__name__)
@@ -34,13 +34,13 @@ async def inscrire(
     """
     email_normalise = email.strip().lower()
 
-    if await utilisateur_repository.get_by_email(session, email_normalise):
+    if await user_repository.get_by_email(session, email_normalise):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Un compte existe déjà avec cet email.",
         )
 
-    utilisateur = await utilisateur_repository.creer(
+    utilisateur = await user_repository.creer(
         session,
         email=email_normalise,
         password_hash=hash_password(password),
@@ -61,7 +61,7 @@ async def authentifier(
     Raises:
         HTTPException: 401 si les identifiants sont invalides.
     """
-    utilisateur = await utilisateur_repository.get_by_email(session, email)
+    utilisateur = await user_repository.get_by_email(session, email)
 
     if utilisateur is None or not verify_password(password, utilisateur.password):
         # On ne journalise jamais le mot de passe saisi, ni le hash stocké.
