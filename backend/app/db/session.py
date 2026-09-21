@@ -48,7 +48,7 @@ async def dispose_engine() -> None:
         _session_factory = None
 
 
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_session() -> AsyncGenerator[AsyncSession]:
     """Dépendance FastAPI : fournit une session par requête HTTP.
     """
     if _session_factory is None:

@@ -17,7 +17,7 @@ from app.db.models.log_vlm import (
     STATUTS_VALIDES,
     LogVlm,
 )
-from app.db.models.utilisateur import (
+from app.db.models.user import (
     ROLE_ADMIN,
     ROLE_USER,
     ROLES_PAR_DEFAUT,
