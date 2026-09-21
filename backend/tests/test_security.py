@@ -16,7 +16,6 @@ from app.core.security import (
     verify_password,
 )
 
-
 # Mots de passe
 
 def test_hash_puis_verification_reussit():
