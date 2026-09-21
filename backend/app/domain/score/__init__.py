@@ -20,14 +20,14 @@ from app.domain.score.calcul import (
     discretiser,
     normaliser,
 )
-from app.domain.score.referentiel_v1 import (
+from app.domain.score.referential_v1 import (
     COEFS,
     SEUIL_APPORT_MINIMAL,
     SEUIL_COMPLETUDE,
     SEUILS,
     VERSION_REFERENTIEL,
     ReferentielIncompletError,
-    get_reperes,
+    get_landmarks,
     referentiel_est_pret,
 )
 
@@ -48,7 +48,7 @@ __all__ = [
     "discretiser",
     "evaluer_badge",
     "evaluer_badges",
-    "get_reperes",
+    "get_landmarks",
     "normaliser",
     "referentiel_est_pret",
 ]

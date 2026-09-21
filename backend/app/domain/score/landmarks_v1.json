@@ -1,12 +1,12 @@
 {
   "_README": [
-    "Reperes de normalisation du referentiel de score v1.0.",
+    "landmarks de normalisation du referentiel de score v1.0.",
     "Source : cellule de controle final du notebook de calibration CIQUAL 2020 (3 186 aliments).",
     "med = mediane, p10 = 10e centile, p90 = 90e centile, pour 100 g."
   ],
   "version": "v1.0",
   "base_calibration": "CIQUAL 2020 (ANSES), 3186 aliments",
-  "reperes": {
+  "landmarks": {
     "glucides": {
         "mediane": 6.4,
         "p10": 0.0,

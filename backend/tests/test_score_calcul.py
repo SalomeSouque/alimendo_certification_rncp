@@ -12,15 +12,14 @@ from app.domain.score.calcul import (
     discretiser,
     normaliser,
 )
-from app.domain.score.referentiel_v1 import COEFS, SEUILS, RepereParametre
-
+from app.domain.score.referential_v1 import COEFS, SEUILS, LandmarkParameter
 
 # Normalisation
 
 
 @pytest.fixture
-def repere() -> RepereParametre:
-    return RepereParametre(med=10.0, p10=0.0, p90=20.0)
+def repere() -> LandmarkParameter:
+    return LandmarkParameter(med=10.0, p10=0.0, p90=20.0)
 
 
 def test_normalisation_mediane_vaut_zero(repere):
@@ -40,7 +39,7 @@ def test_normalisation_bornee_a_moins_un(repere):
     assert normaliser(-50.0, repere) == -1.0
 
 
-def test_normalisation_lineaire_entre_reperes(repere):
+def test_normalisation_lineaire_entre_landmarks(repere):
     """Entre médiane et p90, la normalisation est proportionnelle."""
     assert normaliser(15.0, repere) == pytest.approx(0.5)
     assert normaliser(5.0, repere) == pytest.approx(-0.5)
@@ -52,7 +51,7 @@ def test_normalisation_distribution_degeneree():
     Ce cas existe, certains micronutriments sont à zéro sur plus
     de 90 % de la table CIQUAL. Sans ce garde-fou, on diviserait par zéro.
     """
-    plat = RepereParametre(med=0.0, p10=0.0, p90=0.0)
+    plat = LandmarkParameter(med=0.0, p10=0.0, p90=0.0)
     assert normaliser(0.0, plat) == 0.0
     assert normaliser(5.0, plat) == 0.0
 
@@ -90,7 +89,7 @@ def _profil_complet(valeur: float = 10.0) -> dict[str, float | None]:
     return dict.fromkeys(COEFS, valeur)
 
 
-def test_completude_insuffisante(patch_reperes):
+def test_completude_insuffisante(patch_landmarks):
     """Moins de 50 % de paramètres = aucun score calculé."""
     profil: dict[str, float | None] = dict.fromkeys(COEFS, None)
     for nom in ("glucides", "proteines", "lipides", "fibres", "fer"):
@@ -103,7 +102,7 @@ def test_completude_insuffisante(patch_reperes):
     assert resultat.niveau is None
 
 
-def test_hors_perimetre_cas_de_l_eau(patch_reperes):
+def test_hors_perimetre_cas_de_l_eau(patch_landmarks):
     """Un produit sans apport nutritionnel est hors périmètre.
     """
     profil = _profil_complet(10.0)
@@ -117,7 +116,7 @@ def test_hors_perimetre_cas_de_l_eau(patch_reperes):
     assert CauseIndisponibilite.HORS_PERIMETRE in resultat.causes
 
 
-def test_les_deux_causes_peuvent_se_cumuler(patch_reperes):
+def test_les_deux_causes_peuvent_se_cumuler(patch_landmarks):
     """Un aliment peut cumuler les deux causes"""
     profil: dict[str, float | None] = dict.fromkeys(COEFS, None)
     profil["fibres"] = 2.0  # 1 paramètre sur 23, et aucun macronutriment
@@ -135,7 +134,7 @@ def test_les_deux_causes_peuvent_se_cumuler(patch_reperes):
 # Score brut
 
 
-def test_profil_median_donne_un_score_nul(patch_reperes):
+def test_profil_median_donne_un_score_nul(patch_landmarks):
     """Tous les paramètres à la médiane : toutes les contributions s'annulent."""
     resultat = calculer_score(_profil_complet(10.0))
 
@@ -145,7 +144,7 @@ def test_profil_median_donne_un_score_nul(patch_reperes):
     assert resultat.completude == 1.0
 
 
-def test_profil_riche_en_tout_penche_vers_anti_inflammatoire(patch_reperes):
+def test_profil_riche_en_tout_penche_vers_anti_inflammatoire(patch_landmarks):
     """Avec toutes les teneurs au p90, la somme des coefficients l'emporte.
 
     """
@@ -156,7 +155,7 @@ def test_profil_riche_en_tout_penche_vers_anti_inflammatoire(patch_reperes):
     assert resultat.score_brut < 0
 
 
-def test_parametre_manquant_est_exclu_et_non_mis_a_zero(patch_reperes):
+def test_parametre_manquant_est_exclu_et_non_mis_a_zero(patch_landmarks):
     """Un paramètre non mesuré ne doit pas être traité comme « médian ».
 
     Ici on retire un paramètre fortement anti-inflammatoire (les fibres) : le
@@ -173,7 +172,7 @@ def test_parametre_manquant_est_exclu_et_non_mis_a_zero(patch_reperes):
     assert sans.score_brut == pytest.approx(avec.score_brut - COEFS["fibres"], abs=1e-6)
 
 
-def test_version_referentiel_toujours_exposee(patch_reperes):
+def test_version_referentiel_toujours_exposee(patch_landmarks):
     """Toute réponse portant un score expose la version de la règle"""
     resultat = calculer_score(_profil_complet(10.0))
     assert resultat.version_referentiel == "v1.0"

@@ -63,6 +63,6 @@ def test_evaluer_badges_couvre_les_deux_nutriments():
 
 
 def test_nutriment_non_gere_leve_une_erreur():
-    """Un nutriment hors périmètre doit échouer "bruyamment""""
+    """Un nutriment hors périmètre doit échouer 'bruyamment'"""
     with pytest.raises(KeyError):
         evaluer_badge("calcium", 100.0)

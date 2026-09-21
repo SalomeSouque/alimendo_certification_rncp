@@ -65,7 +65,7 @@ SEUIL_APPORT_MINIMAL = 1.0
 MACRONUTRIMENTS: tuple[str, str, str] = ("glucides", "proteines", "lipides")
 
 # Emplacement des repères de normalisation (calibration CIQUAL).
-REPERES_PATH = Path(__file__).with_name("landmarks_v1.json")
+LANDMARKS_PATH = Path(__file__).with_name("landmarks_v1.json")
 
 
 class ReferentielIncompletError(RuntimeError):
@@ -76,7 +76,7 @@ class ReferentielIncompletError(RuntimeError):
 
 
 @dataclass(frozen=True)
-class RepereParametre:
+class LandmarkParameter:
     """Repères de normalisation d'un paramètre, sur la base de calibration.
 
     Attributes:
@@ -101,31 +101,31 @@ class RepereParametre:
 
 
 @lru_cache(maxsize=1)
-def get_reperes() -> dict[str, RepereParametre]:
+def get_landmarks() -> dict[str, LandmarkParameter]:
     """Charge et valide les repères de normalisation (mis en cache).
 
     Returns:
-        Dictionnaire {paramètre: RepereParametre} couvrant les 23 paramètres.
+        Dictionnaire {paramètre: LandmarkParameter} couvrant les 23 paramètres.
 
     Raises:
         ReferentielIncompletError: si le fichier est absent, mal formé, ou s'il
             manque un paramètre présent dans `COEFS`.
     """
-    if not REPERES_PATH.exists():
+    if not LANDMARKS_PATH.exists():
         raise ReferentielIncompletError(
-            f"Repères de normalisation introuvables : {REPERES_PATH}. "
+            f"Repères de normalisation introuvables : {LANDMARKS_PATH}. "
             "Exportez-les depuis la cellule de contrôle final du notebook de "
-            "calibration (voir score-referentiel.md §6, clé REPERES)."
+            "calibration (voir score-referentiel.md §6, clé landmarks)."
         )
 
     try:
-        brut = json.loads(REPERES_PATH.read_text(encoding="utf-8"))
+        brut = json.loads(LANDMARKS_PATH.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise ReferentielIncompletError(
-            f"{REPERES_PATH.name} n'est pas un JSON valide : {exc}"
+            f"{LANDMARKS_PATH.name} n'est pas un JSON valide : {exc}"
         ) from exc
 
-    valeurs = brut.get("reperes", brut)
+    valeurs = brut.get("landmarks", brut)
 
     manquants = sorted(set(COEFS) - set(valeurs))
     if manquants:
@@ -134,7 +134,7 @@ def get_reperes() -> dict[str, RepereParametre]:
             f"{', '.join(manquants)}. Le score ne peut pas être calculé sans eux."
         )
 
-    reperes: dict[str, RepereParametre] = {}
+    landmarks: dict[str, LandmarkParameter] = {}
     for parametre in COEFS:
         entree = valeurs[parametre]
         try:
@@ -142,7 +142,7 @@ def get_reperes() -> dict[str, RepereParametre]:
             # ce module la nomme `med` : les deux sont acceptées pour éviter
             # une conversion manuelle à chaque réexport.
             mediane = entree.get("med", entree.get("mediane"))
-            repere = RepereParametre(
+            repere = LandmarkParameter(
                 med=float(mediane),
                 p10=float(entree["p10"]),
                 p90=float(entree["p90"]),
@@ -153,15 +153,15 @@ def get_reperes() -> dict[str, RepereParametre]:
                 '{"med" (ou "mediane"): ..., "p10": ..., "p90": ...}, reçu '
                 + repr(entree)
             ) from exc
-        reperes[parametre] = repere
+        landmarks[parametre] = repere
 
-    return reperes
+    return landmarks
 
 
 def referentiel_est_pret() -> bool:
     """Indique si les repères sont chargeables - utilisé par le healthcheck."""
     try:
-        get_reperes()
+        get_landmarks()
     except ReferentielIncompletError:
         return False
     return True

@@ -14,15 +14,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from app.domain.score.referentiel_v1 import (
+from app.domain.score.referential_v1 import (
     COEFS,
     MACRONUTRIMENTS,
     SEUIL_APPORT_MINIMAL,
     SEUIL_COMPLETUDE,
     SEUILS,
     VERSION_REFERENTIEL,
-    RepereParametre,
-    get_reperes,
+    LandmarkParameter,
+    get_landmarks,
 )
 
 
@@ -58,7 +58,7 @@ class ResultatScore:
     version_referentiel: str = VERSION_REFERENTIEL
 
 
-def normaliser(valeur: float, repere: RepereParametre) -> float:
+def normaliser(valeur: float, repere: LandmarkParameter) -> float:
     """Normalise une teneur sur [−1, +1], centrée sur la médiane.
 
     Teneur supérieure médiane = contribution positive. 
@@ -130,7 +130,7 @@ def calculer_score(profil: dict[str, float | None]) -> ResultatScore:
         ReferentielIncompletError: si les repères de normalisation ne sont pas
             chargeables (fichier `landmarks_v1.json` absent ou incomplet).
     """
-    reperes = get_reperes()
+    landmarks = get_landmarks()
 
     renseignes = {
         nom: valeur
@@ -151,7 +151,7 @@ def calculer_score(profil: dict[str, float | None]) -> ResultatScore:
         )
 
     score_brut = sum(
-        normaliser(valeur, reperes[nom]) * COEFS[nom]
+        normaliser(valeur, landmarks[nom]) * COEFS[nom]
         for nom, valeur in renseignes.items()
     )
 
@@ -173,9 +173,9 @@ def contributions(profil: dict[str, float | None]) -> dict[str, float]:
         {paramètre: contribution signée}, trié du plus pro-inflammatoire au
         plus anti-inflammatoire.
     """
-    reperes = get_reperes()
+    landmarks = get_landmarks()
     detail = {
-        nom: normaliser(valeur, reperes[nom]) * COEFS[nom]
+        nom: normaliser(valeur, landmarks[nom]) * COEFS[nom]
         for nom, valeur in profil.items()
         if nom in COEFS and valeur is not None
     }

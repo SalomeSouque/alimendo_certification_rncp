@@ -16,11 +16,11 @@ os.environ.setdefault("MISTRAL_API_KEY", "cle-de-test")
 # bcrypt à 4 tours : le minimum autorisé, pour que la suite de tests reste rapide.
 os.environ.setdefault("BCRYPT_ROUNDS", "4")
 
-from app.domain.score.referentiel_v1 import COEFS, RepereParametre
+from app.domain.score.referential_v1 import COEFS, LandmarkParameter
 
 
 @pytest.fixture
-def reperes_synthetiques() -> dict[str, RepereParametre]:
+def synthetic_landmarks() -> dict[str, LandmarkParameter]:
     """Repères de normalisation artificiels, identiques pour tous les paramètres.
 
     med=10, p10=0, p90=20 : une teneur de 20 donne une normalisation de +1,
@@ -28,13 +28,13 @@ def reperes_synthetiques() -> dict[str, RepereParametre]:
     résultats calculables à la main.
 
     """
-    return {nom: RepereParametre(med=10.0, p10=0.0, p90=20.0) for nom in COEFS}
+    return {nom: LandmarkParameter(med=10.0, p10=0.0, p90=20.0) for nom in COEFS}
 
 
 @pytest.fixture
-def patch_reperes(monkeypatch, reperes_synthetiques):
+def patch_landmarks(monkeypatch, synthetic_landmarks):
     """Remplace les repères réels par les repères synthétiques."""
     monkeypatch.setattr(
-        "app.domain.score.calcul.get_reperes", lambda: reperes_synthetiques
+        "app.domain.score.calcul.get_landmarks", lambda: synthetic_landmarks
     )
-    return reperes_synthetiques
+    return synthetic_landmarks
