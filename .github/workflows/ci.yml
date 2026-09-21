@@ -8,6 +8,7 @@ on:
     branches: [main, develop]
 
 jobs:
+ # CI FRONTEND ----
   frontend:
     name: Frontend (lint, test, build)
     runs-on: ubuntu-latest
@@ -45,3 +46,52 @@ jobs:
       # 6. Build
       - name: Build
         run: npm run build
+
+ # CI BACKEND ----
+  # Tourne en prallèle (GitHub Actions exécute les jobs d'un même workflow en parallèle par défaut)
+  # Aucun service PostgreSQL nécessaire (tests métier pur) = CI rapide et fiable.
+
+  backend:
+    name: Backend (lint, tests)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      # 1. Récupère le code
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      # 2. Installe uv + `enable-cache` met en cache les paquets téléchargés entre deux exécutions
+      - name: Installer uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+
+      # 3. Installe Python (version pyproject.toml)
+      - name: Installer Python
+        run: uv python install
+
+      # 4. Installe les dépendances du projet + le groupe dev (ruff, pytest).
+      #    `--frozen` si uv.lock versionné = installation reproductible
+      - name: Installer les dépendances
+        run: uv sync --group dev
+
+      # 5. Lint 
+      - name: Lint (ruff)
+        run: uv run ruff check app tests
+
+      # 6. Tests 
+      - name: Tests (pytest)
+        env:
+          POSTGRES_USER: alimendo_ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: alimendo_ci
+          JWT_SECRET_KEY: cle-de-test-ci-sans-valeur-en-production
+          MISTRAL_API_KEY: cle-factice-ci
+          BCRYPT_ROUNDS: "4"
+        run: uv run pytest tests -q
+
