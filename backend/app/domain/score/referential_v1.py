@@ -65,7 +65,7 @@ SEUIL_APPORT_MINIMAL = 1.0
 MACRONUTRIMENTS: tuple[str, str, str] = ("glucides", "proteines", "lipides")
 
 # Emplacement des repères de normalisation (calibration CIQUAL).
-REPERES_PATH = Path(__file__).with_name("reperes_v1.json")
+REPERES_PATH = Path(__file__).with_name("landmarks_v1.json")
 
 
 class ReferentielIncompletError(RuntimeError):
