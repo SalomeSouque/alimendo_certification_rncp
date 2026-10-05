@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from typing import Final
 
-
 # Versions des référentiels de formulations
 
 #: Version des guidelines du chatbot (RAG_medical-guidelines.md, en-tête).
