@@ -1,161 +1,110 @@
-"""Client d'appel au LLM Mistral (endpoint compatible OpenAI).
-
-Ce module ne connaît RIEN du RAG : il ne fait qu'envoyer des messages et
-retourner du texte. Le retrieval, l'injection de contexte et les garde-fous
-médicaux vivent dans une couche au-dessus. Cette séparation permet de tester le
-LLM seul tant que l'index ChromaDB n'existe pas.
-
-Appel exclusivement côté backend. La clé API ne traverse jamais le frontend.
+"""Client Mistral : génération de la réponse du chatbot RAG.
+Le prompt système impose les garde-fous médicaux : le modèle répond
+uniquement à partir des extraits fournis, ne formule ni diagnostic ni
+prescription, et dit explicitement quand il ne sait pas.
 """
 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
-from typing import Any, Literal
 
 import httpx
 
-from app.core.config import MistralSettings, get_mistral_settings
+from app.core.config import get_mistral_settings
 
 logger = logging.getLogger(__name__)
 
-Role = Literal["system", "user", "assistant"]
+
+class LLMIndisponibleError(RuntimeError):
+    """Levée quand l'API Mistral ne répond pas ou renvoie une erreur."""
 
 
-class MistralError(RuntimeError):
-    """Erreur d'appel au service Mistral."""
+# Prompt système du chatbot.
+PROMPT_SYSTEME = """Tu es un assistant documentaire sur l'endométriose et l'alimentation, intégré à un projet étudiant. Tu réponds en français uniquement.
+
+Ta ligne rouge : tu peux expliquer un mécanisme biologique étudié ou rapporter une association observée dans la littérature. Tu ne peux jamais promettre un effet thérapeutique.
+
+Règles absolues :
+- Réponds UNIQUEMENT à partir des extraits documentaires fournis ci-dessous. Toute affirmation non adossée à l'un de ces extraits est interdite.
+- Si les extraits ne permettent pas de répondre, dis-le explicitement. N'invente pas, ne complète pas depuis tes connaissances générales, ne devine pas.
+- Rapporte une association comme une association, jamais comme une causalité.
+- N'affirme jamais l'efficacité prouvée d'un régime. À ce jour, les recommandations internationales ne permettent de conseiller aucun régime spécifique dans l'endométriose.
+- Aucune formulation prescriptive : ni « évitez X », ni « mangez Y », ni « supprimez Z ».
+- Aucune promesse d'effet : ni « cela réduira vos douleurs », ni « ce régime améliore l'endométriose ».
+- Aucun élément de diagnostic, ni sur une situation personnelle, ni sur des symptômes décrits.
+- Aucun avis sur un traitement, une opération, un médicament ou une contraception.
+- Aucune quantité, dose, portion, calorie, ni plan alimentaire chiffré.
+- N'aide jamais à éliminer ou restreindre des aliments, même si la demande paraît raisonnable.
+- N'emploie aucun vocabulaire moral : ni « bon », ni « mauvais », ni « interdit ».
+- Quand les sources divergent, expose la divergence au lieu de trancher silencieusement.
+- Cite les sources sur lesquelles tu t'appuies, par leur titre.
+- Tu peux dire que tu ne sais pas, et renvoyer vers un professionnel de santé.
+"""
 
 
-class MistralAuthError(MistralError):
-    """Clé API absente, invalide ou révoquée (HTTP 401 / 403)."""
+def _construire_message_utilisateur(question: str, extraits: list[str]) -> str:
+    """Assemble la question et les extraits documentaires en un seul message."""
+    contexte = "\n\n---\n\n".join(extraits)
+    return (
+        f"Extraits documentaires :\n\n{contexte}\n\n"
+        f"---\n\nQuestion de l'utilisatrice : {question}"
+    )
 
 
-class MistralRateLimitError(MistralError):
-    """Quota du tier atteint (HTTP 429).
-
-    Le tier gratuit est limité à 1 requête par seconde : sérialiser les appels
-    (jeu d'évaluation compris) plutôt que de les paralléliser.
-    """
-
-
-@dataclass(frozen=True)
-class LLMResponse:
-    """Réponse du modèle, dépouillée de l'enveloppe HTTP."""
-
-    text: str
-    model: str
-    prompt_tokens: int
-    completion_tokens: int
-    finish_reason: str
-
-    @property
-    def total_tokens(self) -> int:
-        return self.prompt_tokens + self.completion_tokens
-
-
-def _build_payload(
-    messages: list[dict[str, str]],
-    settings: MistralSettings,
-) -> dict[str, Any]:
-    """Assemble le corps de la requête de génération."""
-    return {
-        "model": settings.model,
-        "messages": messages,
-        "temperature": settings.temperature,
-        "max_tokens": settings.max_tokens,
-    }
-
-
-def _parse_response(payload: dict[str, Any]) -> LLMResponse:
-    """Extrait le texte et la comptabilité de tokens d'une réponse Mistral.
-
-    Raises:
-        MistralError: si la structure attendue est absente.
-    """
-    try:
-        choice = payload["choices"][0]
-        usage = payload.get("usage", {})
-        return LLMResponse(
-            text=choice["message"]["content"],
-            model=payload.get("model", "inconnu"),
-            prompt_tokens=usage.get("prompt_tokens", 0),
-            completion_tokens=usage.get("completion_tokens", 0),
-            finish_reason=choice.get("finish_reason", "inconnu"),
-        )
-    except (KeyError, IndexError, TypeError) as exc:
-        raise MistralError(
-            f"Réponse Mistral inexploitable : structure inattendue ({exc})."
-        ) from exc
-
-
-def _raise_for_status(response: httpx.Response) -> None:
-    """Traduit un code HTTP d'erreur en exception métier explicite."""
-    if response.status_code < 400:
-        return
-
-    detail = response.text[:500]
-    if response.status_code in (401, 403):
-        raise MistralAuthError(
-            f"Authentification refusée (HTTP {response.status_code}). "
-            f"Vérifiez MISTRAL_API_KEY. Détail : {detail}"
-        )
-    if response.status_code == 429:
-        raise MistralRateLimitError(
-            "Limite de débit atteinte (HTTP 429). Le tier gratuit autorise "
-            f"1 requête/seconde. Détail : {detail}"
-        )
-    raise MistralError(f"Erreur Mistral HTTP {response.status_code} : {detail}")
-
-
-async def chat_completion(
-    messages: list[dict[str, str]],
-    settings: MistralSettings | None = None,
-) -> LLMResponse:
-    """Envoie une liste de messages au modèle et retourne sa réponse.
+async def generer_reponse(question: str, extraits: list[str]) -> str:
+    """Génère une réponse à partir de la question et des extraits retrouvés.
 
     Args:
-        messages: messages au format `{"role": ..., "content": ...}`.
-        settings: configuration à utiliser. Par défaut, celle de l'environnement.
+        question: la question posée.
+        extraits: les chunks remontés par la recherche vectorielle.
+
+    Returns:
+        Le texte de la réponse.
 
     Raises:
-        MistralAuthError: clé invalide.
-        MistralRateLimitError: quota atteint.
-        MistralError: toute autre erreur d'appel ou réponse illisible.
+        LLMIndisponibleError: si l'API Mistral est injoignable ou renvoie une
+            réponse inexploitable.
     """
-    settings = settings or get_mistral_settings()
-    headers = {
-        "Authorization": f"Bearer {settings.api_key}",
-        "Content-Type": "application/json",
+    settings = get_mistral_settings()
+
+    charge_utile = {
+        "model": settings.model,
+        "temperature": settings.temperature,
+        "max_tokens": settings.max_tokens,
+        "messages": [
+            {"role": "system", "content": PROMPT_SYSTEME},
+            {"role": "user", "content": _construire_message_utilisateur(question, extraits)},
+        ],
     }
 
     try:
         async with httpx.AsyncClient(timeout=settings.timeout_seconds) as client:
-            response = await client.post(
+            reponse = await client.post(
                 settings.chat_completions_url,
-                headers=headers,
-                json=_build_payload(messages, settings),
+                headers={
+                    # La clé ne doit apparaître ni dans les logs ni dans une URL.
+                    "Authorization": f"Bearer {settings.api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=charge_utile,
             )
-    except httpx.TimeoutException as exc:
-        raise MistralError(
-            f"Délai dépassé après {settings.timeout_seconds} s."
+            reponse.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        logger.error("Mistral a répondu %s", exc.response.status_code)
+        raise LLMIndisponibleError(
+            "Le service de génération est momentanément indisponible."
         ) from exc
     except httpx.HTTPError as exc:
-        raise MistralError(f"Échec réseau vers Mistral : {exc}") from exc
+        logger.error("erreur réseau vers Mistral : %s", exc)
+        raise LLMIndisponibleError(
+            "Le service de génération est momentanément indisponible."
+        ) from exc
 
-    _raise_for_status(response)
-    parsed = _parse_response(response.json())
-
-    # Log structuré : ne journalise jamais la clé, ni le contenu des questions
-    # (elles peuvent contenir des données personnelles de santé).
-    logger.info(
-        "mistral_call",
-        extra={
-            "model": parsed.model,
-            "prompt_tokens": parsed.prompt_tokens,
-            "completion_tokens": parsed.completion_tokens,
-            "finish_reason": parsed.finish_reason,
-            "elapsed_ms": round(response.elapsed.total_seconds() * 1000),
-        },
-    )
-    return parsed
+    donnees = reponse.json()
+    try:
+        return donnees["choices"][0]["message"]["content"].strip()
+    except (KeyError, IndexError, AttributeError) as exc:
+        logger.error("réponse Mistral inattendue : %s", donnees)
+        raise LLMIndisponibleError(
+            "Réponse inexploitable du service de génération."
+        ) from exc
