@@ -1,7 +1,11 @@
-# Pipeline RAG offline - Alimendo
+# Pipeline RAG offline / EndoNutrition (Alimendo)
 
-Construit un index ChromaDB persistant et interrogeable à partir du corpus brut
-déjà collecté. **Périmètre : offline uniquement** - de la donnée brute à l'index.
+Construit l'index vectoriel du chatbot, dans le **service ChromaDB du
+docker-compose**, à partir du corpus brut déjà collecté. L'ingestion écrit en HTTP
+dans le même index que celui que le backend interroge : il n'y a **plus d'index
+local** (`rag/data/chroma` et `CHROMA_PERSIST_DIR` sont obsolètes).
+
+**Périmètre : offline uniquement** de la donnée brute à l'index.
 Le retrieval + la génération LLM (Mistral) vivent dans le backend, pas ici.
 
 ---
@@ -15,9 +19,13 @@ Le retrieval + la génération LLM (Mistral) vivent dans le backend, pas ici.
 | **Métrique** | Cosinus | Métrique pour laquelle e5 est entraîné ; embeddings normalisés. |
 | **Chunking** | `RecursiveCharacterTextSplitter`, piloté par le manifest | Découpe aux frontières naturelles. Politique **par source** (intégral / sélectif + marqueurs) dérivée de `note_chunking`, jamais de découpe uniforme. |
 | **Format intermédiaire** | `chunks.jsonl` | Inspectable, découple le découpage de l'embedding, montrable au jury. |
+| **Stockage de l'index** | Service ChromaDB (`HttpClient`) | Le backend tourne en conteneur et ne voit pas les dossiers de la machine hôte. Ingestion et backend passent par le même service : même index en local et en déploiement, et jamais deux processus qui écrivent le même dossier. |
+
+> **Même instance, deux adresses.** Depuis ta machine : `localhost:8001` (port
+> publié par le compose). Depuis un conteneur : `chromadb:8000` (réseau Docker).
 
 > **Point RGPD contre-intuitif à retenir :** un modèle d'embeddings *local* est
-> **plus** souverain qu'un appel API - aucune donnée ne quitte la machine, aucun
+> **plus** souverain qu'un appel API  aucune donnée ne quitte la machine, aucun
 > sous-traitant à contractualiser.
 
 >  **Préfixes e5.** Le modèle exige `passage: ` sur les chunks indexés et
@@ -40,7 +48,9 @@ uv run python rag/extraction.py
 # 2. Chunking piloté par le manifest : processed/ -> chunks.jsonl
 uv run python rag/chunking.py
 
-# 3. Ingestion : chunks.jsonl -> embeddings -> index ChromaDB (+ requêtes de démo)
+# 3. Ingestion : chunks.jsonl -> embeddings -> service ChromaDB (+ requêtes de démo)
+#    PRÉREQUIS : le service doit tourner.
+docker compose up -d chromadb
 uv run python rag/ingestion.py
 
 # Interroger l'index existant sans le reconstruire :
@@ -48,6 +58,19 @@ uv run python rag/ingestion.py --query "quelle est la prévalence de l'endométr
 ```
 
 Le premier run de l'étape 3 télécharge le modèle e5 (~1 Go), puis il est en cache.
+
+Variables d'environnement lues par l'ingestion (toutes optionnelles) :
+
+| Variable | Défaut | Rôle |
+|---|---|---|
+| `CHROMA_HOST` | `localhost` | hôte du service ChromaDB |
+| `CHROMA_PORT` | `CHROMADB_PORT`, sinon `8001` | port publié du service |
+| `CHROMA_COLLECTION` | `endo_corpus` | **doit être identique** à celle du `.env` du backend |
+
+>  **Le piège silencieux.** Si le chatbot devient incohérent sans aucune erreur
+> dans les logs, la cause est presque toujours un index construit avec un autre
+> modèle ou d'autres préfixes que ceux de la requête. Changer de modèle
+> d'embeddings impose une **réindexation complète**.
 
 ---
 
@@ -59,12 +82,13 @@ rag/
 ├── collecte.py         # (déjà fait) -> data/raw/
 ├── extraction.py       # étape 1 : nettoyage -> data/processed/{id}.txt
 ├── chunking.py         # étape 2 : découpage + métadonnées -> data/processed/chunks.jsonl
-├── ingestion.py        # étape 3 : embeddings + index ChromaDB
+├── ingestion.py        # étape 3 : embeddings + écriture HTTP dans le service ChromaDB
 ├── data/
 │   ├── raw/            # corpus brut (PDF/HTML/*.synthese.md) + corpus_manifest.csv
-│   ├── processed/      # texte propre + chunks.jsonl + journaux (_*.csv)
-│   └── chroma/         # index persistant (lu par le backend via CHROMA_PERSIST_DIR)
+│   └── processed/      # texte propre + chunks.jsonl + journaux (_*.csv)
 ```
+
+L'index lui-même vit dans le volume Docker `chroma_data` du service `chromadb`.
 
 ---
 
@@ -85,17 +109,17 @@ Chaque chunk de l'index porte ces champs (base de la citation obligatoire) :
 | *marqueurs* | str | `note_chunking` | ex. `portee=risque_pas_symptomes` (S3), `usage=mecanismes` (S4) |
 
 > Contrainte Chroma : les métadonnées ne peuvent être que `str`/`int`/`float`/`bool`.
-> Pas de liste ni de dict - les marqueurs sont donc des paires plates.
+> Pas de liste ni de dict  les marqueurs sont donc des paires plates.
 
 ---
 
-## Traçabilité
+## Traçabilité (certification C2)
 
 Chaque étape écrit son journal dans `data/processed/` :
 
-- `_extraction_log.csv` - statut par source (ok / skipped_stub / missing / empty / error).
-- `_chunking_log.csv` - nombre de chunks gardés/écartés par source.
-- `_chunking_dropped.csv` - **chunks écartés en mode sélectif (S2, S10), à auditer à la main.**
+- `_extraction_log.csv`  statut par source (ok / skipped_stub / missing / empty / error).
+- `_chunking_log.csv`  nombre de chunks gardés/écartés par source.
+- `_chunking_dropped.csv`  **chunks écartés en mode sélectif (S2, S10), à auditer à la main.**
 
 Le chunking sélectif écarte un chunk dès qu'il contient un mot-clé hors périmètre
 (chirurgie, hormonal, management…). Choix **conservateur assumé** : indexer un

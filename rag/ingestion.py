@@ -1,13 +1,18 @@
-"""Ingestion : chunks.jsonl -> embeddings e5 -> index ChromaDB persistant (cosinus).
+"""Ingestion : chunks.jsonl → embeddings e5 → index dans le SERVICE ChromaDB (cosinus).
 
 Entrée : rag/data/processed/chunks.jsonl   (produit par chunking.py)
-Sortie : index ChromaDB persistant dans CHROMA_DIR (lu plus tard par le backend
-         via la variable d'env CHROMA_PERSIST_DIR).
+Sortie : collection `endo_corpus` dans le service ChromaDB du docker-compose,
+         écrite en HTTP. Le backend lit CE MÊME index (chromadb:8000 depuis le
+         réseau Docker ; localhost:8001 depuis ta machine). Plus aucun index local.
 
-Deux points de vigilance :
+PRÉREQUIS : le service ChromaDB doit tourner AVANT de lancer ce script :
+    docker compose up -d chromadb
+
+Deux points de vigilance qui font toute la qualité du retrieval :
   1. Le modèle e5 EXIGE des préfixes : "passage: " sur les chunks indexés,
-     "query: " sur les questions.
-  2. Métrique COSINUS, et embeddings normalisés - cohérent avec l'entraînement d'e5.
+     "query: " sur les questions. On les applique nous-mêmes, explicitement.
+  2. Métrique COSINUS (déclarée à la création de la collection), et embeddings
+     normalisés — cohérent avec l'entraînement d'e5.
 
 Lancement :
     uv run python rag/ingestion.py                 # (re)construit l'index + requêtes de démo
@@ -22,10 +27,13 @@ from functools import lru_cache
 from pathlib import Path
 
 import chromadb
+from chromadb.api import ClientAPI
+from chromadb.errors import NotFoundError
 from sentence_transformers import SentenceTransformer
 
 from config import (
-    CHROMA_DIR,
+    CHROMA_HOST,
+    CHROMA_PORT,
     COLLECTION_NAME,
     DISTANCE_METRIC,
     EMBEDDING_MODEL,
@@ -40,7 +48,7 @@ logger = logging.getLogger("ingestion")
 CHUNKS_PATH: Path = PROCESSED_DIR / "chunks.jsonl"
 
 
-# Modèle d'embeddings 
+# --- Modèle d'embeddings ---------------------------------------------------
 
 @lru_cache(maxsize=1)
 def get_model() -> SentenceTransformer:
@@ -55,9 +63,9 @@ def get_model() -> SentenceTransformer:
 def embed(texts: list[str], *, is_query: bool) -> list[list[float]]:
     """Encode des textes en vecteurs, en ajoutant le préfixe e5 adapté.
 
-    is_query=True  -> préfixe "query: "   (une question)
-    is_query=False -> préfixe "passage: " (un chunk à indexer)
-    normalize_embeddings=True -> vecteurs unitaires, ce qu'attend la métrique cosinus.
+    is_query=True  → préfixe "query: "   (une question)
+    is_query=False → préfixe "passage: " (un chunk à indexer)
+    normalize_embeddings=True → vecteurs unitaires, ce qu'attend la métrique cosinus.
     """
     prefix = EMBEDDING_QUERY_PREFIX if is_query else EMBEDDING_PASSAGE_PREFIX
     prefixed = [prefix + t for t in texts]
@@ -69,23 +77,45 @@ def embed(texts: list[str], *, is_query: bool) -> list[list[float]]:
     return vectors.tolist()
 
 
-# ChromaDB 
+# --- ChromaDB --------------------------------------------------------------
+
+def get_client() -> ClientAPI:
+    """Connecte au service ChromaDB en HTTP et vérifie qu'il répond.
+
+    On fait un heartbeat tout de suite : si le service n'est pas démarré, on
+    échoue ICI avec un message actionnable, plutôt qu'au milieu de l'indexation
+    après une minute de calcul d'embeddings.
+    """
+    try:
+        client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
+        client.heartbeat()
+    except Exception as exc:
+        raise RuntimeError(
+            f"Service ChromaDB injoignable sur {CHROMA_HOST}:{CHROMA_PORT}. "
+            "Lance-le d'abord : `docker compose up -d chromadb` "
+            "(et vérifie CHROMA_HOST / CHROMA_PORT)."
+        ) from exc
+    logger.info("Connecté au service ChromaDB %s:%s", CHROMA_HOST, CHROMA_PORT)
+    return client
+
 
 def get_collection(reset: bool = False) -> chromadb.Collection:
-    """Ouvre (ou recrée) la collection Chroma persistante en métrique cosinus.
+    """Ouvre (ou recrée) la collection du service ChromaDB en métrique cosinus.
 
     reset=True supprime la collection existante pour une reconstruction propre
-    et déterministe - c'est le comportement de l'indexation complète.
+    et déterministe — c'est le comportement de l'indexation complète.
     """
-    client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+    client = get_client()
     if reset:
         try:
             client.delete_collection(COLLECTION_NAME)
             logger.info("Ancienne collection supprimée (reconstruction propre).")
-        except Exception:
-            # La collection n'existait pas encore : cas normal au premier run.
-            pass
-    # hnsw:space fixe la métrique de distance.
+        except NotFoundError:
+            # Seul cas attendu : la collection n'existe pas encore (premier run).
+            # Toute autre erreur (réseau, serveur) remonte normalement.
+            logger.info("Aucune collection '%s' à supprimer (premier run).", COLLECTION_NAME)
+    # hnsw:space fixe la métrique de distance. Doit être posée À LA CRÉATION :
+    # elle ne peut pas être changée après coup sans recréer la collection.
     return client.get_or_create_collection(
         name=COLLECTION_NAME,
         metadata={"hnsw:space": DISTANCE_METRIC},
@@ -96,14 +126,14 @@ def load_chunks() -> list[dict]:
     """Charge chunks.jsonl (une ligne JSON par chunk)."""
     if not CHUNKS_PATH.exists():
         raise FileNotFoundError(
-            f"{CHUNKS_PATH} introuvable - lance d'abord chunking.py."
+            f"{CHUNKS_PATH} introuvable — lance d'abord chunking.py."
         )
     with CHUNKS_PATH.open(encoding="utf-8") as f:
         return [json.loads(line) for line in f if line.strip()]
 
 
 def build_index() -> None:
-    """Construit l'index complet : chunks -> embeddings -> Chroma."""
+    """Construit l'index complet : chunks → embeddings → Chroma."""
     chunks = load_chunks()
     logger.info("%d chunks chargés depuis %s", len(chunks), CHUNKS_PATH)
 
@@ -121,14 +151,17 @@ def build_index() -> None:
     )
     logger.info("Index construit : %d chunks dans '%s' (%s).",
                 collection.count(), COLLECTION_NAME, DISTANCE_METRIC)
-    logger.info("Persistance : %s", CHROMA_DIR)
+    logger.info("Persistance : service ChromaDB %s:%s (volume Docker chroma_data)",
+                CHROMA_HOST, CHROMA_PORT)
 
 
-# Requête de test
+# --- Requête de test -------------------------------------------------------
 
 def query(question: str, n_results: int = 3) -> None:
     """Interroge l'index et affiche les chunks récupérés AVEC leurs sources.
 
+    C'est la preuve que la chaîne de citation tient de bout en bout, et que le
+    retrieval cross-lingue fonctionne (question FR → passages EN).
     """
     collection = get_collection(reset=False)
     q_vector = embed([question], is_query=True)  # préfixe "query: " appliqué ici
@@ -139,7 +172,7 @@ def query(question: str, n_results: int = 3) -> None:
     metas = res["metadatas"][0]
     dists = res["distances"][0]
     for rank, (doc, meta, dist) in enumerate(zip(docs, metas, dists), start=1):
-        # Distance cosinus -> score de similarité (1 - distance) pour lisibilité.
+        # Distance cosinus → score de similarité (1 - distance) pour lisibilité.
         score = 1 - dist
         marqueurs = {k: v for k, v in meta.items()
                      if k not in ("id_source", "titre", "url", "licence_indicative",
@@ -167,7 +200,8 @@ def main() -> None:
 
     build_index()
 
-    # Requêtes de démonstration
+    # Requêtes de démonstration : la 2e est le piège central du projet (Q13 de
+    # ton jeu d'éval — le chunk S3 remonté doit porter le marqueur risque≠symptômes).
     query("C'est quoi l'endométriose ?", n_results=args.n)
     query("Est-ce que manger des légumes réduit mes douleurs ?", n_results=args.n)
 

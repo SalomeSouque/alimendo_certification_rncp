@@ -6,3 +6,5 @@
 # Artefacts Python
 __pycache__/
 *.pyc
+
+rag/data/chroma*
