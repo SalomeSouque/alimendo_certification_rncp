@@ -1,110 +1,159 @@
-# Certification RNCP37827 projet Alimendo
-Application web d'aide aux choix alimentaires pour les personnes atteintes
-d'endométriose : score d'inflammation par photo, code-barre ou recherche
-textuelle, et chatbot documentaire sourcé.
+# Alimendo
 
-> **Projet étudiant.** Cette application est réalisée dans le cadre d'un projet
-> de fin d'études. Elle ne délivre aucun conseil médical et ne remplace pas
-> l'avis d'un professionnel de santé.
+> **Projet étudiant à but pédagogique**, réalisé dans le cadre de la certification
+> *Développeur en intelligence artificielle* (RNCP37827). Ce service n'a pas vocation
+> à être utilisé comme outil de santé et ne remplace en aucun cas l'avis d'un
+> professionnel. Aucun régime alimentaire spécifique ne peut à ce jour être
+> recommandé dans l'endométriose.
 
----
+Alimendo est une application web destinée aux personnes atteintes d'endométriose.
+Elle attribue à chaque aliment un **score d'inflammation indicatif**, inspiré du
+*Dietary Inflammatory Index* (Shivappa et al., 2014), et met à disposition un
+**chatbot documentaire (RAG)** qui répond uniquement à partir d'un corpus restreint
+de sources sélectionnées.
+
+## Stack technique
+
+| Couche | Technologie |
+|---|---|
+| Frontend | React (Vite), servi par nginx en conteneur |
+| Backend | FastAPI, Python ≥ 3.13, gestion des dépendances avec `uv` |
+| Base de données | PostgreSQL 17 (extension `pg_trgm` pour la recherche floue) |
+| ORM / migrations | SQLAlchemy 2.0 (async, driver psycopg 3) + Alembic |
+| Base vectorielle | ChromaDB 1.5.9 (service conteneurisé, accès HTTP) |
+| Embeddings | `intfloat/multilingual-e5-base` |
+| LLM (chatbot RAG) | Mistral Small (`mistral-small-2603`), via l'API Mistral |
+| Routage d'intention | Classifieur scikit-learn (TF-IDF + régression logistique), 5 classes, avec filet de sécurité déterministe |
+| Qualité | `ruff`, `pytest`, CI GitHub Actions (frontend + backend) |
+
+**Prochaine étape (non branchée) :** reconnaissance d'aliments par photo via un
+VLM Qwen3-VL 4B servi par Ollama (service `ollama`, profil `ai`).
+
+## Architecture du backend
+
+Quatre couches, des routes vers le domaine métier pur :
+
+```
+routers -> services -> repositories -> domain
+```
+
+Le SQL reste dans les `repositories` ; le `domain` (calcul du score, badges) ne
+dépend ni de la base, ni du réseau, ni de FastAPI, ce qui le rend testable sans
+infrastructure. Le score est **recalculé à la volée et jamais stocké** : seule
+la règle (référentiel v1.0) est figée, et chaque réponse expose
+`version_referentiel`. Toutes les formulations à caractère médical sont
+centralisées dans `app/core/disclaimers.py` (transcription littérale des
+guidelines) et ne sont jamais générées par le code ni par le LLM.
 
 ## Prérequis
 
-- [Docker](https://docs.docker.com/get-docker/) et Docker Compose v2
-  (inclus dans Docker Desktop)
+- Docker et Docker Compose
+- (optionnel, pour travailler le backend hors conteneur) `uv`
 
-Aucune autre installation n'est nécessaire : Python, Node et PostgreSQL
-tournent dans des conteneurs.
-
-## Démarrage
+## Installation
 
 ```bash
-git clone <url>
-cd certification_RNCP_37827
+# 1. Cloner le dépôt
+git clone https://github.com/SalomeSouque/alimendo_certification_rncp.git
+cd alimendo_certification_rncp
+
+# 2. Créer le fichier d'environnement et le compléter
 cp .env.example .env
-docker compose up -d
+#   Renseigner au minimum : JWT_SECRET_KEY (chaîne longue et aléatoire)
+#                           MISTRAL_API_KEY
+
+# 3. Construire et démarrer la stack applicative
+#     Le profil « app » est nécessaire : sans lui, seuls db et chromadb
+#    démarrent (api et frontend sont sous profils).
+docker compose --profile app up --build -d
+
+# 4. Appliquer les migrations (création du schéma dans PostgreSQL)
+docker compose exec api uv run alembic upgrade head
 ```
 
-Vérifier que les services sont démarrés :
+Services disponibles une fois la stack démarrée :
+
+| Service | URL par défaut |
+|---|---|
+| API (FastAPI) | http://localhost:8000 — documentation : http://localhost:8000/docs |
+| Santé détaillée | http://localhost:8000/health/detail |
+| Frontend | http://localhost:3000 |
+
+## Migrations de base de données
 
 ```bash
-docker compose ps
+# Appliquer les migrations
+docker compose exec api uv run alembic upgrade head
+
+# Générer une nouvelle migration après modification des modèles ORM
+docker compose exec api uv run alembic revision --autogenerate -m "description"
+
+# Vérifier la réversibilité (down puis up)
+docker compose exec api uv run alembic downgrade base
+docker compose exec api uv run alembic upgrade head
 ```
 
-Le service `db` doit passer en `healthy` après une dizaine de secondes.
-
-### Configuration
-
-Toutes les variables sont documentées dans `.env.example`. Le fichier `.env`
-n'est jamais versionné : il contient les identifiants et les clés d'API.
-
-Les ports hôte sont configurables — utile si un service occupe déjà le port
-par défaut sur votre machine :
+## Tests et qualité
 
 ```bash
-POSTGRES_PORT=5434
+# Lint (depuis backend/, sans installer tout le projet)
+uvx ruff check
+
+# Tests dans le conteneur
+docker compose exec api uv run pytest -q
+
+# ou en local (backend/), si l'environnement uv est synchronisé
+uv run pytest -q
 ```
 
-## Services
+La CI GitHub Actions (`.github/workflows/ci.yml`) exécute lint + tests pour le
+frontend et le backend à chaque push et pull request. Les tests du backend
+portent sur le domaine métier pur (score, badges), le routage d'intention à 5
+classes, la conformité des formulations médicales et le contrôle d'accès — aucun
+ne nécessite de base de données.
 
-| Service    | Rôle                          | Port hôte (défaut) | Profil |
-|------------|-------------------------------|--------------------|--------|
-| `db`       | PostgreSQL — données métier    | 5432               | —      |
-| `chromadb` | Base vectorielle — corpus RAG  | 8001               | —      |
-| `api`      | Backend FastAPI                | 8000               | `app`  |
-| `frontend` | Frontend React                 | 3000               | `app`  |
-| `ollama`   | Inférence VLM locale (Qwen)    | 11434              | `ai`   |
+## Variables d'environnement
 
-Les services sans profil démarrent avec `docker compose up`. Les autres
-doivent être demandés explicitement :
+Toutes les variables sont décrites dans `.env.example`. Les principales :
+
+| Variable | Rôle |
+|---|---|
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Accès PostgreSQL |
+| `POSTGRES_PORT` | Port **hôte** de PostgreSQL (le conteneur reste sur 5432) |
+| `JWT_SECRET_KEY` | Clé de signature des jetons JWT (secret, jamais commité) |
+| `MISTRAL_API_KEY` | Clé de l'API Mistral (chatbot RAG) |
+| `BCRYPT_ROUNDS` | Coût du hachage bcrypt |
+| `CHROMADB_PORT`, `FRONTEND_PORT`, `FASTAPI_PORT`, `OLLAMA_PORT` | Ports hôte des services |
+
+Aucun secret ne doit figurer dans le code ou les commits : seul `.env.example`
+(sans valeurs sensibles) est versionné.
+
+## Dépannage
+
+**`docker compose up` ne démarre que `db` et `chromadb`.** C'est normal : `api`
+et `frontend` sont sous le profil `app`. Utilise `docker compose --profile app up`.
+
+**`[Errno 98] address already in use` sur le port 8000.** Le conteneur `api`
+occupe déjà ce port. Inutile de lancer `uvicorn` en local en plus — l'API tourne
+dans Docker. Pour un `uvicorn` local, arrête d'abord la stack ou choisis un autre
+port (`--port 8010`).
+
+**`Bind for 0.0.0.0:5432 failed: port is already allocated`.** Un autre
+PostgreSQL (autre projet) occupe le port. Change `POSTGRES_PORT` dans `.env` ; le
+port interne du conteneur, lui, reste 5432.
+
+**`psql: role "root" does not exist`.** Les variables `$POSTGRES_USER` /
+`$POSTGRES_DB` doivent être évaluées **dans** le conteneur, pas dans ton shell :
 
 ```bash
-docker compose --profile app up -d    # + api et frontend
-docker compose --profile ai up -d     # + ollama
+docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\dt"'
 ```
 
-**Note :** les services `api`, `frontend` et `ollama` sont déclarés mais ne
-peuvent pas encore démarrer — leurs Dockerfiles seront ajoutés en S3–S4.
+## Sources et références
 
-## Architecture
-
-Aucun appel direct depuis le frontend vers la base de données ou les services
-d'IA : tout transite par le backend.
-
-```
-Navigateur → frontend (React)
-           → api (FastAPI)
-               ├── db        PostgreSQL — aliments, scores, signaux
-               ├── chromadb  recherche sémantique dans le corpus
-               ├── ollama    reconnaissance d'aliment par photo
-               └── APIs externes (Open Food Facts, OpenRouter)
-```
-
-Les conteneurs communiquent entre eux par leur **nom de service** sur le
-réseau interne créé par Compose, sur leur port interne : le backend joint la
-base à `db:5432`, quel que soit le port publié sur la machine hôte. Les ports
-déclarés dans `docker-compose.yml` ne servent qu'à l'accès depuis la machine
-de développement.
-
-## Commandes utiles
-
-```bash
-docker compose config          # valide le fichier et affiche la config résolue
-docker compose logs -f db      # suit les logs d'un service
-docker compose exec db psql -U alimendo   # ouvre un client SQL
-docker compose down            # arrête et supprime les conteneurs
-```
-
-> `docker compose down -v` supprime également les volumes, donc **toutes les
-> données** : base PostgreSQL, corpus vectoriel et modèles Ollama téléchargés.
-
-## Tests
-
-À venir — S3 pour les composants métier, S5 pour le classificateur d'intention.
-
-## Stack
-
-React · FastAPI · PostgreSQL · ChromaDB · Qwen2.5-VL via Ollama ·
-DeepSeek R1 via OpenRouter · Docker Compose · GitHub Actions
-
+- Score : approche inspirée du *Dietary Inflammatory Index* (Shivappa N. et al.,
+  *Public Health Nutrition*, 2014). Les coefficients officiels du DII étant
+  propriétaires, ce score n'en est pas une reproduction.
+- Données de composition : table **CIQUAL 2020** (ANSES) et base **Open Food Facts**.
+- Badges nutritionnels fer et magnésium : seuils du Règlement **UE 1169/2011**
+  (annexe XIII).
