@@ -157,11 +157,10 @@ Open Food Facts n'est pas importé : le backend interroge l'API à la demande, p
 # Lint (depuis backend/, sans installer tout le projet)
 uvx ruff check
 
-# Tests dans le conteneur
-docker compose exec api uv run pytest -q
-
-# ou en local (backend/), si l'environnement uv est synchronisé
-uv run pytest -q
+# Tests en local, depuis backend/ (l'image Docker n'embarque pas les tests)
+cd backend
+uv sync --group dev
+uv run pytest tests -q
 ```
 
 La CI GitHub Actions (`.github/workflows/ci.yml`) exécute lint + tests pour le
