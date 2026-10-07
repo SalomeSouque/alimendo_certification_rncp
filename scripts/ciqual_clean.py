@@ -62,7 +62,7 @@ SEUIL_ECART_ENERGIE_PCT = 20.0      # les deux seuils ensemble : le % seul
 SEUIL_ECART_ENERGIE_KCAL = 20.0     # pénalise les aliments peu énergétiques
 
 # Schéma PostgreSQL visé : NUMERIC(précision, échelle) - à aligner sur les migrations Alembic
-SCHEMA_NUTRIMENTS = (8, 3)          # passer à (10, 4) après la migration 0002
+SCHEMA_NUTRIMENTS = (10, 4)         # aligné sur la migration Alembic 0002
 SCHEMA_ENERGIE = (8, 2)
 
 # Nom logique (= colonne BDD) : (mots-clés de la colonne CIQUAL, unité attendue)
