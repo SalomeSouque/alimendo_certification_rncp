@@ -8,7 +8,15 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from sqlalchemy import ForeignKey, Index, Numeric, String, Text
+from sqlalchemy import (
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -73,41 +81,44 @@ class Aliment(Base):
     nom: Mapped[str] = mapped_column(String(255), nullable=False)
     source: Mapped[str] = mapped_column(String(10), nullable=False)
     url_image: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Identifiant CIQUAL (alim_code) : rend l'import relançable sans doublon (migration 0002)
+    code_ciqual: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     energie: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
 
     # Paramètres pro-inflammatoires
-    glucides: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    proteines: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    lipides: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    graisses_saturees: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    cholesterol: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    fer: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    vitamine_b12: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
+    glucides: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    proteines: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    lipides: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    graisses_saturees: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    cholesterol: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    fer: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    vitamine_b12: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
 
     # Paramètres anti-inflammatoires
-    fibres: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    omega3: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    omega6: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    vitamine_a: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    beta_carotene: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    vitamine_c: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    vitamine_d: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    vitamine_e: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    vitamine_b6: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    folates: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    thiamine: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    riboflavine: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    niacine: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    magnesium: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    selenium: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
-    zinc: Mapped[Decimal | None] = mapped_column(Numeric(8, 3), nullable=True)
+    fibres: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    omega3: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    omega6: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    vitamine_a: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    beta_carotene: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    vitamine_c: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    vitamine_d: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    vitamine_e: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    vitamine_b6: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    folates: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    thiamine: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    riboflavine: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    niacine: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    magnesium: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    selenium: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    zinc: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
 
     categorie: Mapped[Categorie | None] = relationship(back_populates="aliments")
 
     __table_args__ = (
         # Recherche textuelle tolérante 
         Index("ix_aliment_id_categorie", "id_categorie"),
+        UniqueConstraint("code_ciqual", name="uq_aliment_code_ciqual"),
     )
 
     def __repr__(self) -> str:  # pragma: no cover - confort de debug
