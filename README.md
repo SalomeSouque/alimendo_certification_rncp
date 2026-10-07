@@ -93,6 +93,64 @@ docker compose exec api uv run alembic downgrade base
 docker compose exec api uv run alembic upgrade head
 ```
 
+## Import des données
+
+Remplit PostgreSQL (tables `categorie` et `aliment`) avec la table CIQUAL 2020 nettoyée.
+Les spécifications de toutes les sources sont dans [`docs/specs_extraction.md`](docs/specs_extraction.md),
+le détail des règles de nettoyage dans [`scripts/README.md`](scripts/README.md).
+
+### Prérequis
+
+| Élément | Détail |
+|---|---|
+| Python | 3.13 ou plus (`.python-version`) |
+| Gestionnaire | [`uv`](https://docs.astral.sh/uv/) |
+| Bibliothèques | groupe `data` du `pyproject.toml` racine : `pandas`, `numpy`, `xlrd`, `openpyxl`, `requests` ; dépendances principales : `sqlalchemy`, `psycopg`, `python-dotenv` |
+| Base | service `db` du `docker-compose.yml` démarré, migrations appliquées jusqu'à `0002` |
+| Configuration | fichier `.env` à la racine : `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT` |
+| Réseau | accès à data.gouv.fr (téléchargement de CIQUAL au premier lancement) |
+
+### Commandes
+
+Depuis la racine du dépôt :
+
+```bash
+# 1. Installer les dépendances des scripts
+uv sync --group data --group dev
+
+# 2. Démarrer la stack et appliquer les migrations (jusqu'à 0002)
+docker compose --profile app up -d --build   # --build : embarque la migration 0002
+docker compose exec api uv run alembic upgrade head
+
+# 3. Produire le jeu nettoyé (télécharge CIQUAL si absent)
+uv run --group data python scripts/ciqual_clean.py
+
+# 4. Importer dans PostgreSQL (relançable sans créer de doublon)
+uv run --group data python scripts/import_aliments.py
+
+# 5. Vérifier les comptages (utilisateur et base du .env)
+docker compose exec db psql -U alimendo -d alimendo -c "SELECT count(*) FROM aliment;"
+```
+
+| Option de `import_aliments.py` | Défaut | Effet |
+|---|---|---|
+| `--csv` | `data/ciqual/clean/aliments_ciqual_2020_clean.csv` | Fichier à importer |
+| `--host` | `localhost` | Hôte PostgreSQL vu depuis ta machine |
+| `--port` | `POSTGRES_PORT` du `.env` | Port publié par Docker |
+
+**Fonctionnement** : une seule transaction (en cas d'erreur, rien n'est écrit) ; catégories insérées
+avant les aliments (clé étrangère) ; aliments insérés ou mis à jour selon `code_ciqual`
+(`INSERT ... ON CONFLICT DO UPDATE`), donc une relance ne crée aucun doublon. Le log affiche les
+comptages avant et après. Codes de sortie : `0` succès, `1` erreur (CSV absent ou invalide, base
+injoignable, migration manquante).
+
+Résultat attendu sur CIQUAL 2020 : **3 184 aliments** et **11 catégories**.
+
+### Open Food Facts
+
+Open Food Facts n'est pas importé : le backend interroge l'API à la demande, par code-barre
+(`backend/app/services/openfoodfacts_service.py`). Voir [`docs/specs_extraction.md`](docs/specs_extraction.md), § 5.
+
 ## Tests et qualité
 
 ```bash

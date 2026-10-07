@@ -3,6 +3,7 @@
 | Script | Rôle |
 |---|---|
 | `ciqual_clean.py` | Nettoyage reproductible de la table CIQUAL 2020 → jeu d'aliments prêt pour PostgreSQL |
+| `import_aliments.py` | Import du jeu CIQUAL nettoyé dans PostgreSQL, relançable sans doublon (doc : README racine, « Import des données ») |
 | `smoke_test_mistral.py` | Test de connectivité vers Mistral La Plateforme (C8) |
 
 ---
@@ -153,13 +154,12 @@ déclarée 181 kcal pour 236 recalculées (−30 %) : deux contrôles indépenda
 
 ### 4.5 Compatibilité avec la base (notebook § 5)
 
-- **Débordement** : le bêta-carotène de 2 algues séchées (wakamé 104 000 µg, kombu 393 000 µg) dépasse
-  `NUMERIC(8,3)`. La donnée est conservée ; c'est le schéma qui doit évoluer. Le script affiche un
-  avertissement tant que la constante `SCHEMA_NUTRIMENTS` vaut `(8, 3)`.
+- **Débordement** : le bêta-carotène de 2 algues séchées (wakamé 104 000 µg, kombu 393 000 µg) dépassait
+  `NUMERIC(8,3)`. La donnée est conservée ; c'est le schéma qui a évolué (migration 0002).
 - **Précision** : à 3 décimales, 2 aliments changent de niveau de score (arrondi de l'oméga-3 près d'un seuil) ;
   à 4 décimales, aucun.
-- → **Migration Alembic 0002 à prévoir (lot import)** : colonnes nutritionnelles en `NUMERIC(10,4)`, puis
-  `SCHEMA_NUTRIMENTS = (10, 4)` dans le script.
+- -> **Migration Alembic 0002 appliquée** : colonnes nutritionnelles en `NUMERIC(10,4)` et
+  `SCHEMA_NUTRIMENTS = (10, 4)` dans le script : plus d'avertissement de débordement.
 - Le CSV garde la pleine précision de la source : l'arrondi est une décision du schéma, pas du nettoyage.
 
 ### 4.6 Non-régression avec le référentiel de score v1.0
@@ -176,3 +176,4 @@ formats, conversion (dont « non mesuré → NULL, jamais 0 »), unicité des mo
 fusion et rejet des doublons, réparation et ambiguïté des catégories.
 Les seuils des règles de corruption ne sont pas testés : ce sont des décisions mesurées, documentées
 dans le notebook.
+
