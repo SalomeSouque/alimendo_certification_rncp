@@ -146,6 +146,15 @@ injoignable, migration manquante).
 
 Résultat attendu sur CIQUAL 2020 : **3 184 aliments** et **11 catégories**.
 
+### Requêtes d'extraction
+
+Les requêtes SQL d'extraction (aliments, journal du VLM) sont dans `sql/`, exécutées par
+`scripts/run_extractions.py`. Choix, optimisations et mesures : [`docs/requetes.md`](docs/requetes.md).
+
+```bash
+uv run python scripts/run_extractions.py
+```
+
 ### Open Food Facts
 
 Open Food Facts n'est pas importé : le backend interroge l'API à la demande, par code-barre
