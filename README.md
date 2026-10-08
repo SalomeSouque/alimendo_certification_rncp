@@ -45,6 +45,22 @@ la règle (référentiel v1.0) est figée, et chaque réponse expose
 centralisées dans `app/core/disclaimers.py` (transcription littérale des
 guidelines) et ne sont jamais générées par le code ni par le LLM.
 
+### Endpoints IA
+
+Les deux routes IA exigent un jeton JWT (`Authorization: Bearer <jeton>`, obtenu
+via `POST /auth/login`) : sans jeton ou avec un jeton invalide, réponse `401`.
+
+| Route | Modèle(s) | Comportement |
+|---|---|---|
+| `POST /ai/chat` | Filet de sécurité + classifieur d'intention + Mistral (RAG) | La question passe d'abord par le filet de sécurité (détresse), puis par le classifieur (`backend/app/ml/intent_classifier.pkl`). Seule l'intention `in_scope` interroge ChromaDB et Mistral ; les quatre autres renvoient un texte validé des guidelines. `422` si la question fait moins de 3 ou plus de 1000 caractères, `503` si un service dépendant est indisponible. |
+| `POST /ai/vision` | Qwen3-VL via Ollama (non branché) | Renvoie `501` avec un message explicite : la reconnaissance photo est une prochaine étape. Contrôles déjà actifs : `415` si le fichier n'est pas une image JPEG, PNG ou WebP, `413` au-delà de 5 Mo. |
+
+Le classifieur est l'artefact produit par le notebook `02_classifieur.ipynb`
+(dépôt `alimendo_data_science`), versionné avec ses métadonnées dans
+`backend/app/ml/`. scikit-learn est figé à la version d'entraînement (1.9.0).
+Si le fichier `.pkl` manque, le routage bascule sur une heuristique par
+mots-clés et `GET /health/detail` affiche `"classifieur_intention": "repli_heuristique"`.
+
 ## Prérequis
 
 - Docker et Docker Compose

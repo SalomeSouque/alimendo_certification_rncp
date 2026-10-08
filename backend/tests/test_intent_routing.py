@@ -2,8 +2,14 @@
 
 Tests sur le comportement attendu, pas sur l'implémentation du
 classifieur.
-La règle qu'ils protègent : 
+La règle qu'ils protègent :
 Une question de détresse ne doit jamais être routée vers le RAG.
+
+Les tests de détresse passent par le vrai chemin (filet de sécurité, modèle
+chargé ou non). Les tests des quatre autres classes vérifient le repli
+heuristique, modèle désactivé par la fixture `sans_modele` : les prédictions du
+modèle entraîné sont évaluées globalement (rappel par classe) dans le notebook
+et, plus tard, par les tests C12, pas question par question ici.
 """
 
 from __future__ import annotations
@@ -18,7 +24,14 @@ from app.core.disclaimers import (
     TEXTE_RESTRICTION_ALIMENTAIRE,
     TEXTES_PAR_REFERENCE,
 )
+from app.services import intent_service
 from app.services.intent_service import ROUTING, Intention, router
+
+
+@pytest.fixture
+def sans_modele(monkeypatch):
+    """Force le repli heuristique en simulant l'absence du modèle entraîné."""
+    monkeypatch.setattr(intent_service, "charger_modele", lambda: None)
 
 # Classe de sécurité 1 : détresse
 
@@ -84,7 +97,7 @@ def test_detresse_ne_declenche_ni_retrieval_ni_llm():
         "je me sens coupable après chaque repas",
     ],
 )
-def test_restriction_est_detectee(question):
+def test_restriction_est_detectee(question, sans_modele):
     """Une demande d'éviction doit être routée en `restriction_alimentaire`."""
     resultat = router(question)
 
@@ -106,12 +119,12 @@ def test_restriction_est_detectee(question):
         "faut-il arrêter le gluten ?",
     ],
 )
-def test_hors_perimetre(question):
+def test_hors_perimetre(question, sans_modele):
     """Diagnostic, traitement, fertilité, gluten et FODMAP sont hors périmètre."""
     assert router(question).intent is Intention.OUT_OF_SCOPE
 
 
-def test_question_sur_un_aliment_redirige_vers_le_scan():
+def test_question_sur_un_aliment_redirige_vers_le_scan(sans_modele):
     resultat = router("quel est le score du saumon ?")
 
     assert resultat.intent is Intention.FOOD_SPECIFIC
@@ -127,7 +140,7 @@ def test_question_sur_un_aliment_redirige_vers_le_scan():
         "c'est quoi l'endo belly ?",
     ],
 )
-def test_question_documentaire_declenche_le_rag(question):
+def test_question_documentaire_declenche_le_rag(question, sans_modele):
     """Seule `in_scope` déclenche la recherche vectorielle et la génération."""
     resultat = router(question)
 
