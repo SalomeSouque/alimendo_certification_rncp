@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_session
 from app.domain.score import VERSION_REFERENTIEL, referentiel_est_pret
-from app.services import chroma_service
+from app.services import chroma_service, intent_service
 
 router = APIRouter(tags=["santé"])
 
@@ -46,6 +46,10 @@ async def health_detail(
         "status": "ok",
         "base_de_donnees": base_de_donnees,
         "index_vectoriel": "ok" if chroma_service.est_disponible() else "indisponible",
+        # "repli_heuristique" : le fichier du modèle manque, le chatbot route par mots-clés.
+        "classifieur_intention": (
+            "ok" if intent_service.modele_est_charge() else "repli_heuristique"
+        ),
         "referentiel_score": "ok" if referentiel_est_pret() else "reperes_manquants",
         "version_referentiel": VERSION_REFERENTIEL,
     }
