@@ -116,5 +116,6 @@ Choix validé avec le formateur, à argumenter à l'oral.
 |---|---|---|
 | CIQUAL | `uv run --group data python scripts/ciqual_clean.py` | log, rapport JSON (SHA-256 de la source), rejets |
 | Import | `uv run --group data python scripts/import_aliments.py` | log avec comptages avant / après |
+| Requêtes SQL | `uv run python scripts/run_extractions.py` (voir `docs/requetes.md`) | résultats affichés en console, nombre de lignes par requête |
 | RAG | voir `rag/README.md` | `_collecte_log.csv`, `_extraction_log.csv` |
 | OFF | appelé par le backend (route code-barre, lot API) | logs applicatifs du backend |
