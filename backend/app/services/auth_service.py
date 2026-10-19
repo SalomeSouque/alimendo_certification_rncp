@@ -72,6 +72,10 @@ async def authentifier(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # Date de dernière connexion : sert à repérer les comptes inactifs (RGPD).
+    await user_repository.enregistrer_connexion(session, utilisateur)
+    await session.commit()
+
     return _emettre_jeton(utilisateur)
 
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,6 +27,15 @@ async def get_role_by_libelle(session: AsyncSession, libelle: str) -> Role | Non
     requete = select(Role).where(Role.libelle == libelle)
     resultat = await session.execute(requete)
     return resultat.scalar_one_or_none()
+
+
+async def enregistrer_connexion(session: AsyncSession, utilisateur: Utilisateur) -> None:
+    """Note la date de la connexion réussie (base de la procédure de tri RGPD).
+
+    Le commit reste à la charge du service appelant.
+    """
+    utilisateur.last_login = datetime.now(UTC)
+    await session.flush()
 
 
 async def creer(
