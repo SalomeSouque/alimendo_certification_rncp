@@ -85,6 +85,12 @@ export default function Authentification() {
           </form>
 
           <Link to="/" className="btn-back">Retour à l'accueil</Link>
+          {/* Mention d'information RGPD (art. 13). Détail : docs/rgpd/ */}
+          <p className="auth-rgpd">
+            Votre email sert uniquement à vous connecter à Alimendo : il n'est ni partagé
+            ni utilisé à d'autres fins. Votre compte est supprimé après 3 ans sans connexion,
+            ou plus tôt sur simple demande auprès de l'administratrice du site.
+          </p>
         </div>
       </main>
     </Layout>

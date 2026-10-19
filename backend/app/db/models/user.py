@@ -44,6 +44,11 @@ class Utilisateur(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+    # Mise à jour à chaque connexion réussie. Sert à la procédure de tri RGPD
+    # (suppression après 3 ans d'inactivité). NULL = aucune connexion enregistrée.
+    last_login: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     id_role: Mapped[int] = mapped_column(
         ForeignKey("role.id_role", ondelete="RESTRICT"), nullable=False
     )
