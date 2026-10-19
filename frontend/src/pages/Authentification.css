@@ -64,3 +64,12 @@
 .toggle-eye img { width: 19px; height: 19px; }
 
 .auth-submit.btn-primary { width: 100%; padding: 12px; margin-top: 4px; }
+
+/* Mention d'information RGPD sous le formulaire de connexion */
+.auth-rgpd {
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--muted);
+  text-align: center;
+  margin: 20px 0 0;
+}
