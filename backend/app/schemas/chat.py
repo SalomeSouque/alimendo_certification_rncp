@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+import re
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+# Caractères de contrôle invisibles (octets nuls, retour arrière, échappements
+# de terminal...). On garde seulement la tabulation (\x09) et le saut de ligne
+# (\x0a), utiles dans une question écrite sur plusieurs lignes.
+_CARACTERES_DE_CONTROLE = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 
 
 class SourceCitee(BaseModel):
@@ -25,6 +32,21 @@ class ChatRequest(BaseModel):
     """Corps de `POST /ai/chat`."""
 
     question: str = Field(min_length=3, max_length=1000)
+
+    @field_validator("question", mode="before")
+    @classmethod
+    def nettoyer_question(cls, valeur: object) -> object:
+        """Nettoie la question avant qu'elle n'atteigne le classifieur et le prompt.
+
+        Exécuté avant la vérification des longueurs (mode="before") : une
+        question faite seulement d'espaces ou de caractères invisibles est
+        donc refusée en 422 par min_length, au lieu de partir vers Mistral.
+        Une valeur qui n'est pas une chaîne est laissée telle quelle :
+        Pydantic la refusera ensuite avec son message habituel.
+        """
+        if not isinstance(valeur, str):
+            return valeur
+        return _CARACTERES_DE_CONTROLE.sub("", valeur).strip()
 
 
 class ChatResponse(BaseModel):
