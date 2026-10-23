@@ -119,7 +119,9 @@ reprend les règles de `RAG_medical-guidelines.md`.
 
 Parcours d'une question, dans l'ordre :
 
-1. Frontend React -> `POST /ai/chat` avec le jeton JWT.
+1. Client -> `POST /ai/chat` avec le jeton JWT. Le client cible est le
+   frontend React ; tant qu'il n'est pas branché sur l'API, les appels se
+   font depuis Swagger (`/docs`, en local).
 2. FastAPI nettoie la question (`backend/app/schemas/chat.py`).
 3. Filet de sécurité puis classifieur d'intention : seule l'intention
    `in_scope` continue. Les quatre autres reçoivent un texte validé, sans
@@ -128,7 +130,7 @@ Parcours d'une question, dans l'ordre :
    (5 extraits au plus).
 5. Si aucun extrait n'est trouvé : texte de repli, sans appel à Mistral.
 6. Sinon : appel à Mistral avec le prompt système, les extraits et la question.
-7. FastAPI renvoie la réponse, les sources et le disclaimer au frontend.
+7. FastAPI renvoie la réponse, les sources et le disclaimer au client.
 
 | Panne | Comportement |
 |---|---|
