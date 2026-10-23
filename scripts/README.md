@@ -4,7 +4,7 @@
 |---|---|
 | `ciqual_clean.py` | Nettoyage reproductible de la table CIQUAL 2020 → jeu d'aliments prêt pour PostgreSQL |
 | `import_aliments.py` | Import du jeu CIQUAL nettoyé dans PostgreSQL, relançable sans doublon (doc : README racine, « Import des données ») |
-| `smoke_test_mistral.py` | Test de connectivité vers Mistral La Plateforme (C8) |
+| `validate_mistral.py` | Tests de validation du service Mistral sur le vrai service (C8). Doc : [`docs/services/mistral.md`](../docs/services/mistral.md) |
 
 ---
 
@@ -176,4 +176,3 @@ formats, conversion (dont « non mesuré → NULL, jamais 0 »), unicité des mo
 fusion et rejet des doublons, réparation et ambiguïté des catégories.
 Les seuils des règles de corruption ne sont pas testés : ce sont des décisions mesurées, documentées
 dans le notebook.
-
