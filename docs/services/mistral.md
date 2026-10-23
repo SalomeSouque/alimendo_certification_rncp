@@ -109,6 +109,7 @@ Toutes les valeurs sont lues dans `.env` par `backend/app/core/config.py`
 | `MISTRAL_TEMPERATURE` | `0.15` | Réponses peu créatives, collées aux extraits : on limite les inventions |
 | `MISTRAL_MAX_TOKENS` | `800` | Borne la longueur et le coût de chaque réponse |
 | `MISTRAL_TIMEOUT_SECONDS` | `30` | Au-delà, l'API renvoie une erreur 503 claire au lieu d'attendre |
+| `MISTRAL_REASONING_EFFORT` | `none` | Réponse directe, sans phase de raisonnement : plus rapide et moins de tokens pour un chatbot qui reformule des extraits. Seules valeurs acceptées : `none` et `high` |
 
 Le prompt système (`PROMPT_SYSTEME` dans `llm_mistral.py`) fait partie de la
 configuration : il impose de répondre seulement à partir des extraits, sans

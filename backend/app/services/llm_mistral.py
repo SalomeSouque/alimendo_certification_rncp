@@ -77,6 +77,8 @@ async def generer_reponse(question: str, extraits: list[str]) -> str:
         "model": settings.model,
         "temperature": settings.temperature,
         "max_tokens": settings.max_tokens,
+        # "none" : réponse directe, sans phase de raisonnement (choix du rapport E2).
+        "reasoning_effort": settings.reasoning_effort,
         "messages": [
             {"role": "system", "content": PROMPT_SYSTEME},
             {"role": "user", "content": _construire_message_utilisateur(question, extraits)},
