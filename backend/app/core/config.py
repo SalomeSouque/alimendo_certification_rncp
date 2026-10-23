@@ -234,11 +234,30 @@ class MistralSettings:
     temperature: float
     max_tokens: int
     timeout_seconds: float
+    reasoning_effort: str
 
     @property
     def chat_completions_url(self) -> str:
         """URL complète de l'endpoint de génération."""
         return f"{self.base_url}/chat/completions"
+
+
+# Valeurs acceptées par l'API Mistral pour reasoning_effort.
+_REASONING_EFFORTS = frozenset({"none", "high"})
+
+
+def _read_reasoning_effort() -> str:
+    """Lit MISTRAL_REASONING_EFFORT ("none" par défaut : réponse directe).
+
+    Une valeur inconnue lève une ConfigurationError au message clair, dès la
+    lecture de la config, au lieu d'un refus de Mistral moins lisible.
+    """
+    valeur = os.getenv("MISTRAL_REASONING_EFFORT", "none").strip().lower()
+    if valeur not in _REASONING_EFFORTS:
+        raise ConfigurationError(
+            f"MISTRAL_REASONING_EFFORT doit valoir 'none' ou 'high', reçu : {valeur!r}"
+        )
+    return valeur
 
 
 @lru_cache(maxsize=1)
@@ -256,6 +275,7 @@ def get_mistral_settings() -> MistralSettings:
         temperature=_read_float("MISTRAL_TEMPERATURE", "0.15"),
         max_tokens=_read_int("MISTRAL_MAX_TOKENS", "800"),
         timeout_seconds=_read_float("MISTRAL_TIMEOUT_SECONDS", "30"),
+        reasoning_effort=_read_reasoning_effort(),
     )
 
 
