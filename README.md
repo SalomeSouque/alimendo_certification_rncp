@@ -194,6 +194,9 @@ portent sur le domaine métier pur (score, badges), le routage d'intention à 5
 classes, la conformité des formulations médicales et le contrôle d'accès — aucun
 ne nécessite de base de données.
 
+Le service Mistral (chatbot) a sa propre documentation et ses tests de
+validation sur le vrai service : [`docs/services/mistral.md`](docs/services/mistral.md).
+
 ## Variables d'environnement
 
 Toutes les variables sont décrites dans `.env.example`. Les principales :

@@ -7,6 +7,7 @@ prescription, et dit explicitement quand il ne sait pas.
 from __future__ import annotations
 
 import logging
+import time
 
 import httpx
 
@@ -17,6 +18,11 @@ logger = logging.getLogger(__name__)
 
 class LLMIndisponibleError(RuntimeError):
     """Levée quand l'API Mistral ne répond pas ou renvoie une erreur."""
+
+
+def _latence_ms(debut: float) -> int:
+    """Durée écoulée depuis `debut` (time.perf_counter), en millisecondes."""
+    return round((time.perf_counter() - debut) * 1000)
 
 
 # Prompt système du chatbot.
@@ -77,6 +83,9 @@ async def generer_reponse(question: str, extraits: list[str]) -> str:
         ],
     }
 
+    # Monitorage du service (C8) : une ligne de log par appel, avec statut,
+    # latence et tokens. Jamais la clé, la question ni la réponse.
+    debut = time.perf_counter()
     try:
         async with httpx.AsyncClient(timeout=settings.timeout_seconds) as client:
             reponse = await client.post(
@@ -90,21 +99,39 @@ async def generer_reponse(question: str, extraits: list[str]) -> str:
             )
             reponse.raise_for_status()
     except httpx.HTTPStatusError as exc:
-        logger.error("Mistral a répondu %s", exc.response.status_code)
+        logger.error(
+            "appel mistral en échec : statut=%s latence_ms=%d",
+            exc.response.status_code,
+            _latence_ms(debut),
+        )
         raise LLMIndisponibleError(
             "Le service de génération est momentanément indisponible."
         ) from exc
     except httpx.HTTPError as exc:
-        logger.error("erreur réseau vers Mistral : %s", exc)
+        logger.error(
+            "appel mistral en échec : erreur_reseau=%s latence_ms=%d",
+            type(exc).__name__,
+            _latence_ms(debut),
+        )
         raise LLMIndisponibleError(
             "Le service de génération est momentanément indisponible."
         ) from exc
 
     donnees = reponse.json()
+    usage = donnees.get("usage") or {}
+    logger.info(
+        "appel mistral : statut=%s modele=%s latence_ms=%d tokens_entree=%s tokens_sortie=%s",
+        reponse.status_code,
+        donnees.get("model", settings.model),
+        _latence_ms(debut),
+        usage.get("prompt_tokens"),
+        usage.get("completion_tokens"),
+    )
     try:
         return donnees["choices"][0]["message"]["content"].strip()
     except (KeyError, IndexError, AttributeError) as exc:
-        logger.error("réponse Mistral inattendue : %s", donnees)
+        # Seulement les clés : le contenu peut reprendre des propos de santé.
+        logger.error("réponse Mistral inattendue, clés reçues : %s", sorted(donnees))
         raise LLMIndisponibleError(
             "Réponse inexploitable du service de génération."
         ) from exc
