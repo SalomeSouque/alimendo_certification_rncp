@@ -26,6 +26,10 @@ router = APIRouter(
     prefix="/ai",
     tags=["intelligence artificielle"],
     dependencies=[Depends(verify_api_key), Depends(get_current_user)],
+    responses={
+        401: {"description": "Jeton absent, invalide ou expiré, ou clé d'API invalide."},
+        503: {"description": "Service IA (index, embeddings, Mistral ou Ollama) indisponible."},
+    },
 )
 
 # Taille maximale acceptée pour une photo d'aliment (5 Mo).
@@ -63,7 +67,16 @@ async def chat(payload: ChatRequest) -> ChatResponse:
         ) from exc
 
 
-@router.post("/vision", response_model=VisionResponse, summary="Identifier un aliment sur une photo")
+@router.post(
+    "/vision",
+    response_model=VisionResponse,
+    summary="Identifier un aliment sur une photo",
+    responses={
+        413: {"description": "Image de plus de 5 Mo."},
+        415: {"description": "Format non supporté (JPEG, PNG ou WebP attendu)."},
+        501: {"description": "Reconnaissance photo pas encore branchée."},
+    },
+)
 async def vision(
     session: Annotated[AsyncSession, Depends(get_session)],
     utilisateur: Annotated[CurrentUser, Depends(get_current_user)],

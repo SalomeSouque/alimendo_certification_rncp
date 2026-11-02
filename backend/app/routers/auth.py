@@ -28,6 +28,7 @@ router = APIRouter(prefix="/auth", tags=["authentification"])
     response_model=TokenResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Créer un compte",
+    responses={409: {"description": "Un compte existe déjà avec cet email."}},
 )
 async def register(
     payload: RegisterRequest,
@@ -39,7 +40,12 @@ async def register(
     )
 
 
-@router.post("/login", response_model=TokenResponse, summary="Se connecter")
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    summary="Se connecter",
+    responses={401: {"description": "Email ou mot de passe incorrect."}},
+)
 async def login(
     payload: LoginRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
@@ -50,7 +56,12 @@ async def login(
     )
 
 
-@router.get("/me", response_model=UtilisateurPublic, summary="Utilisateur courant")
+@router.get(
+    "/me",
+    response_model=UtilisateurPublic,
+    summary="Utilisateur courant",
+    responses={401: {"description": "Jeton absent, invalide ou expiré."}},
+)
 async def me(
     utilisateur: Annotated[CurrentUser, Depends(get_current_user)],
 ) -> UtilisateurPublic:
