@@ -54,6 +54,9 @@ def _extraire_sources(resultat: dict) -> tuple[list[str], list[SourceCitee]]:
     Les métadonnées attendues sont celles posées à l'ingestion : `id_source`,
     `titre`, `url`, `licence_indicative`. La distance cosinus est convertie en
     score de similarité (1 − distance) pour rester lisible.
+
+    Chaque extrait est précédé du titre de sa source : le prompt demande à
+    Mistral de citer ses sources par leur titre, il doit donc le recevoir.
     """
     documents = (resultat.get("documents") or [[]])[0]
     metadonnees = (resultat.get("metadatas") or [[]])[0]
@@ -63,11 +66,12 @@ def _extraire_sources(resultat: dict) -> tuple[list[str], list[SourceCitee]]:
     sources: list[SourceCitee] = []
 
     for document, meta, distance in zip(documents, metadonnees, distances, strict=False):
-        extraits.append(document)
+        titre = str(meta.get("titre", "Source sans titre"))
+        extraits.append(f"Source : {titre}\n{document}")
         sources.append(
             SourceCitee(
                 id_source=str(meta.get("id_source", "inconnue")),
-                titre=str(meta.get("titre", "Source sans titre")),
+                titre=titre,
                 url=meta.get("url"),
                 licence_indicative=meta.get("licence_indicative"),
                 score_similarite=round(1 - float(distance), 3),
