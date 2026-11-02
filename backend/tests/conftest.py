@@ -1,10 +1,15 @@
 """Fixtures partagées par les tests.
 
+Les tests d'API n'utilisent ni base PostgreSQL, ni ChromaDB, ni Mistral :
+la session de base est remplacée par une doublure et les services externes
+sont simulés test par test. La CI reste rapide et ne dépend pas du réseau.
 """
 
 from __future__ import annotations
 
 import os
+from collections.abc import Iterator
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -16,7 +21,12 @@ os.environ.setdefault("MISTRAL_API_KEY", "cle-de-test")
 # bcrypt à 4 tours : le minimum autorisé, pour que la suite de tests reste rapide.
 os.environ.setdefault("BCRYPT_ROUNDS", "4")
 
+from fastapi.testclient import TestClient
+
+from app.core.security import create_access_token
+from app.db.session import get_session
 from app.domain.score.referential_v1 import COEFS, LandmarkParameter
+from app.main import app
 
 
 @pytest.fixture
@@ -38,3 +48,41 @@ def patch_landmarks(monkeypatch, synthetic_landmarks):
         "app.domain.score.calcul.get_landmarks", lambda: synthetic_landmarks
     )
     return synthetic_landmarks
+
+
+# Fixtures des tests d'API
+
+
+@pytest.fixture
+def session_factice() -> Iterator[AsyncMock]:
+    """Remplace la session PostgreSQL par une doublure.
+
+    Les routes reçoivent cette doublure à la place d'une vraie connexion.
+    Les fonctions du repository sont simulées dans chaque test, la doublure
+    sert seulement à absorber les appels comme `commit()`.
+    """
+    session = AsyncMock()
+
+    async def _fournir_session():
+        yield session
+
+    app.dependency_overrides[get_session] = _fournir_session
+    yield session
+    app.dependency_overrides.pop(get_session, None)
+
+
+@pytest.fixture
+def client_api(session_factice) -> TestClient:
+    """Client HTTP de test, branché sur la session factice.
+
+    Sans `with TestClient(...)`, le lifespan ne s'exécute pas : aucune
+    connexion à la base n'est ouverte au démarrage.
+    """
+    return TestClient(app)
+
+
+@pytest.fixture
+def entetes_auth() -> dict[str, str]:
+    """En-tête d'une utilisatrice connectée (jeton valide, rôle user)."""
+    jeton = create_access_token(utilisateur_id=1, email="test@example.com", role="user")
+    return {"Authorization": f"Bearer {jeton}"}
