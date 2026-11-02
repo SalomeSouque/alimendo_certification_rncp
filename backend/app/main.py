@@ -21,6 +21,30 @@ from app.routers import ai, auth, health, score, search
 
 logger = logging.getLogger(__name__)
 
+# Description de chaque groupe de routes dans la documentation OpenAPI.
+TAGS_OPENAPI = [
+    {"name": "santé", "description": "Sondes de monitoring. Public."},
+    {
+        "name": "authentification",
+        "description": "Inscription et connexion (publiques), utilisateur courant (JWT).",
+    },
+    {"name": "recherche", "description": "Aliments CIQUAL stockés en base. Public."},
+    {
+        "name": "score",
+        "description": (
+            "Score d'un aliment CIQUAL ou d'un produit Open Food Facts "
+            "(interrogé à la demande). Public."
+        ),
+    },
+    {
+        "name": "intelligence artificielle",
+        "description": (
+            "Chatbot RAG et reconnaissance photo. JWT obligatoire, plus "
+            "l'en-tête X-API-Key si ALIMENDO_API_KEY est configurée."
+        ),
+    },
+]
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -61,9 +85,15 @@ def creer_application() -> FastAPI:
         description=(
             "API du projet étudiant Alimendo. Score inflammatoire des aliments "
             "et assistant documentaire sur l'endométriose.\n\n"
-            "Projet étudiant à but pédagogique, sans expertise médicale."
+            "Projet étudiant à but pédagogique, sans expertise médicale.\n\n"
+            "Règles d'accès : la santé, l'inscription, la connexion, la recherche "
+            "et le score sont publics. `/auth/me` et les routes `/ai` exigent un "
+            "jeton JWT (`Authorization: Bearer <jeton>`), obtenu par `/auth/login` "
+            "ou `/auth/register` et valable 60 minutes par défaut. Détail : "
+            "docs/api.md."
         ),
         version="0.1.0",
+        openapi_tags=TAGS_OPENAPI,
         lifespan=lifespan,
         # Documentation désactivée hors développement : elle expose la cartographie complète de l'API.
         docs_url="/docs" if settings.is_local else None,

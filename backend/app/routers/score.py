@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.disclaimers import (
+    ATTRIBUTION_OPEN_FOOD_FACTS,
     CITATION_SOURCE_COURTE,
     DISCLAIMER_SCORE,
     LIBELLE_ALTERNATIVES,
@@ -23,7 +24,7 @@ from app.core.disclaimers import (
 from app.db.session import get_session
 from app.repositories import aliment_repository
 from app.schemas.aliment import AlimentDetail, AlimentResume
-from app.services import alternative_service, score_service
+from app.services import alternative_service, openfoodfacts_service, score_service
 
 router = APIRouter(prefix="/score", tags=["score"])
 
@@ -32,6 +33,7 @@ router = APIRouter(prefix="/score", tags=["score"])
     "/aliment/{id_aliment}",
     response_model=AlimentDetail,
     summary="Score et alternatives d'un aliment",
+    responses={404: {"description": "Aliment introuvable."}},
 )
 async def score_aliment(
     session: Annotated[AsyncSession, Depends(get_session)],
@@ -69,15 +71,53 @@ async def score_aliment(
     "/code-barre/{code}",
     response_model=AlimentDetail,
     summary="Score d'un produit Open Food Facts",
-    status_code=status.HTTP_501_NOT_IMPLEMENTED,
+    responses={
+        404: {"description": "Produit inconnu d'Open Food Facts."},
+        503: {"description": "Open Food Facts injoignable ou en erreur."},
+    },
 )
-async def score_code_barre(code: Annotated[str, Path(min_length=8, max_length=14)]) -> AlimentDetail:
+async def score_code_barre(
+    code: Annotated[
+        str,
+        Path(pattern=r"^\d{8,14}$", description="Code-barre EAN : 8 à 14 chiffres"),
+    ],
+) -> AlimentDetail:
     """Score d'un produit transformé identifié par son code-barre.
 
-    NON IMPLÉMENTÉ : le mapping des champs Open Food Facts vers les 23
-    paramètres du référentiel doit d'abord être vérifié unité par unité.
+    Le produit est demandé à Open Food Facts au moment de l'appel, il n'est
+    pas stocké en base (docs/specs_extraction.md, § 5). Pas d'alternatives
+    pour un produit transformé : prévu en V2.
+
+    Raises:
+        HTTPException: 404 si OFF ne connaît pas ce code-barre,
+            503 si OFF est injoignable.
     """
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Le parcours code-barre n'est pas encore disponible.",
+    try:
+        produit = await openfoodfacts_service.recuperer_produit(code)
+    except openfoodfacts_service.OpenFoodFactsIndisponibleError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Open Food Facts est temporairement indisponible, réessayez dans un instant.",
+        ) from exc
+
+    if produit is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Produit introuvable dans Open Food Facts.",
+        )
+
+    return AlimentDetail(
+        aliment=AlimentResume(
+            id_aliment=None,
+            nom=produit.nom,
+            source="OFF",
+            url_image=produit.url_image,
+        ),
+        score=score_service.scorer_profil(produit.profil),
+        badges=score_service.badges_profil(produit.profil),
+        alternatives=[],
+        libelle_alternatives=LIBELLE_ALTERNATIVES,
+        disclaimer=DISCLAIMER_SCORE,
+        mention_projet_etudiant=MENTION_PROJET_ETUDIANT,
+        citation_source=f"{CITATION_SOURCE_COURTE} {ATTRIBUTION_OPEN_FOOD_FACTS}",
     )

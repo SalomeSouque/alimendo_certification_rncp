@@ -1,0 +1,1185 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Alimendo : API",
+    "description": "API du projet étudiant Alimendo. Score inflammatoire des aliments et assistant documentaire sur l'endométriose.\n\nProjet étudiant à but pédagogique, sans expertise médicale.\n\nRègles d'accès : la santé, l'inscription, la connexion, la recherche et le score sont publics. `/auth/me` et les routes `/ai` exigent un jeton JWT (`Authorization: Bearer <jeton>`), obtenu par `/auth/login` ou `/auth/register` et valable 60 minutes par défaut. Détail : docs/api.md.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "santé"
+        ],
+        "summary": "Sonde de vivacité",
+        "description": "Indique que le processus répond. Aucune dépendance interrogée.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/detail": {
+      "get": {
+        "tags": [
+          "santé"
+        ],
+        "summary": "État détaillé des dépendances",
+        "description": "Vérifie chaque dépendance et renvoie son état.\n\nNe renvoie jamais une erreur HTTP : l'intérêt est justement de pouvoir\nlire quelle brique est tombée.",
+        "operationId": "health_detail_health_detail_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Detail Health Detail Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "authentification"
+        ],
+        "summary": "Créer un compte",
+        "description": "Crée un compte et renvoie directement un jeton d'accès.",
+        "operationId": "register_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Un compte existe déjà avec cet email."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "authentification"
+        ],
+        "summary": "Se connecter",
+        "description": "Vérifie les identifiants et renvoie un jeton d'accès.",
+        "operationId": "login_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Email ou mot de passe incorrect."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": [
+          "authentification"
+        ],
+        "summary": "Utilisateur courant",
+        "description": "Renvoie l'utilisateur associé au jeton fourni.\n\nLe frontend appelle cette route au chargement pour savoir si le jeton\nconservé en localStorage est encore valide. Un 401 déconnecte.",
+        "operationId": "me_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UtilisateurPublic"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent, invalide ou expiré."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/search/aliments": {
+      "get": {
+        "tags": [
+          "recherche"
+        ],
+        "summary": "Rechercher un aliment par nom",
+        "description": "Recherche tolérante aux fautes de frappe et aux variantes orthographiques.\n\nUne liste vide affiche un message explicite « aucun résultat » dans le frontend.",
+        "operationId": "rechercher_aliments_search_aliments_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 100,
+              "description": "Terme recherché",
+              "title": "Q"
+            },
+            "description": "Terme recherché"
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RechercheResultat"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/categories": {
+      "get": {
+        "tags": [
+          "recherche"
+        ],
+        "summary": "Lister les catégories alimentaires",
+        "description": "Liste les catégories utilisées par le filtrage et les alternatives.",
+        "operationId": "lister_categories_search_categories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CategorieOut"
+                  },
+                  "type": "array",
+                  "title": "Response Lister Categories Search Categories Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/score/aliment/{id_aliment}": {
+      "get": {
+        "tags": [
+          "score"
+        ],
+        "summary": "Score et alternatives d'un aliment",
+        "description": "Calcule le score d'un aliment et propose des alternatives.\n\nRaises:\n    HTTPException: 404 si l'aliment n'existe pas.",
+        "operationId": "score_aliment_score_aliment__id_aliment__get",
+        "parameters": [
+          {
+            "name": "id_aliment",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Id Aliment"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlimentDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Aliment introuvable."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/score/code-barre/{code}": {
+      "get": {
+        "tags": [
+          "score"
+        ],
+        "summary": "Score d'un produit Open Food Facts",
+        "description": "Score d'un produit transformé identifié par son code-barre.\n\nLe produit est demandé à Open Food Facts au moment de l'appel, il n'est\npas stocké en base (docs/specs_extraction.md, § 5). Pas d'alternatives\npour un produit transformé : prévu en V2.\n\nRaises:\n    HTTPException: 404 si OFF ne connaît pas ce code-barre,\n        503 si OFF est injoignable.",
+        "operationId": "score_code_barre_score_code_barre__code__get",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{8,14}$",
+              "description": "Code-barre EAN : 8 à 14 chiffres",
+              "title": "Code"
+            },
+            "description": "Code-barre EAN : 8 à 14 chiffres"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlimentDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Produit inconnu d'Open Food Facts."
+          },
+          "503": {
+            "description": "Open Food Facts injoignable ou en erreur."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/chat": {
+      "post": {
+        "tags": [
+          "intelligence artificielle"
+        ],
+        "summary": "Poser une question au chatbot",
+        "description": "Répond à une question à partir du corpus documentaire.\n\nRaises:\n    HTTPException: 503 si l'index vectoriel, le modèle d'embeddings ou le\n        service de génération est indisponible. On renvoie un message\n        explicite plutôt qu'une 500 brute.",
+        "operationId": "chat_ai_chat_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent, invalide ou expiré, ou clé d'API invalide."
+          },
+          "503": {
+            "description": "Service IA (index, embeddings, Mistral ou Ollama) indisponible."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/vision": {
+      "post": {
+        "tags": [
+          "intelligence artificielle"
+        ],
+        "summary": "Identifier un aliment sur une photo",
+        "description": "Identifie un aliment brut à partir d'une photo .\n\nLe VLM n'est pas encore branché : la route renvoie 501 tant que\n`vision_service._appeler_vlm` n'est pas implémenté.\n\nRaises:\n    HTTPException: 415 si le type de fichier n'est pas une image,\n        413 si l'image dépasse la taille maximale,\n        501 tant que le VLM n'est pas branché,\n        503 si Ollama est injoignable.",
+        "operationId": "vision_ai_vision_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_vision_ai_vision_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent, invalide ou expiré, ou clé d'API invalide."
+          },
+          "503": {
+            "description": "Service IA (index, embeddings, Mistral ou Ollama) indisponible."
+          },
+          "413": {
+            "description": "Image de plus de 5 Mo."
+          },
+          "415": {
+            "description": "Format non supporté (JPEG, PNG ou WebP attendu)."
+          },
+          "501": {
+            "description": "Reconnaissance photo pas encore branchée."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AlimentDetail": {
+        "properties": {
+          "aliment": {
+            "$ref": "#/components/schemas/AlimentResume"
+          },
+          "score": {
+            "$ref": "#/components/schemas/ScoreOut"
+          },
+          "badges": {
+            "items": {
+              "$ref": "#/components/schemas/BadgeOut"
+            },
+            "type": "array",
+            "title": "Badges"
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/AlternativeOut"
+            },
+            "type": "array",
+            "title": "Alternatives"
+          },
+          "libelle_alternatives": {
+            "type": "string",
+            "title": "Libelle Alternatives"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer"
+          },
+          "mention_projet_etudiant": {
+            "type": "string",
+            "title": "Mention Projet Etudiant"
+          },
+          "citation_source": {
+            "type": "string",
+            "title": "Citation Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aliment",
+          "score",
+          "libelle_alternatives",
+          "disclaimer",
+          "mention_projet_etudiant",
+          "citation_source"
+        ],
+        "title": "AlimentDetail",
+        "description": "Réponse complète d'une consultation d'aliment.\n\nC'est la charge utile des trois parcours score (photo, code-barre,\nrecherche texte) : ils convergent tous vers cette structure."
+      },
+      "AlimentResume": {
+        "properties": {
+          "id_aliment": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id Aliment",
+            "description": "Identifiant en base ; null pour un produit Open Food Facts, non stocké."
+          },
+          "nom": {
+            "type": "string",
+            "title": "Nom"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "CIQUAL (aliment en base) ou OFF (produit scanné)"
+          },
+          "url_image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url Image"
+          },
+          "id_categorie": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id Categorie"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nom",
+          "source"
+        ],
+        "title": "AlimentResume",
+        "description": "Aliment sans détail nutritionnel, pour les listes de résultats."
+      },
+      "AlternativeOut": {
+        "properties": {
+          "aliment": {
+            "$ref": "#/components/schemas/AlimentResume"
+          },
+          "score": {
+            "$ref": "#/components/schemas/ScoreOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aliment",
+          "score"
+        ],
+        "title": "AlternativeOut",
+        "description": "Alternative proposée dans la même catégorie.\n\nPrésentée comme une option nutritionnelle, non comme un conseil de santé."
+      },
+      "BadgeOut": {
+        "properties": {
+          "nutriment": {
+            "type": "string",
+            "title": "Nutriment"
+          },
+          "niveau": {
+            "type": "string",
+            "title": "Niveau",
+            "description": "riche | source | aucun | non_renseigne"
+          },
+          "libelle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Libelle",
+            "description": "Libellé validé à afficher, ou null si rien n'est déclarable."
+          },
+          "valeur": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valeur"
+          },
+          "unite": {
+            "type": "string",
+            "title": "Unite"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nutriment",
+          "niveau",
+          "unite"
+        ],
+        "title": "BadgeOut",
+        "description": "Badge nutritionnel fer ou magnésium."
+      },
+      "Body_vision_ai_vision_post": {
+        "properties": {
+          "image": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Image",
+            "description": "Photo d'un aliment brut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "image"
+        ],
+        "title": "Body_vision_ai_vision_post"
+      },
+      "CategorieOut": {
+        "properties": {
+          "id_categorie": {
+            "type": "integer",
+            "title": "Id Categorie"
+          },
+          "nom": {
+            "type": "string",
+            "title": "Nom"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_categorie",
+          "nom"
+        ],
+        "title": "CategorieOut",
+        "description": "Catégorie alimentaire."
+      },
+      "ChatRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 3,
+            "title": "Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "ChatRequest",
+        "description": "Corps de `POST /ai/chat`."
+      },
+      "ChatResponse": {
+        "properties": {
+          "reponse": {
+            "type": "string",
+            "title": "Reponse"
+          },
+          "intention": {
+            "type": "string",
+            "title": "Intention",
+            "description": "detresse_urgence | restriction_alimentaire | out_of_scope | food_specific | in_scope"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "SAFE_RESPONSE_DISTRESS | SAFE_RESPONSE_RESTRICTION | STATIC_RESPONSE_OOS | REDIRECT_SCAN | RAG_RETRIEVAL"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceCitee"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "disclaimer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disclaimer",
+            "description": "Disclaimer court à afficher sous la réponse, ou null."
+          }
+        },
+        "type": "object",
+        "required": [
+          "reponse",
+          "intention",
+          "action"
+        ],
+        "title": "ChatResponse",
+        "description": "Réponse du chatbot.\n\n`intention` et `action` documentent la décision du routeur : seule `in_scope` déclenche le pipeline RAG.\n\n`disclaimer` est nullable : les réponses de détresse et de restriction. "
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "description": "Corps de `POST /auth/login`."
+      },
+      "RechercheResultat": {
+        "properties": {
+          "terme": {
+            "type": "string",
+            "title": "Terme"
+          },
+          "nombre_resultats": {
+            "type": "integer",
+            "title": "Nombre Resultats"
+          },
+          "resultats": {
+            "items": {
+              "$ref": "#/components/schemas/AlimentResume"
+            },
+            "type": "array",
+            "title": "Resultats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "terme",
+          "nombre_resultats",
+          "resultats"
+        ],
+        "title": "RechercheResultat",
+        "description": "Réponse de `GET /search/aliments`."
+      },
+      "RegisterRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "RegisterRequest",
+        "description": "Corps de `POST /auth/register`.\n\nLa longueur minimale de 8 caractères (OWASP A07)\nAucune règle de complexité imposée (déconseillées au profit de la longueur.)"
+      },
+      "ScoreOut": {
+        "properties": {
+          "disponible": {
+            "type": "boolean",
+            "title": "Disponible"
+          },
+          "niveau": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2.0,
+                "minimum": -2.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Niveau"
+          },
+          "libelle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Libelle"
+          },
+          "score_brut": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Brut"
+          },
+          "causes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Causes"
+          },
+          "completude": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Completude"
+          },
+          "parametres_utilises": {
+            "type": "integer",
+            "title": "Parametres Utilises"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "version_referentiel": {
+            "type": "string",
+            "title": "Version Referentiel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "disponible",
+          "completude",
+          "parametres_utilises",
+          "version_referentiel"
+        ],
+        "title": "ScoreOut",
+        "description": "Résultat d'un calcul de score.\n\nQuand `disponible` est False, `niveau` et `score_brut` valent null et\n`message` porte la formulation validée à afficher."
+      },
+      "SourceCitee": {
+        "properties": {
+          "id_source": {
+            "type": "string",
+            "title": "Id Source"
+          },
+          "titre": {
+            "type": "string",
+            "title": "Titre"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "licence_indicative": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence Indicative"
+          },
+          "score_similarite": {
+            "type": "number",
+            "title": "Score Similarite",
+            "description": "1 - distance cosinus ; 1 = identique, 0 = sans rapport."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_source",
+          "titre",
+          "score_similarite"
+        ],
+        "title": "SourceCitee",
+        "description": "Source documentaire citée dans une réponse du chatbot.\n\n    "
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UtilisateurPublic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "user"
+        ],
+        "title": "TokenResponse",
+        "description": "Réponse de `POST /auth/login`"
+      },
+      "UtilisateurPublic": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "role"
+        ],
+        "title": "UtilisateurPublic",
+        "description": "Représentation d'un utilisateur exposée par l'API.\n\nNe contient jamais le hash du mot de passe."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VisionResponse": {
+        "properties": {
+          "label_identifie": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label Identifie"
+          },
+          "score_confiance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Confiance"
+          },
+          "statut": {
+            "type": "string",
+            "title": "Statut",
+            "description": "reconnu | non_rapproche | echec"
+          },
+          "id_aliment": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id Aliment",
+            "description": "Aliment rapproché en base, si le rapprochement a abouti."
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "statut"
+        ],
+        "title": "VisionResponse",
+        "description": "Réponse de `POST /ai/vision` : reconnaissance d'aliment par photo."
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "santé",
+      "description": "Sondes de monitoring. Public."
+    },
+    {
+      "name": "authentification",
+      "description": "Inscription et connexion (publiques), utilisateur courant (JWT)."
+    },
+    {
+      "name": "recherche",
+      "description": "Aliments CIQUAL stockés en base. Public."
+    },
+    {
+      "name": "score",
+      "description": "Score d'un aliment CIQUAL ou d'un produit Open Food Facts (interrogé à la demande). Public."
+    },
+    {
+      "name": "intelligence artificielle",
+      "description": "Chatbot RAG et reconnaissance photo. JWT obligatoire, plus l'en-tête X-API-Key si ALIMENDO_API_KEY est configurée."
+    }
+  ]
+}

@@ -37,6 +37,13 @@ CITATION_SOURCE_COURTE: Final[str] = (
     "Approche inspirée du Dietary Inflammatory Index (Shivappa et al., 2014)."
 )
 
+# Attribution exigée par la licence ODbL d'Open Food Facts, ajoutée à la
+# citation de source quand le score porte sur un produit scanné. Texte de
+# licence, pas une formulation médicale.
+ATTRIBUTION_OPEN_FOOD_FACTS: Final[str] = (
+    "Données produit : Open Food Facts (licence ODbL)."
+)
+
 # Citation de source longue, page « Comment lire ce score ».
 CITATION_SOURCE_LONGUE: Final[str] = (
     "Le score est calculé selon une approche inspirée du Dietary Inflammatory "

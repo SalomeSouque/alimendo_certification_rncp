@@ -24,9 +24,12 @@ class AlimentResume(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id_aliment: int
+    id_aliment: int | None = Field(
+        default=None,
+        description="Identifiant en base ; null pour un produit Open Food Facts, non stocké.",
+    )
     nom: str
-    source: str
+    source: str = Field(description="CIQUAL (aliment en base) ou OFF (produit scanné)")
     url_image: str | None = None
     id_categorie: int | None = None
 
