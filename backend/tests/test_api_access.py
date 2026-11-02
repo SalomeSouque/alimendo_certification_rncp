@@ -7,11 +7,15 @@ nécessit pas de db, les dépendances de sécurité s'exécutent avant d'atteind
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.core.security import create_access_token
 from app.main import app
+from app.schemas.chat import ChatResponse
+from app.services import rag_service
 
 
 @pytest.fixture
@@ -47,10 +51,17 @@ def test_features_ia_refusent_un_jeton_invalide(client, chemin):
     assert reponse.status_code == 401
 
 
-def test_jeton_valide_franchit_le_mur_dauthentification(client):
+def test_jeton_valide_franchit_le_mur_dauthentification(client, monkeypatch):
     """Avec un jeton valide, on dépasse la couche d'authentification.
 
+    Le service RAG est simulé : le test ne dépend ni de ChromaDB, ni du
+    modèle d'embeddings, ni de Mistral, donc ni du réseau. Il porte
+    uniquement sur le contrôle d'accès.
     """
+    fausse_reponse = ChatResponse(
+        reponse="Réponse simulée.", intention="in_scope", action="RAG_RETRIEVAL"
+    )
+    monkeypatch.setattr(rag_service, "repondre", AsyncMock(return_value=fausse_reponse))
     jeton = create_access_token(utilisateur_id=1, email="test@example.com", role="user")
 
     reponse = client.post(
@@ -59,7 +70,7 @@ def test_jeton_valide_franchit_le_mur_dauthentification(client):
         headers={"Authorization": f"Bearer {jeton}"},
     )
 
-    assert reponse.status_code != 401
+    assert reponse.status_code == 200
 
 
 def test_recherche_est_publique(client, monkeypatch):
