@@ -6,6 +6,8 @@ import re
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.schemas.aliment import AlimentDetail
+
 # Caractères de contrôle invisibles (octets nuls, retour arrière, échappements
 # de terminal...). On garde seulement la tabulation (\x09) et le saut de ligne
 # (\x0a), utiles dans une question écrite sur plusieurs lignes.
@@ -78,12 +80,32 @@ class ChatResponse(BaseModel):
 
 
 class VisionResponse(BaseModel):
-    """Réponse de `POST /ai/vision` : reconnaissance d'aliment par photo."""
+    """Réponse de `POST /ai/vision` : reconnaissance d'aliment par photo.
 
-    label_identifie: str | None = None
-    score_confiance: float | None = None
+    Quand l'aliment est reconnu et rapproché de la base, `resultat` porte la
+    même charge utile que `GET /score/aliment/{id}` (score, badges,
+    alternatives, disclaimer, mention projet étudiant). Sinon `resultat` est
+    null et `message` oriente vers la recherche par nom.
+    """
+
     statut: str = Field(description="reconnu | non_rapproche | echec")
+    contenu: str | None = Field(
+        default=None,
+        description=(
+            "Classement de la photo par le VLM : aliment_unique | "
+            "plusieurs_aliments | plat_prepare | aucun_aliment. Null si le VLM "
+            "n'a pas renvoyé de réponse exploitable."
+        ),
+    )
+    label_identifie: str | None = None
+    score_confiance: float | None = Field(
+        default=None,
+        description="Confiance déclarée par le modèle (0 à 1), indicative et peu calibrée.",
+    )
     id_aliment: int | None = Field(
         default=None, description="Aliment rapproché en base, si le rapprochement a abouti."
+    )
+    resultat: AlimentDetail | None = Field(
+        default=None, description="Score et alternatives de l'aliment reconnu."
     )
     message: str | None = None

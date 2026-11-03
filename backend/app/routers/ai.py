@@ -74,7 +74,7 @@ async def chat(payload: ChatRequest) -> ChatResponse:
     responses={
         413: {"description": "Image de plus de 5 Mo."},
         415: {"description": "Format non supporté (JPEG, PNG ou WebP attendu)."},
-        501: {"description": "Reconnaissance photo pas encore branchée."},
+        422: {"description": "Fichier illisible : ce n'est pas une image valide."},
     },
 )
 async def vision(
@@ -82,16 +82,17 @@ async def vision(
     utilisateur: Annotated[CurrentUser, Depends(get_current_user)],
     image: Annotated[UploadFile, File(description="Photo d'un aliment brut")],
 ) -> VisionResponse:
-    """Identifie un aliment brut à partir d'une photo .
+    """Identifie un aliment brut à partir d'une photo et renvoie son score.
 
-    Le VLM n'est pas encore branché : la route renvoie 501 tant que
-    `vision_service._appeler_vlm` n'est pas implémenté.
+    La réponse est toujours un 200 quand le VLM a répondu, même si aucun
+    aliment n'est reconnu : `statut` et `message` décrivent alors l'issue.
+    L'image n'est jamais stockée.
 
     Raises:
-        HTTPException: 415 si le type de fichier n'est pas une image,
+        HTTPException: 415 si le type de fichier n'est pas une image autorisée,
             413 si l'image dépasse la taille maximale,
-            501 tant que le VLM n'est pas branché,
-            503 si Ollama est injoignable.
+            422 si le fichier n'est pas une image lisible,
+            503 si Ollama est injoignable, trop lent ou en erreur.
     """
     if image.content_type not in TYPES_IMAGE_AUTORISES:
         raise HTTPException(
@@ -108,10 +109,10 @@ async def vision(
 
     try:
         return await vision_service.analyser_image(session, contenu)
-    except NotImplementedError as exc:
+    except vision_service.ImageInvalideError as exc:
         raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="La reconnaissance photo n'est pas encore disponible.",
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Le fichier envoyé n'est pas une image lisible.",
         ) from exc
     except vision_service.VLMIndisponibleError as exc:
         raise HTTPException(
