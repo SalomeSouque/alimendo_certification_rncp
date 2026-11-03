@@ -295,12 +295,39 @@ class OllamaSettings:
 
 @lru_cache(maxsize=1)
 def get_ollama_settings() -> OllamaSettings:
-    """Construit et met en cache la configuration Ollama."""
+    """Construit et met en cache la configuration Ollama.
+
+    Le modèle par défaut est la variante « instruct » quantifiée en q4_K_M.
+    Le tag court `qwen3-vl:4b` désigne la variante « thinking » (même digest
+    dans la bibliothèque Ollama), trop lente pour une classification de photo.
+
+    Raises:
+        ConfigurationError: si le nom du modèle est vide, si le délai
+            d'attente n'est pas strictement positif, ou si le seuil de
+            confiance sort de l'intervalle [0, 1].
+    """
+    model = os.getenv("OLLAMA_MODEL", "qwen3-vl:4b-instruct-q4_K_M").strip()
+    if not model:
+        raise ConfigurationError("OLLAMA_MODEL ne doit pas être vide.")
+
+    timeout_seconds = _read_float("OLLAMA_TIMEOUT_SECONDS", "120")
+    if timeout_seconds <= 0:
+        raise ConfigurationError(
+            f"OLLAMA_TIMEOUT_SECONDS doit être strictement positif, reçu : {timeout_seconds}"
+        )
+
+    confidence_threshold = _read_float("VLM_CONFIDENCE_THRESHOLD", "0.5")
+    if not 0.0 <= confidence_threshold <= 1.0:
+        raise ConfigurationError(
+            "VLM_CONFIDENCE_THRESHOLD doit être compris entre 0 et 1, "
+            f"reçu : {confidence_threshold}"
+        )
+
     return OllamaSettings(
-        base_url=os.getenv("OLLAMA_BASE_URL", "http://ollama:11434").rstrip("/"),
-        model=os.getenv("OLLAMA_MODEL", "qwen3-vl:4b").strip(),
-        timeout_seconds=_read_float("OLLAMA_TIMEOUT_SECONDS", "120"),
-        confidence_threshold=_read_float("VLM_CONFIDENCE_THRESHOLD", "0.5"),
+        base_url=os.getenv("OLLAMA_BASE_URL", "http://ollama:11434").strip().rstrip("/"),
+        model=model,
+        timeout_seconds=timeout_seconds,
+        confidence_threshold=confidence_threshold,
     )
 
 
