@@ -291,6 +291,8 @@ class OllamaSettings:
     model: str
     timeout_seconds: float
     confidence_threshold: float
+    num_ctx: int
+    image_max_px: int
 
 
 @lru_cache(maxsize=1)
@@ -303,14 +305,16 @@ def get_ollama_settings() -> OllamaSettings:
 
     Raises:
         ConfigurationError: si le nom du modèle est vide, si le délai
-            d'attente n'est pas strictement positif, ou si le seuil de
-            confiance sort de l'intervalle [0, 1].
+            d'attente, la taille du contexte ou la taille d'image n'est pas
+            strictement positif, ou si le seuil de confiance sort de
+            l'intervalle [0, 1].
     """
     model = os.getenv("OLLAMA_MODEL", "qwen3-vl:4b-instruct-q4_K_M").strip()
     if not model:
         raise ConfigurationError("OLLAMA_MODEL ne doit pas être vide.")
 
-    timeout_seconds = _read_float("OLLAMA_TIMEOUT_SECONDS", "120")
+    # 30 s : le pire cas mesuré est un démarrage à froid à 17,3 s (docs/services/ollama.md § 8).
+    timeout_seconds = _read_float("OLLAMA_TIMEOUT_SECONDS", "30")
     if timeout_seconds <= 0:
         raise ConfigurationError(
             f"OLLAMA_TIMEOUT_SECONDS doit être strictement positif, reçu : {timeout_seconds}"
@@ -323,11 +327,26 @@ def get_ollama_settings() -> OllamaSettings:
             f"reçu : {confidence_threshold}"
         )
 
+    # Taille du contexte du modèle, en tokens. Une photo de 1024 px coûte
+    # environ 1 300 tokens ; une photo de téléphone non réduite, plus de 4 000.
+    num_ctx = _read_int("OLLAMA_NUM_CTX", "4096")
+    if num_ctx <= 0:
+        raise ConfigurationError(f"OLLAMA_NUM_CTX doit être strictement positif, reçu : {num_ctx}")
+
+    # Plus grand côté de l'image envoyée au VLM, après redimensionnement.
+    image_max_px = _read_int("VLM_IMAGE_MAX_PX", "1024")
+    if image_max_px <= 0:
+        raise ConfigurationError(
+            f"VLM_IMAGE_MAX_PX doit être strictement positif, reçu : {image_max_px}"
+        )
+
     return OllamaSettings(
         base_url=os.getenv("OLLAMA_BASE_URL", "http://ollama:11434").strip().rstrip("/"),
         model=model,
         timeout_seconds=timeout_seconds,
         confidence_threshold=confidence_threshold,
+        num_ctx=num_ctx,
+        image_max_px=image_max_px,
     )
 
 

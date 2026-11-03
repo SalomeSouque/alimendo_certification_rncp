@@ -21,6 +21,8 @@ VARIABLES_OLLAMA = (
     "OLLAMA_MODEL",
     "OLLAMA_TIMEOUT_SECONDS",
     "VLM_CONFIDENCE_THRESHOLD",
+    "OLLAMA_NUM_CTX",
+    "VLM_IMAGE_MAX_PX",
 )
 
 
@@ -42,8 +44,11 @@ def test_valeurs_par_defaut():
     settings = get_ollama_settings()
 
     assert settings.base_url == "http://ollama:11434"
-    assert settings.timeout_seconds == 120.0
+    # 30 s : pire cas mesuré à 17,3 s (démarrage à froid), voir ollama.md § 8.
+    assert settings.timeout_seconds == 30.0
     assert settings.confidence_threshold == 0.5
+    assert settings.num_ctx == 4096
+    assert settings.image_max_px == 1024
 
 
 def test_modele_par_defaut_est_la_variante_instruct():
@@ -59,6 +64,8 @@ def test_valeurs_lues_depuis_l_environnement(monkeypatch):
     monkeypatch.setenv("OLLAMA_MODEL", "  qwen3-vl:2b-instruct  ")
     monkeypatch.setenv("OLLAMA_TIMEOUT_SECONDS", "45")
     monkeypatch.setenv("VLM_CONFIDENCE_THRESHOLD", "0.7")
+    monkeypatch.setenv("OLLAMA_NUM_CTX", "8192")
+    monkeypatch.setenv("VLM_IMAGE_MAX_PX", "768")
 
     settings = get_ollama_settings()
 
@@ -67,6 +74,8 @@ def test_valeurs_lues_depuis_l_environnement(monkeypatch):
     assert settings.model == "qwen3-vl:2b-instruct"
     assert settings.timeout_seconds == 45.0
     assert settings.confidence_threshold == 0.7
+    assert settings.num_ctx == 8192
+    assert settings.image_max_px == 768
 
 
 @pytest.mark.parametrize(
@@ -78,6 +87,9 @@ def test_valeurs_lues_depuis_l_environnement(monkeypatch):
         ("OLLAMA_TIMEOUT_SECONDS", "deux minutes"),
         ("VLM_CONFIDENCE_THRESHOLD", "1.5"),
         ("VLM_CONFIDENCE_THRESHOLD", "-0.1"),
+        ("OLLAMA_NUM_CTX", "0"),
+        ("OLLAMA_NUM_CTX", "4096.5"),
+        ("VLM_IMAGE_MAX_PX", "-1"),
     ],
 )
 def test_valeur_invalide_refusee(monkeypatch, variable, valeur):
