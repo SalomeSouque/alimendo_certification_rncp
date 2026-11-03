@@ -32,7 +32,7 @@ uv run python ../scripts/export_openapi.py
 | GET | `/score/aliment/{id}` | public | Score, badges et alternatives | CIQUAL + référentiel de score |
 | GET | `/score/code-barre/{code}` | public | Score d'un produit scanné | API Open Food Facts, à la demande |
 | POST | `/ai/chat` | JWT | Chatbot RAG | corpus RAG (ChromaDB) + Mistral |
-| POST | `/ai/vision` | JWT | Reconnaissance photo | VLM (pas encore branché, 501) |
+| POST | `/ai/vision` | JWT | Reconnaissance photo, puis score de l'aliment reconnu | VLM Qwen3-VL (Ollama, local) + CIQUAL + référentiel de score |
 
 ## 3. Règles d'authentification et d'autorisation
 
@@ -78,8 +78,7 @@ Authorization: Bearer eyJhbGciOi...
 | 404 | Aliment ou produit introuvable |
 | 409 | Email déjà utilisé à l'inscription |
 | 413 / 415 | Photo trop lourde (5 Mo maximum) ou format non supporté |
-| 422 | Entrée refusée par la validation (terme de recherche trop court, code-barre qui n'est pas fait de 8 à 14 chiffres, email mal formé...) |
-| 501 | Reconnaissance photo pas encore branchée |
+| 422 | Entrée refusée par la validation (terme de recherche trop court, code-barre qui n'est pas fait de 8 à 14 chiffres, email mal formé, photo illisible...) |
 | 503 | Service externe indisponible (Open Food Facts, Mistral, ChromaDB, Ollama) |
 
 Les erreurs ont toujours la forme `{ "detail": "message" }`, ce que lit le frontend

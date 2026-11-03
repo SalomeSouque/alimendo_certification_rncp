@@ -18,12 +18,14 @@ rapides, reproductibles et exécutables dans GitHub Actions sans réseau :
 | Classifieur d'intention | `FauxModele` (renvoie toujours la même classe) | `tests/test_intent_classifier.py` |
 | Embeddings, ChromaDB, Mistral | fonctions simulées, faux Mistral en `AsyncMock` | `_brancher_un_faux_rag()` (`tests/test_endpoints.py`) |
 | Open Food Facts | `recuperer_produit` simulé | `tests/test_score_code_barre.py` |
+| Ollama (VLM) | `httpx.MockTransport`, ou `_appeler_vlm` simulé dans les tests de route | `tests/test_vision_service.py`, `tests/test_ai_endpoints.py` |
 
 Ce que ces tests ne couvrent pas, et où c'est vérifié :
 
 - le SQL réel : `scripts/run_extractions.py` sur la base de développement (`docs/requetes.md`) ;
 - le vrai Mistral : `scripts/validate_mistral.py` (`docs/services/resultats_validation_mistral.md`) ;
 - la conversion des nutriments Open Food Facts : `tests/test_openfoodfacts_service.py`.
+- le vrai VLM : `scripts/vlm_curl_test.sh` sur un jeu de photos (`docs/services/ollama.md` § 8) ;
 
 ## 2. Lancer les tests
 
@@ -50,7 +52,7 @@ Dans GitHub Actions, le job `backend` du workflow `ci.yml` lance la même comman
 | `GET /score/aliment/{id}` | public | 200 avec disclaimer, 404, 422 | `test_endpoints.py` |
 | `GET /score/code-barre/{code}` | public | 200 avec attribution OFF, 404, 503, 422 | `test_score_code_barre.py` |
 | `POST /ai/chat` | JWT | 200 RAG avec sources, 200 hors périmètre, 200 détresse, 401 sans jeton, 401 jeton invalide, 401 clé d'API manquante, 422, 503 Mistral indisponible | `test_ai_endpoints.py`, `test_api_access.py`, `test_endpoints.py` |
-| `POST /ai/vision` | JWT | 401, 413 image trop lourde, 415 mauvais format, 501 VLM pas encore branché | `test_api_access.py`, `test_ai_endpoints.py`, `test_endpoints.py` |
+| `POST /ai/vision` | JWT | 200 aliment reconnu avec score et disclaimer, 200 photo sans aliment unique avec message, 401, 413 image trop lourde, 415 mauvais format, 422 image illisible, 503 VLM indisponible | `test_ai_endpoints.py`, `test_api_access.py`, `test_endpoints.py` (logique du service : `test_vision_service.py`) |
 
 Les 11 routes de l'API sont couvertes.
 
@@ -115,9 +117,9 @@ applicatif. Elles sont vérifiées par leur exécution réelle (`docs/acces_base
   `alternative_service.py`. C'est un choix assumé, pas un oubli : ces modules parlent à PostgreSQL,
   ChromaDB ou au modèle d'embeddings, que les tests d'API remplacent par des doublures (§ 1). Leurs
   requêtes sont vérifiées contre la vraie base par `scripts/run_extractions.py` (`docs/requetes.md`).
-- **`vision_service.py`** est encore partiellement couvert : le VLM n'est pas branché (route en 501).
-  Les tests sans réseau prévus avec le branchement (reconnu, non reconnu, image invalide, service
-  indisponible) le couvriront.
+- **`vision_service.py`** était couvert à 54 % quand la route renvoyait encore 501. Avec le
+  branchement du VLM et `test_vision_service.py` (reconnu, non reconnu, image invalide, service
+  indisponible), il passe à XX %.
 - **`core/logging_config.py`** : les motifs de masquage des secrets dans les logs ne sont pas testés
   directement (le test `test_les_logs_ne_contiennent_ni_cle_ni_question` vérifie seulement que le
   client Mistral n'écrit pas la clé). Piste d'amélioration : un test unitaire de ces motifs.

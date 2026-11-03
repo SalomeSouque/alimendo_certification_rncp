@@ -53,7 +53,7 @@ via `POST /auth/login`) : sans jeton ou avec un jeton invalide, réponse `401`.
 | Route | Modèle(s) | Comportement |
 |---|---|---|
 | `POST /ai/chat` | Filet de sécurité + classifieur d'intention + Mistral (RAG) | La question passe d'abord par le filet de sécurité (détresse), puis par le classifieur (`backend/app/ml/intent_classifier.pkl`). Seule l'intention `in_scope` interroge ChromaDB et Mistral ; les quatre autres renvoient un texte validé des guidelines. `422` si la question fait moins de 3 ou plus de 1000 caractères, `503` si un service dépendant est indisponible. |
-| `POST /ai/vision` | Qwen3-VL via Ollama (non branché) | Renvoie `501` avec un message explicite : la reconnaissance photo est une prochaine étape. Contrôles déjà actifs : `415` si le fichier n'est pas une image JPEG, PNG ou WebP, `413` au-delà de 5 Mo. |
+| `POST /ai/vision` | Qwen3-VL 4B via Ollama (local, GPU) | Identifie un aliment brut sur une photo et renvoie son score (`200`). Une photo sans aliment unique renvoie `200` avec un message vers la recherche par nom. `415` si le fichier n'est pas une image JPEG, PNG ou WebP, `413` au-delà de 5 Mo, `422` si l'image est illisible, `503` si Ollama est indisponible. Voir [`docs/services/ollama.md`](docs/services/ollama.md). |
 
 Le classifieur est l'artefact produit par le notebook `02_classifieur.ipynb`
 (dépôt `alimendo_data_science`), versionné avec ses métadonnées dans

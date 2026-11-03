@@ -5,23 +5,29 @@ comme le prévoient les spécifications (critère C9-CR2) :
 
 - /ai/chat fait passer la question par le routage d'intention (filet de
   sécurité puis classifieur) et renvoie la réponse prévue pour l'intention ;
-- /ai/vision renvoie un 501 explicite tant que le VLM n'est pas branché
-  (prochaine étape documentée).
+- /ai/vision renvoie l'aliment reconnu et son score, un 422 pour un fichier
+  illisible et un 503 explicite quand le VLM est indisponible.
 
-Ni base de données, ni ChromaDB, ni Mistral ne sont nécessaires : les
-intentions testées ici renvoient un texte figé, sans RAG ni LLM.
+Ni base de données, ni ChromaDB, ni Mistral, ni Ollama ne sont nécessaires :
+les intentions testées ici renvoient un texte figé, sans RAG ni LLM, et la
+réponse du VLM est simulée.
 """
 
 from __future__ import annotations
 
+import io
+from unittest.mock import AsyncMock
+
 import pytest
 from fastapi.testclient import TestClient
+from PIL import Image
 
 from app.core.disclaimers import TEXTE_DETRESSE_URGENCE, TEXTE_OUT_OF_SCOPE
 from app.core.security import create_access_token
-from app.db.session import get_session
 from app.main import app
-from app.services import intent_service
+from app.repositories import aliment_repository, log_vlm_repository
+from app.services import alternative_service, intent_service, vision_service
+from tests.test_endpoints import _faux_aliment
 from tests.test_intent_classifier import FauxModele
 
 
@@ -79,21 +85,99 @@ def test_chat_refuse_une_question_trop_courte(client, entetes):
     assert reponse.status_code == 422
 
 
-def test_vision_renvoie_501_tant_que_le_vlm_n_est_pas_branche(client, entetes):
-    """Comportement documenté : la reconnaissance photo est une prochaine étape."""
+def _photo_png() -> bytes:
+    """Petite image PNG valide, fabriquée en mémoire."""
+    sortie = io.BytesIO()
+    Image.new("RGB", (64, 48), (200, 30, 30)).save(sortie, format="PNG")
+    return sortie.getvalue()
 
-    async def _session_factice():
-        yield None
 
-    app.dependency_overrides[get_session] = _session_factice
-    try:
-        reponse = client.post(
-            "/ai/vision",
-            files={"image": ("tomate.png", b"\x89PNG faux contenu", "image/png")},
-            headers=entetes,
-        )
-    finally:
-        app.dependency_overrides.clear()
+@pytest.fixture
+def vlm_simule(monkeypatch):
+    """Base et journal simulés ; la réponse du VLM est fixée test par test."""
+    monkeypatch.setattr(
+        aliment_repository,
+        "rechercher_par_nom",
+        AsyncMock(return_value=[_faux_aliment()]),
+    )
+    monkeypatch.setattr(alternative_service, "trouver_alternatives", AsyncMock(return_value=[]))
+    monkeypatch.setattr(log_vlm_repository, "enregistrer", AsyncMock())
 
-    assert reponse.status_code == 501
-    assert "pas encore disponible" in reponse.json()["detail"]
+
+def test_vision_reconnait_l_aliment_et_renvoie_son_score(
+    client_api, entetes_auth, vlm_simule, monkeypatch
+):
+    monkeypatch.setattr(
+        vision_service,
+        "_appeler_vlm",
+        AsyncMock(return_value=vision_service.ReponseVLM("aliment_unique", "tomate", 0.98)),
+    )
+
+    reponse = client_api.post(
+        "/ai/vision",
+        files={"image": ("tomate.png", _photo_png(), "image/png")},
+        headers=entetes_auth,
+    )
+
+    assert reponse.status_code == 200
+    corps = reponse.json()
+    assert corps["statut"] == "reconnu"
+    assert corps["id_aliment"] == 42
+    assert corps["resultat"]["aliment"]["nom"] == "Tomate, crue"
+    assert corps["resultat"]["disclaimer"]
+    assert corps["resultat"]["mention_projet_etudiant"]
+
+
+def test_vision_photo_sans_aliment_unique_renvoie_200_et_un_message(
+    client_api, entetes_auth, vlm_simule, monkeypatch
+):
+    """Pas d'aliment reconnu n'est pas une erreur HTTP : le message oriente l'utilisatrice."""
+    monkeypatch.setattr(
+        vision_service,
+        "_appeler_vlm",
+        AsyncMock(return_value=vision_service.ReponseVLM("plat_prepare", "", 0.98)),
+    )
+
+    reponse = client_api.post(
+        "/ai/vision",
+        files={"image": ("assiette.png", _photo_png(), "image/png")},
+        headers=entetes_auth,
+    )
+
+    assert reponse.status_code == 200
+    corps = reponse.json()
+    assert corps["statut"] == "echec"
+    assert corps["contenu"] == "plat_prepare"
+    assert corps["resultat"] is None
+    assert "recherche par nom" in corps["message"]
+
+
+def test_vision_refuse_un_fichier_illisible_en_422(client_api, entetes_auth, vlm_simule):
+    """Le type annoncé est image/png, mais le contenu n'est pas une image."""
+    reponse = client_api.post(
+        "/ai/vision",
+        files={"image": ("faux.png", b"\x89PNG faux contenu", "image/png")},
+        headers=entetes_auth,
+    )
+
+    assert reponse.status_code == 422
+    assert "pas une image lisible" in reponse.json()["detail"]
+
+
+def test_vision_renvoie_503_si_le_vlm_est_indisponible(
+    client_api, entetes_auth, vlm_simule, monkeypatch
+):
+    monkeypatch.setattr(
+        vision_service,
+        "_appeler_vlm",
+        AsyncMock(side_effect=vision_service.VLMIndisponibleError("Ollama injoignable")),
+    )
+
+    reponse = client_api.post(
+        "/ai/vision",
+        files={"image": ("tomate.png", _photo_png(), "image/png")},
+        headers=entetes_auth,
+    )
+
+    assert reponse.status_code == 503
+    assert "recherche textuelle" in reponse.json()["detail"]
