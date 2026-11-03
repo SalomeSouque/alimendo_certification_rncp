@@ -23,5 +23,13 @@ dependencies = [
 dev = [
     "pytest>=9.1.1",
     "pytest-asyncio>=0.24",
+    "pytest-cov>=7.1.0",
     "ruff>=0.16.6",
 ]
+[tool.coverage.run]
+source = ["app"]
+# Scripts de schéma exécutés par Alembic contre une vraie base : voir docs/tests_api.md § 6.
+omit = ["app/migrations/*"]
+
+[tool.coverage.report]
+show_missing = true
