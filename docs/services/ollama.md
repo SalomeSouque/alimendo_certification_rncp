@@ -7,7 +7,7 @@ CR1 à CR5), au même titre que [la documentation du service Mistral](mistral.md
 Public visé : toute personne qui doit installer, tester ou maintenir la
 reconnaissance d'aliment par photo.
 
-> **État du document.** Les parties 1 à 4 sont rédigées (étape 1 du lot VLM :
+> **État du document.** Toutes les parties sont rédigées.
 > installation). Les parties 5 à 9 seront complétées quand le service sera
 > branché sur le backend (étapes 3 et suivantes).
 
@@ -220,40 +220,198 @@ VRAM. Le premier appel est plus lent, car il charge le modèle en mémoire.
 
 ### Backend (`.env`)
 
-| Variable | Valeur par défaut | Rôle |
-|---|---|---|
-| `OLLAMA_BASE_URL` | `http://ollama:11434` | Adresse du service. En local, hors Docker : `http://localhost:11434` |
-| `OLLAMA_MODEL` | `qwen3-vl:4b-instruct-q4_K_M` | Tag exact du modèle |
-| `OLLAMA_TIMEOUT_SECONDS` | `120` | Délai maximal d'attente d'une réponse. Il inclut le premier chargement du modèle en VRAM. Il sera réduit après les mesures de l'étape 3 |
-| `VLM_CONFIDENCE_THRESHOLD` | `0.5` | En dessous de ce score, l'aliment est considéré comme non identifié |
+| Variable | Valeur par défaut | Rôle | Justification |
+|---|---|---|---|
+| `OLLAMA_BASE_URL` | `http://ollama:11434` | Adresse du service. En local, hors Docker : `http://localhost:11434` | — |
+| `OLLAMA_MODEL` | `qwen3-vl:4b-instruct-q4_K_M` | Tag exact du modèle | § 1 |
+| `OLLAMA_TIMEOUT_SECONDS` | `30` | Délai maximal d'attente d'une réponse | Pire cas mesuré : 17,3 s au premier appel (chargement en VRAM compris), environ 0,6 s ensuite (§ 8) |
+| `OLLAMA_NUM_CTX` | `4096` | Taille du contexte du modèle, en tokens | Une photo réduite à 1024 px en coûte environ 1 300 |
+| `VLM_IMAGE_MAX_PX` | `1024` | Plus grand côté de l'image envoyée, après réduction par le backend | Sans réduction, une photo de téléphone coûte 4 186 tokens et dépasse le contexte (§ 8) |
+| `VLM_CONFIDENCE_THRESHOLD` | `0.5` | En dessous, l'aliment est considéré comme non identifié | Garde-fou seulement : la confiance déclarée est peu discriminante (§ 9) |
 
 Ces valeurs sont lues et validées par `get_ollama_settings()`
-(`backend/app/core/config.py`). Une valeur absurde (modèle vide, délai nul ou
-négatif, seuil hors de [0, 1]) bloque le démarrage avec un message explicite.
-Les tests correspondants sont dans `backend/tests/test_config_ollama.py`.
+(`backend/app/core/config.py`). Une valeur absurde (modèle vide, délai, contexte
+ou taille d'image nul ou négatif, seuil hors de [0, 1]) bloque le démarrage avec
+un message explicite. Tests : `backend/tests/test_config_ollama.py`.
 
-Le prompt et le format de sortie JSON seront documentés ici à l'étape 3.
+### Prompt et format de sortie
+
+Le prompt et le schéma sont dans `backend/app/services/vision_service.py`
+(`PROMPT_SYSTEME`, `PROMPT_UTILISATEUR`, `SCHEMA_REPONSE`). Ils sont identiques à
+ceux de l'outil de test `scripts/vlm_curl_test.sh`.
+
+La sortie est contrainte par les **sorties structurées** d'Ollama : un schéma JSON
+est passé dans le champ `format` de la requête, et le modèle ne peut produire que
+des objets qui le respectent.
+
+```json
+{
+  "contenu": "aliment_unique | plusieurs_aliments | plat_prepare | aucun_aliment",
+  "label": "nom générique en français, ou \"\" si contenu ≠ aliment_unique",
+  "confidence": 0.98
+}
+```
+
+L'ordre des propriétés compte : le modèle **classe d'abord la photo**
+(`contenu`), **puis nomme l'aliment** (`label`). Cette version 2 du prompt
+remplace une v1 qui ne demandait que `label` et `confidence` (résultats
+comparés au § 8).
+
+| Option de génération | Valeur | Pourquoi |
+|---|---|---|
+| `temperature` | `0` | Classification : réponse la plus probable, identique d'un appel à l'autre |
+| `num_ctx` | `OLLAMA_NUM_CTX` | Voir ci-dessus |
+| `stream` | `false` | Une seule réponse JSON complète |
+
+La sortie est revérifiée par le backend (`analyser_reponse`) : valeur de
+`contenu` connue, `label` texte, `confidence` nombre entre 0 et 1. Une sortie
+inexploitable donne le statut `echec`, jamais une erreur 500.
 
 ## 5. Interconnexions avec les autres composants
 
-À compléter à l'étape 3 (branchement de `vision_service.py`).
+```
+Frontend ──(photo, JWT)──▶ POST /ai/vision ──▶ vision_service
+                                                 │ 1. Pillow : vérifie, redresse, réduit à 1024 px, retire les EXIF
+                                                 │ 2. Ollama : POST /api/chat (prompt v2 + schéma)
+                                                 │ 3. si aliment_unique : aliment_repository.rechercher_par_nom (pg_trgm)
+                                                 │    puis choisir_aliment (écarte « Pomme de terre » pour « pomme »)
+                                                 │ 4. score_service + alternative_service
+                                                 │ 5. log_vlm_repository (PostgreSQL)
+Frontend ◀──(statut, score, disclaimer)──────────┘
+```
+
+| Issue | Code HTTP | Contenu de la réponse |
+|---|---|---|
+| Aliment reconnu et présent dans CIQUAL | 200 | `statut: reconnu`, `resultat` = même charge utile que `GET /score/aliment/{id}` (score, badges, alternatives, disclaimer, mention projet étudiant) |
+| Aliment reconnu, absent de CIQUAL | 200 | `statut: non_rapproche`, message vers la recherche par nom |
+| Plusieurs aliments, plat préparé, aucun aliment, confiance trop basse, sortie inexploitable | 200 | `statut: echec`, `contenu`, message adapté vers la recherche par nom |
+| Fichier qui n'est pas une image lisible | 422 | Message d'erreur, rien n'est envoyé au VLM |
+| Ollama injoignable, trop lent ou en erreur | 503 | « Le service de reconnaissance photo est temporairement indisponible, essayez la recherche textuelle. » |
+
+Les contrôles 415 (type de fichier) et 413 (plus de 5 Mo) sont faits par la
+route, avant le service.
 
 ## 6. Données impliquées
 
-À compléter. Principe déjà retenu : l'image n'est jamais stockée. Seuls le
-libellé reconnu, la confiance, le statut et l'aliment rapproché sont écrits
-dans `log_vlm`.
+| Donnée | Où elle va | Conservée ? |
+|---|---|---|
+| Photo envoyée | Mémoire du backend, puis Ollama (local, même machine) | **Non.** Elle n'est écrite ni sur disque, ni en base, ni dans les logs |
+| Métadonnées EXIF (dont position GPS) | Supprimées par le réencodage JPEG, avant l'envoi au VLM | Non : elles ne sortent jamais du backend |
+| `contenu`, `label`, `confidence` | Réponse API + log applicatif (`contenu` seulement) | Libellé et confiance dans `log_vlm` |
+| Statut et aliment rapproché | Table `log_vlm` | Oui, sans lien avec l'utilisatrice (aucun identifiant de compte) |
+
+Aucune donnée ne quitte la machine : le modèle tourne en local, contrairement à
+une API de vision hébergée. Si la fiche du registre des traitements
+(`docs/rgpd/registre-traitement-alimendo.ods`) ne mentionne pas encore la
+reconnaissance photo, ce traitement y est à ajouter.
 
 ## 7. Monitorage
 
-À compléter : ligne de log par appel (statut, latence, modèle), table
-`log_vlm`, et mesure de la mémoire GPU avec `ollama ps` et `nvidia-smi`.
+| Source | Contenu | Commande |
+|---|---|---|
+| Log applicatif, une ligne par appel | `appel ollama : statut=200 modele=… latence_ms=… tokens_entree=… tokens_sortie=… contenu=… json_valide=…` ; en cas de panne : `appel ollama en échec : statut=…` ou `erreur_reseau=…` | `docker compose logs api \| grep "appel ollama"` |
+| Table `log_vlm`, une ligne par inférence | Statut (`reconnu`, `non_rapproche`, `echec`), libellé, confiance, aliment, horodatage | `SELECT statut, count(*) FROM log_vlm GROUP BY statut;` |
+| Charge du modèle | Modèle chargé, part GPU/CPU, mémoire, expiration | `docker compose exec ollama ollama ps` |
+| Mémoire GPU | VRAM occupée | `nvidia-smi` |
+
+La table `log_vlm` permet de suivre le taux de reconnaissance et sa dérive dans
+le temps. C'est l'entrée du monitorage du modèle (compétence C11).
 
 ## 8. Procédure de test
 
-À compléter : tests sans réseau de `vision_service.py` et jeu de photos
-d'aliments.
+### Tests automatisés, sans réseau ni GPU
+
+```bash
+cd backend
+uv run pytest tests/test_vision_service.py tests/test_config_ollama.py -v
+```
+
+Ollama est remplacé par `httpx.MockTransport`, la base par des doublures.
+
+| Famille de cas | Ce qui est vérifié |
+|---|---|
+| Préparation de l'image | Réduction à 1024 px, proportions conservées, pas d'agrandissement, EXIF et GPS supprimés, orientation appliquée, fichiers illisibles refusés |
+| Requête envoyée | Modèle, schéma (ordre `contenu` → `label`), `temperature: 0`, `num_ctx`, image réduite en JPEG |
+| Reconnu | Score et disclaimer renvoyés, ligne `log_vlm` complète |
+| Non reconnu | `plusieurs_aliments`, `plat_prepare`, `aucun_aliment`, confiance sous le seuil, label vide, absent de CIQUAL, 6 sorties de modèle inexploitables |
+| Image invalide | Exception levée, Ollama jamais appelé, rien journalisé |
+| Service indisponible | Connexion refusée, timeout, HTTP 400 / 404 / 500 : exception levée et échec journalisé |
+| Rapprochement CIQUAL | « pomme » ne donne pas « Pomme de terre », accents ignorés, ordre de la recherche conservé |
+| Monitorage | Ligne `appel ollama` présente, image absente des logs, panne de journalisation sans effet sur la réponse |
+
+Les tests de la route (`tests/test_ai_endpoints.py`) vérifient les codes 200,
+422 et 503 de `POST /ai/vision`.
+
+### Test sur le vrai modèle : jeu de photos de contrôle
+
+Outil : `scripts/vlm_curl_test.sh` (même prompt, même schéma, mêmes options que
+le backend). Photos personnelles, sans personne visible, réduites à 1024 px.
+Poste : RTX 3060 6 Go, Ollama 0.40.12, `qwen3-vl:4b-instruct-q4_K_M`.
+
+**Prompt v1** (`label` + `confidence`), photos non réduites, 03/11/2026 :
+
+| Photo | Attendu | Obtenu |
+|---|---|---|
+| Tomate cerise (1024 px) | tomate | tomate · 0,95 ✅ |
+| Tomate cerise (pleine résolution) | tomate | HTTP 400 : 4 186 tokens > contexte de 4 096 |
+| Brocoli | brocoli | brocoli · 0,98 ✅ |
+| Banane | banane | banane · 0,98 ✅ |
+| Pomme tenue en main | pomme | HTTP 400 (contexte dépassé) |
+| Assortiment de légumes | aucun | **laitue · 0,95** ❌ |
+| Assiette repas | aucun | **riz · 0,95** ❌ |
+| Souris d'ordinateur | aucun | HTTP 400 (contexte dépassé) |
+| Pommes, photo floue | à observer | HTTP 400 (contexte dépassé) |
+
+**Prompt v2** (`contenu` → `label` → `confidence`), photos réduites à 1024 px, 03/11/2026 :
+
+| Photo | Attendu | `contenu` | `label` · confiance | |
+|---|---|---|---|---|
+| Tomate cerise (×2 versions) | tomate | aliment_unique | tomate · 0,98 | ✅ |
+| Banane | banane | aliment_unique | banane · 0,98 | ✅ |
+| Brocoli | brocoli | aliment_unique | brocoli · 0,98 | ✅ |
+| Pomme tenue en main | pomme | aliment_unique | pomme · 0,95 | ✅ |
+| Assortiment de légumes | aucun | plusieurs_aliments | — · 0,98 | ✅ |
+| Assiette repas | aucun | plat_prepare | — · 0,98 | ✅ |
+| Souris d'ordinateur | aucun | aucun_aliment | — · 1,0 | ✅ |
+| Pommes, photo floue | à observer | aliment_unique | pomme · 0,95 | ✅ |
+
+JSON valide sur 9 appels sur 9.
+
+| Mesure | Valeur |
+|---|---|
+| Durée au premier appel (chargement du modèle compris) | 17,3 s (6,2 s de chargement) |
+| Durée à chaud | 0,5 à 0,6 s par photo |
+| Tokens d'entrée, photo réduite à 1024 px | 1 298 à 1 342 |
+| Mémoire GPU, modèle chargé | 4 499 à 4 703 Mio sur 6 144 |
+| Mémoire GPU maximale relevée (après appel, modèle chargé) | 4 703 Mio sur 6 144 (≈ 1,4 Go de marge) |
+
+**Interprétation.** La v1 a révélé deux problèmes : les photos non réduites
+dépassent le contexte, et le modèle nomme un aliment même quand la photo n'en
+montre pas un seul, avec une confiance aussi haute que pour une bonne réponse.
+La v2 corrige le second en faisant classer la photo avant de la nommer. Le
+premier est corrigé par la réduction à 1024 px dans le backend. Ces 8 photos
+forment un **jeu de contrôle** : elles valident le paramétrage, elles ne
+mesurent pas une précision.
 
 ## 9. Limites connues
 
-À compléter après les mesures.
+- **Confiance non calibrée.** Le modèle déclare entre 0,95 et 1,0 sur toutes les
+  photos, y compris ses erreurs en v1 et une photo floue. La décision repose
+  donc sur `contenu`, et le seuil de confiance n'est qu'un garde-fou.
+- **Jeu de contrôle réduit.** 8 photos personnelles. Une évaluation sérieuse
+  demanderait un jeu étiqueté de plusieurs centaines de photos (piste de
+  monitorage C11 : comparer `log_vlm` à des retours utilisateur).
+- **Un seul aliment par photo.** Une assiette ou un assortiment renvoie vers la
+  recherche par nom. La reconnaissance de plusieurs aliments est une prochaine
+  étape (« recettes via photo du frigo »).
+- **Rapprochement CIQUAL heuristique.** Le libellé du modèle (« pomme ») est
+  rapproché par recherche floue, puis on privilégie le nom exact et les aliments
+  crus. Une variété précise (« tomate cerise ») est ramenée à l'aliment générique.
+- **Premier appel lent.** 17 s après un démarrage ou 10 minutes d'inactivité,
+  le temps de charger le modèle en VRAM. Piste : un appel de préchauffage au
+  démarrage de l'API.
+- **Format HEIC.** Les photos d'iPhone en HEIC sont refusées (415). En général,
+  les navigateurs mobiles les convertissent en JPEG à l'envoi, ce qui reste à
+  vérifier en démonstration.
+- **Matériel.** 6 Go de VRAM au minimum. Sans GPU, Ollama bascule sur le CPU
+  sans erreur, avec plusieurs secondes à plusieurs minutes par photo.

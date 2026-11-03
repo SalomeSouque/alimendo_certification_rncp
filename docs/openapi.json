@@ -437,7 +437,7 @@
           "intelligence artificielle"
         ],
         "summary": "Identifier un aliment sur une photo",
-        "description": "Identifie un aliment brut à partir d'une photo .\n\nLe VLM n'est pas encore branché : la route renvoie 501 tant que\n`vision_service._appeler_vlm` n'est pas implémenté.\n\nRaises:\n    HTTPException: 415 si le type de fichier n'est pas une image,\n        413 si l'image dépasse la taille maximale,\n        501 tant que le VLM n'est pas branché,\n        503 si Ollama est injoignable.",
+        "description": "Identifie un aliment brut à partir d'une photo et renvoie son score.\n\nLa réponse est toujours un 200 quand le VLM a répondu, même si aucun\naliment n'est reconnu : `statut` et `message` décrivent alors l'issue.\nL'image n'est jamais stockée.\n\nRaises:\n    HTTPException: 415 si le type de fichier n'est pas une image autorisée,\n        413 si l'image dépasse la taille maximale,\n        422 si le fichier n'est pas une image lisible,\n        503 si Ollama est injoignable, trop lent ou en erreur.",
         "operationId": "vision_ai_vision_post",
         "security": [
           {
@@ -495,18 +495,8 @@
           "415": {
             "description": "Format non supporté (JPEG, PNG ou WebP attendu)."
           },
-          "501": {
-            "description": "Reconnaissance photo pas encore branchée."
-          },
           "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
+            "description": "Fichier illisible : ce n'est pas une image valide."
           }
         }
       }
@@ -1094,6 +1084,23 @@
       },
       "VisionResponse": {
         "properties": {
+          "statut": {
+            "type": "string",
+            "title": "Statut",
+            "description": "reconnu | non_rapproche | echec"
+          },
+          "contenu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contenu",
+            "description": "Classement de la photo par le VLM : aliment_unique | plusieurs_aliments | plat_prepare | aucun_aliment. Null si le VLM n'a pas renvoyé de réponse exploitable."
+          },
           "label_identifie": {
             "anyOf": [
               {
@@ -1114,12 +1121,8 @@
                 "type": "null"
               }
             ],
-            "title": "Score Confiance"
-          },
-          "statut": {
-            "type": "string",
-            "title": "Statut",
-            "description": "reconnu | non_rapproche | echec"
+            "title": "Score Confiance",
+            "description": "Confiance déclarée par le modèle (0 à 1), indicative et peu calibrée."
           },
           "id_aliment": {
             "anyOf": [
@@ -1132,6 +1135,17 @@
             ],
             "title": "Id Aliment",
             "description": "Aliment rapproché en base, si le rapprochement a abouti."
+          },
+          "resultat": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlimentDetail"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Score et alternatives de l'aliment reconnu."
           },
           "message": {
             "anyOf": [
@@ -1150,7 +1164,7 @@
           "statut"
         ],
         "title": "VisionResponse",
-        "description": "Réponse de `POST /ai/vision` : reconnaissance d'aliment par photo."
+        "description": "Réponse de `POST /ai/vision` : reconnaissance d'aliment par photo.\n\nQuand l'aliment est reconnu et rapproché de la base, `resultat` porte la\nmême charge utile que `GET /score/aliment/{id}` (score, badges,\nalternatives, disclaimer, mention projet étudiant). Sinon `resultat` est\nnull et `message` oriente vers la recherche par nom."
       }
     },
     "securitySchemes": {
