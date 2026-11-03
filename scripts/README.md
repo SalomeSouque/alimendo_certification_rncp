@@ -5,6 +5,7 @@
 | `ciqual_clean.py` | Nettoyage reproductible de la table CIQUAL 2020 → jeu d'aliments prêt pour PostgreSQL |
 | `import_aliments.py` | Import du jeu CIQUAL nettoyé dans PostgreSQL, relançable sans doublon (doc : README racine, « Import des données ») |
 | `validate_mistral.py` | Tests de validation du service Mistral sur le vrai service (C8). Doc : [`docs/services/mistral.md`](../docs/services/mistral.md) |
+| `vlm_curl_test.sh` | Test d'inférence du VLM Qwen3-VL sur des photos, via l'API Ollama : réponse JSON, durées, mémoire GPU (C8). Doc : [`docs/services/ollama.md`](../docs/services/ollama.md) |
 
 ---
 
