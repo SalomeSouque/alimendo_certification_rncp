@@ -64,6 +64,7 @@ elle sera testée avec cette route.
 | Date | Commande | Résultat |
 |---|---|---|
 | à compléter | `uv run pytest tests -q` (CI de la PR `feat/data-api`) | à compléter (attendu : 179 passed) |
+| 03/11/2026 | `uv run pytest tests -q --cov` (poste de développement, après l'ajout de `test_config_ollama.py`) | ⟨ 1242 passed⟩, couverture ⟨ 84%⟩ |
 
 ## 5. Interprétation
 
@@ -81,4 +82,45 @@ elle sera testée avec cette route.
   source avec son extrait, pour pouvoir la citer comme le demande le prompt.
 
 **Limites :** les doublures vérifient le contrat HTTP, pas le comportement réel de PostgreSQL, de
-ChromaDB ou de Mistral (voir § 1). La couverture de code n'est pas encore mesurée.
+ChromaDB ou de Mistral (voir § 1). La couverture de code est mesurée au § 6.
+
+## 6. Couverture de code
+
+La couverture est mesurée avec `pytest-cov` (dépendance du groupe `dev`). La configuration est dans
+`backend/pyproject.toml`, section `[tool.coverage]`.
+
+```bash
+cd backend
+uv run pytest tests -q --cov                          # tableau dans le terminal, avec les lignes manquantes
+uv run pytest tests -q --cov --cov-report=html        # rapport détaillé dans backend/htmlcov/index.html
+```
+
+**Périmètre mesuré :** tout le paquet `app`, sauf les migrations Alembic (`app/migrations/`). Les
+migrations sont des scripts de schéma exécutés une seule fois par `alembic upgrade`, contre une vraie
+base PostgreSQL. Les compter ferait baisser le chiffre sans rien dire de la qualité du code
+applicatif. Elles sont vérifiées par leur exécution réelle (`docs/acces_base.md`).
+
+| Date | Lignes mesurées | Couverture totale | Sans exclusion des migrations |
+|---|---|---|---|
+| 03/11/2026 | 1242 | 84% | 78% |
+
+**Interprétation :**
+
+- **Bien couvert (85 % et plus)** : la logique métier du score (`app/domain/score/`,
+  `score_service.py`), la sécurité (`core/security.py`), les routes (`app/routers/`), les schémas
+  et le client Open Food Facts. C'est là que se trouvent les règles du référentiel et le contrôle d'accès, les
+  parties dont une erreur aurait le plus de conséquences.
+- **Moins couvert** : les repositories (`aliment_repository.py`, `user_repository.py`,
+  `log_vlm_repository.py`), `chroma_service.py`, `embedding_service.py` et
+  `alternative_service.py`. C'est un choix assumé, pas un oubli : ces modules parlent à PostgreSQL,
+  ChromaDB ou au modèle d'embeddings, que les tests d'API remplacent par des doublures (§ 1). Leurs
+  requêtes sont vérifiées contre la vraie base par `scripts/run_extractions.py` (`docs/requetes.md`).
+- **`vision_service.py`** est encore partiellement couvert : le VLM n'est pas branché (route en 501).
+  Les tests sans réseau prévus avec le branchement (reconnu, non reconnu, image invalide, service
+  indisponible) le couvriront.
+- **`core/logging_config.py`** : les motifs de masquage des secrets dans les logs ne sont pas testés
+  directement (le test `test_les_logs_ne_contiennent_ni_cle_ni_question` vérifie seulement que le
+  client Mistral n'écrit pas la clé). Piste d'amélioration : un test unitaire de ces motifs.
+
+Le chiffre global n'est pas un objectif en soi : une couverture élevée sur des doublures ne prouve
+pas que le SQL réel fonctionne. Il sert à repérer les zones jamais exécutées par les tests.
