@@ -27,6 +27,7 @@ export default function App() {
       <Route path="/aliment" element={<Aliment />} />
       <Route path="/en-savoir-plus" element={<EnSavoirPlus />} />
       <Route path="/connexion" element={<Authentification />} />
+      <Route path="/inscription" element={<Authentification />} />
       <Route path="/analyser" element={<Analyser />} />
       <Route path="/produit-emballe" element={<ProduitEmballe />} />
 

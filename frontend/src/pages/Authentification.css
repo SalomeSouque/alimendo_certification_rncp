@@ -2,18 +2,20 @@
 
 .auth-main {
   position: relative;
-  padding: 184px 0 120px;
+  padding: 120px 0 80px;
   display: flex;
   justify-content: center;
 }
 
 .auth-card {
   background: #fff;
-  width: 438px;
+  width: 100%;
+  max-width: 438px;
+  margin: 0 16px;
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: 0 18px 50px rgba(30, 36, 35, 0.08);
-  padding: 44px 44px 40px;
+  padding: 32px 20px 28px;
   text-align: center;
 }
 .auth-logo { width: 56px; height: 56px; margin: 0 auto 22px; display: block; }
@@ -53,23 +55,66 @@
   background: #fff;
   outline: none;
 }
-.field input:focus { border-color: var(--green); }
+.input-wrap:focus-within {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px var(--green);
+}
+.input-wrap--password input { padding-right: 52px; }
+.input-wrap:has(input[aria-invalid="true"]) { border-color: var(--error, #b3261e); }
 .toggle-eye {
   position: absolute;
   right: 14px; top: 50%;
   transform: translateY(-50%);
   background: none; border: none; cursor: pointer;
   display: flex; padding: 4px;
+  border-radius: 6px;
 }
+.toggle-eye:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 .toggle-eye img { width: 19px; height: 19px; }
 
 .auth-submit.btn-primary { width: 100%; padding: 12px; margin-top: 4px; }
 
 /* Mention d'information RGPD sous le formulaire de connexion */
 .auth-rgpd {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.5;
   color: var(--muted);
   text-align: center;
   margin: 20px 0 0;
+}
+
+/* Field hints and errors. #b3261e on white = 6.5:1 (WCAG AA). */
+.field-hint { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+.field-error,
+.form-error { font-size: 14px; color: var(--error, #b3261e); margin: 6px 0 0; text-align: left; }
+.form-error { margin: 0 0 14px; }
+
+.field--checkbox {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+.field--checkbox input {
+  width: 20px; height: 20px; margin: 2px 0 0;
+  accent-color: var(--green);
+}
+.field--checkbox label { font-size: 13px; line-height: 1.45; margin: 0; color: var(--ink); }
+.field--checkbox .field-error { grid-column: 1 / -1; }
+
+.auth-notice {
+  background: var(--green-soft);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  margin: 0 0 20px;
+  text-align: left;
+}
+.auth-switch { font-size: 14px; color: var(--ink); margin: 18px 0 10px; }
+.auth-switch a { color: var(--green-deep); font-weight: 500; }
+
+@media (min-width: 600px) {
+  .auth-main { padding: 184px 0 120px; }
+  .auth-card { padding: 44px 44px 40px; }
 }
