@@ -44,7 +44,7 @@ Dans GitHub Actions, le job `backend` du workflow `ci.yml` lance la même comman
 |---|---|---|---|
 | `GET /health` | public | 200 | `test_api_access.py` |
 | `GET /health/detail` | public | 200 même si une dépendance manque | `test_endpoints.py` |
-| `POST /auth/register` | public | 201, 409 email déjà pris, 422 mot de passe trop court | `test_endpoints.py` |
+| `POST /auth/register` | public | 201, 409 email déjà pris, 422 mot de passe trop court, 422 sans consentement explicite | `test_endpoints.py` |
 | `POST /auth/login` | public | 200, 401 mauvais mot de passe, 422 email mal formé | `test_endpoints.py` |
 | `GET /auth/me` | JWT | 200, 401 sans jeton, 401 jeton expiré | `test_endpoints.py` |
 | `GET /search/aliments` | public | 200, 422 terme trop court | `test_api_access.py`, `test_endpoints.py` |

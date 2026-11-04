@@ -91,7 +91,7 @@ def test_register_cree_le_compte_et_renvoie_un_jeton(client_api, monkeypatch):
     monkeypatch.setattr(user_repository, "creer", AsyncMock(return_value=_faux_utilisateur()))
 
     reponse = client_api.post(
-        "/auth/register", json={"email": "lea@example.com", "password": "motdepasse-correct"}
+        "/auth/register", json={"email": "lea@example.com", "password": "motdepasse-correct", "consentement": True}
     )
 
     assert reponse.status_code == 201
@@ -106,7 +106,7 @@ def test_register_refuse_un_email_deja_utilise(client_api, monkeypatch):
     )
 
     reponse = client_api.post(
-        "/auth/register", json={"email": "lea@example.com", "password": "motdepasse-correct"}
+        "/auth/register", json={"email": "lea@example.com", "password": "motdepasse-correct", "consentement": True}
     )
 
     assert reponse.status_code == 409
@@ -115,7 +115,18 @@ def test_register_refuse_un_email_deja_utilise(client_api, monkeypatch):
 def test_register_refuse_un_mot_de_passe_trop_court(client_api):
     """Moins de 8 caractères : refusé par Pydantic avant tout appel à la base."""
     reponse = client_api.post(
-        "/auth/register", json={"email": "lea@example.com", "password": "court"}
+        "/auth/register", json={"email": "lea@example.com", "password": "court", "consentement": True}
+    )
+
+    assert reponse.status_code == 422
+
+
+@pytest.mark.parametrize("corps_consentement", [{}, {"consentement": False}])
+def test_register_refuse_sans_consentement_explicite(client_api, corps_consentement):
+    """Sans `consentement: true`, refus 422 avant tout appel à la base (RGPD art. 9.2.a)."""
+    reponse = client_api.post(
+        "/auth/register",
+        json={"email": "lea@example.com", "password": "motdepasse-correct", **corps_consentement},
     )
 
     assert reponse.status_code == 422
@@ -128,7 +139,7 @@ def test_login_renvoie_un_jeton(client_api, monkeypatch):
     monkeypatch.setattr(user_repository, "enregistrer_connexion", AsyncMock())
 
     reponse = client_api.post(
-        "/auth/login", json={"email": "lea@example.com", "password": "motdepasse-correct"}
+        "/auth/login", json={"email": "lea@example.com", "password": "motdepasse-correct", "consentement": True}
     )
 
     assert reponse.status_code == 200

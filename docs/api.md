@@ -24,7 +24,7 @@ uv run python ../scripts/export_openapi.py
 |---|---|---|---|---|
 | GET | `/health` | public | Sonde de vivacité | |
 | GET | `/health/detail` | public | État de chaque dépendance | |
-| POST | `/auth/register` | public | Créer un compte, renvoie un jeton | |
+| POST | `/auth/register` | public | Créer un compte, renvoie un jeton. Corps : `email`, `password` (8 caractères min.), `consentement: true` obligatoire | table `utilisateur` |
 | POST | `/auth/login` | public | Se connecter, renvoie un jeton | |
 | GET | `/auth/me` | JWT | Utilisatrice du jeton | table `utilisateur` |
 | GET | `/search/aliments?q=` | public | Recherche tolérante aux fautes | CIQUAL (table `aliment`) |
