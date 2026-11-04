@@ -57,10 +57,11 @@ export default function Chatbot() {
         <div className="chat-thread">
           {messages.map((msg, i) =>
             msg.role === 'bot' ? (
-              <div className="msg-bot" key={i}>{
-                msg.paragraphes.map((p, i) => (
-                <p key={i} Style="margin-top: 10px">{p}</p>
-              ))}</div>
+              <div className="msg-bot" key={i}>
+                {(msg.paragraphes ?? [msg.texte]).map((p, j) => (
+                  <p key={j} className="msg-paragraph">{p}</p>
+                ))}
+              </div>
             ) : (
               <div className="msg-user" key={i}>{msg.texte}</div>
             )
