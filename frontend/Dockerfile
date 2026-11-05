@@ -4,6 +4,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+# Variables VITE_* figées dans le bundle au moment du build.
+ARG VITE_API_URL=http://localhost:8000
+ARG VITE_AUTH_MOCK=false
+ENV VITE_API_URL=$VITE_API_URL VITE_AUTH_MOCK=$VITE_AUTH_MOCK
 RUN npm run build          
 # Vite sort dans /app/dist
 

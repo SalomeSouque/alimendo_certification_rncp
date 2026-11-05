@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+# Les .env locaux ne doivent pas finir dans l'image : les variables VITE_*
+# sont figées au build, on les passe en build args (voir Dockerfile).
+.env
+.env.*
+!.env.example

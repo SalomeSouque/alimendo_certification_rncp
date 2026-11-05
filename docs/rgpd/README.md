@@ -30,7 +30,16 @@ Les photos envoyées à la reconnaissance d'aliments sont traitées en mémoire 
 
 **Coordonnées du responsable non publiées.** Le projet n'a pas vocation à être ouvert au public : il sert de support de certification. Publier une adresse email personnelle dans un dépôt public exposerait inutilement les données de la responsable du projet. Les champs de contact indiquent donc « Non publiée ». En cas d'ouverture au public, une adresse de contact dédiée serait ajoutée au registre et à la mention d'information de la page Connexion.
 
-**Base légale.** Le modèle simplifié de la CNIL n'a pas de rubrique dédiée. Elle est indiquée dans la fiche ref-001, ligne « Sous-finalité 3 » : exécution d'un contrat (article 6.1.b du RGPD).
+**Base légale.** Le modèle simplifié de la CNIL n'a pas de rubrique dédiée. Elle est indiquée dans la fiche ref-001, ligne « Sous-finalité 3 » : exécution d'un contrat (article 6.1.b du RGPD) pour la gestion du compte, complétée par le consentement explicite (article 9.2.a), voir ci-dessous.
+
+**Consentement explicite à l'inscription.** Alimendo ne demande aucune donnée de santé. Mais la CJUE (1er août 2022, C-184/20) retient qu'une donnée peut révéler indirectement une information de santé : un compte sur un service consacré à l'endométriose en fait partie. L'article 9.2.a du RGPD exige alors un consentement explicite. Mise en œuvre :
+
+- page Inscription : case obligatoire, non pré-cochée, qui explique ce que révèle le compte et comment retirer le consentement ;
+- API : `POST /auth/register` exige `consentement: true`, sinon 422 avant tout accès à la base (test `test_register_refuse_sans_consentement_explicite`) ;
+- preuve (article 7.1) : aucun compte ne peut être créé sans consentement, la date `created_at` du compte est donc la date du consentement. Pas de colonne supplémentaire ;
+- retrait : suppression du compte sur demande auprès de l'administratrice, comme décrit dans `procedure_tri.md`.
+
+Limite assumée : la version du texte de consentement n'est pas enregistrée par compte. Si le texte change, il faudra ajouter une colonne `consentement_version` (évolution V2).
 
 **Exemple CNIL retiré.** L'onglet d'exemple du modèle (traitement fictif « Gestion de la paie ») a été supprimé pour éviter toute confusion. Les onglets Tutoriel et Listes sont conservés : les listes déroulantes en dépendent.
 

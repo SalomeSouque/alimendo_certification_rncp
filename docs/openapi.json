@@ -853,15 +853,22 @@
             "maxLength": 128,
             "minLength": 8,
             "title": "Password"
+          },
+          "consentement": {
+            "type": "boolean",
+            "const": true,
+            "title": "Consentement",
+            "description": "Consentement explicite au traitement (RGPD art. 9.2.a). Doit valoir true."
           }
         },
         "type": "object",
         "required": [
           "email",
-          "password"
+          "password",
+          "consentement"
         ],
         "title": "RegisterRequest",
-        "description": "Corps de `POST /auth/register`.\n\nLa longueur minimale de 8 caractères (OWASP A07)\nAucune règle de complexité imposée (déconseillées au profit de la longueur.)"
+        "description": "Corps de `POST /auth/register`.\n\nLa longueur minimale de 8 caractères (OWASP A07)\nAucune règle de complexité imposée (déconseillées au profit de la longueur.)\n\n`consentement` doit valoir `true` : consentement explicite (RGPD art. 9.2.a),\ncar un compte sur un service dédié à l'endométriose peut révéler une\ninformation de santé (CJUE, 1er août 2022, C-184/20). Toute autre valeur,\nou son absence, renvoie 422 : aucun compte ne peut exister sans consentement,\nla date de création du compte (`created_at`) vaut donc date du consentement."
       },
       "ScoreOut": {
         "properties": {
