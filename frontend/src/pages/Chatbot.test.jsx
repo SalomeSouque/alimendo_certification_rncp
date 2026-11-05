@@ -4,6 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 import { renderWithProviders } from '../test/renderWithProviders';
 import { mockFetch, jsonResponse } from '../test/mockFetch';
 import Chatbot from './Chatbot';
+import { CHATBOT_LONG_DISCLAIMER } from '../content/chatbotTexts';
 
 const SHORT_DISCLAIMER =
   'Information générale issue d’un corpus documentaire limité. Ne remplace pas un avis médical.';
@@ -27,7 +28,7 @@ async function ask(user, question) {
 describe('Chatbot (POST /ai/chat)', () => {
   it('shows the §7.7 banner and the privacy notice linked to the input', () => {
     renderChat();
-    expect(screen.getByText('Projet étudiant — prototype de démonstration.')).toBeInTheDocument();
+    expect(screen.getByText(CHATBOT_LONG_DISCLAIMER.title)).toBeInTheDocument();
     const input = screen.getByLabelText('Poser une question');
     expect(input).toHaveAccessibleDescription(/N’indiquez pas d’informations personnelles ou de santé/);
   });
