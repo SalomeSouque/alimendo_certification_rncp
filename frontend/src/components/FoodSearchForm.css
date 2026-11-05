@@ -1,0 +1,32 @@
+/* Search-by-name form (Analyser and Search pages). Mobile-first. */
+.search-block { width: calc(100% - 32px); max-width: 456px; margin: 0 auto; }
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 8px 8px 20px;
+}
+.search-bar:focus-within { border-color: var(--green); box-shadow: 0 0 0 2px var(--green); }
+.search-bar .loupe { width: 16px; height: 16px; flex: none; }
+.search-bar input {
+  flex: 1;
+  min-width: 0;
+  border: none; outline: none;
+  font-family: inherit; font-size: 16px; color: var(--ink);
+  background: transparent;
+}
+.search-bar input::placeholder { color: var(--muted); }
+.search-go {
+  width: 42px; height: 42px; flex: none;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.search-go:focus-visible { outline: 2px solid var(--green-deep); outline-offset: 2px; }
+.search-go img { width: 16px; height: 16px; }
+.search-error { margin-top: 8px; font-size: 14px; color: #b3261e; text-align: left; padding-left: 20px; }

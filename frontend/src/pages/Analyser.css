@@ -38,33 +38,4 @@
 }
 .choice-card p { font-size: 16px; color: var(--muted); }
 
-.search-bar {
-  width: 456px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 8px 8px 8px 22px;
-}
-.search-bar .loupe { width: 16px; height: 16px; flex: none; }
-.search-bar input {
-  flex: 1;
-  border: none; outline: none;
-  font-family: inherit; font-size: 16px; color: var(--ink);
-  background: transparent;
-}
-.search-bar input::placeholder { color: var(--muted-2); }
-.search-go {
-  width: 42px; height: 42px; flex: none;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-}
-.search-go img { width: 16px; height: 16px; }
-
 .analyse-note { margin-top: 24px; font-size: 15px; color: var(--muted-2); }

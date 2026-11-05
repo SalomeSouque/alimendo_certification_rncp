@@ -1,0 +1,24 @@
+.search-main { max-width: 720px; margin: 0 auto; padding: 48px 0 80px; }
+.search-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400; font-size: 32px; color: var(--ink);
+  text-align: center; margin: 0 16px 24px;
+}
+.search-hint, .search-status { margin: 24px 16px 0; font-size: 16px; color: var(--muted); text-align: center; }
+.search-status--error { color: #b3261e; }
+.search-count { margin: 32px 16px 12px; font-size: 18px; font-weight: 600; color: var(--ink); }
+.search-results { list-style: none; margin: 0 16px; padding: 0; border-top: 1px solid var(--border); }
+.search-result {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 52px; padding: 12px 4px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink); text-decoration: none; font-size: 16px;
+}
+.search-result:hover, .search-result:focus-visible { background: var(--green-soft); }
+.search-result:focus-visible { outline: 2px solid var(--green-deep); outline-offset: -2px; }
+.search-result img { width: 14px; height: 14px; flex: none; }
+
+@media (min-width: 768px) {
+  .search-main { padding-top: 96px; }
+  .search-title { font-size: 40px; }
+}

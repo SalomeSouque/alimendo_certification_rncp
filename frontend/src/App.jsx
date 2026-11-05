@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import Aliment from './pages/Aliment.jsx';
 import EnSavoirPlus from './pages/EnSavoirPlus.jsx';
@@ -8,6 +8,7 @@ import ProduitEmballe from './pages/ProduitEmballe.jsx';
 import AlimentFrais from './pages/AlimentFrais.jsx';
 import Home from './pages/Home.jsx';
 import Chatbot from './pages/Chatbot.jsx';
+import Recherche from './pages/Recherche.jsx';
 import AuthGate from './components/AuthGate';
 
 function Placeholder({ titre }) {
@@ -24,7 +25,11 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/aliment" element={<Aliment />} />
+      {/* Old demo URL without id: send to the analysis choice. */}
+      <Route path="/aliment" element={<Navigate to="/analyser" replace />} />
+      <Route path="/aliment/:id" element={<Aliment />} />
+      <Route path="/produit/:code" element={<Aliment />} />
+      <Route path="/recherche" element={<Recherche />} />
       <Route path="/en-savoir-plus" element={<EnSavoirPlus />} />
       <Route path="/connexion" element={<Authentification />} />
       <Route path="/inscription" element={<Authentification />} />

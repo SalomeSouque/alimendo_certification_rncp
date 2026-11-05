@@ -1,4 +1,6 @@
-.emb-main { padding: 125px 0 120px; text-align: center; }
+.emb-back { margin: 24px 16px 0; }
+.emb-main { padding: 48px 16px 80px; text-align: center; }
+@media (min-width: 768px) { .emb-main { padding: 96px 0 120px; } }
 .emb-title {
   font-family: 'Bagel Fat One', system-ui, cursive;
   font-weight: 400; font-size: 46px; color: var(--ink); margin-bottom: 12px;
@@ -12,17 +14,20 @@
 }
 .or-sep::before, .or-sep::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 
-.manual { display: flex; justify-content: center; gap: 14px; }
+.manual { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
 .manual input {
-  width: 352px; height: 52px;
+  width: 100%; max-width: 352px; height: 52px;
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0 18px;
   font-family: inherit; font-size: 16px; color: var(--ink);
   background: #fff; outline: none;
 }
-.manual input:focus { border-color: var(--green); }
-.manual input::placeholder { color: var(--muted-2); }
+.manual input:focus-visible { border-color: var(--green); box-shadow: 0 0 0 2px var(--green); }
+.manual input[aria-invalid="true"] { border-color: #b3261e; }
+.manual input::placeholder { color: var(--muted); }
 .manual .btn-primary { padding: 0 28px; height: 52px; }
 
-.emb-note { margin-top: 34px; font-size: 15px; color: var(--muted-2); }
+.emb-hint { margin-top: 12px; font-size: 14px; color: var(--muted); }
+.emb-error { margin-top: 8px; font-size: 14px; color: #b3261e; }
+.emb-note { margin-top: 34px; font-size: 15px; color: var(--muted); }

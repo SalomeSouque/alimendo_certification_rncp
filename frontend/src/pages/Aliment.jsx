@@ -1,110 +1,68 @@
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
+import FoodScore from '../components/FoodScore.jsx';
+import { useApiResource } from '../components/useApiResource';
+import { getBarcodeScore, getCategories, getFoodScore } from '../services/score';
 import './Aliment.css';
 
+/** Loads the food and, for a CIQUAL food, the name of its category (optional). */
+async function loadFood({ id, code }) {
+  const detail = code ? await getBarcodeScore(code) : await getFoodScore(id);
+  let categoryName;
+  if (detail.aliment.id_categorie != null) {
+    try {
+      const categories = await getCategories();
+      categoryName = categories.find((c) => c.id_categorie === detail.aliment.id_categorie)?.nom;
+    } catch {
+      // The category is only a label: its absence must not hide the score.
+    }
+  }
+  return { detail, categoryName };
+}
+
+function errorText(err, isBarcode) {
+  if (err?.status === 404) {
+    return isBarcode
+      ? 'Ce code-barre est inconnu d’Open Food Facts. Vérifiez-le, ou recherchez l’aliment par son nom.'
+      : 'Cet aliment est introuvable.';
+  }
+  return err?.message ?? 'Une erreur est survenue. Réessayez.';
+}
+
+/**
+ * Score page of a food: /aliment/:id (CIQUAL) or /produit/:code (barcode, Open Food Facts).
+ */
 export default function Aliment() {
+  const { id, code } = useParams();
+  const isBarcode = Boolean(code);
+  const { status, data, error } = useApiResource(() => loadFood({ id, code }), code ?? id);
+
   return (
     <Layout>
       <main className="aliment-wrap">
+        <p className="aliment-back">
+          <Link to={isBarcode ? '/produit-emballe' : '/analyser'} className="btn-back">&larr; Retour</Link>
+        </p>
 
-        <div className="top-row">
-          <div className="col-left">
-            <img className="food-img" src="/assets/saumon.png" alt="Saumon atlantique" />
-            <div className="disclaimer-card">
-              <p>
-                Score basé sur le profil nutritionnel de l'aliment et son potentiel inflammatoire
-                estimé selon la littérature scientifique (approche inspirée du Dietary Inflammatory
-                Index, Shivappa et al., 2014). <b>Cet outil ne remplace pas un professionnel de santé.</b>
-              </p>
-              <Link to="/en-savoir-plus" className="btn-primary">En savoir plus</Link>
-            </div>
+        {status === 'loading' && (
+          <div className="aliment-state" role="status">
+            <div className="spinner" aria-hidden="true" />
+            <p>{isBarcode ? 'Recherche du produit…' : 'Chargement du score…'}</p>
           </div>
+        )}
 
-          <div className="col-right">
-            <div className="food-kicker">Aliment frais · Poisson</div>
-            <h1 className="food-title">Saumon atlantique</h1>
-
-            <div className="score-card">
-              <div className="kicker">Potentiel inflammatoire estimé</div>
-              <div className="score-bar">
-                <span className="score-knob" style={{ left: '22%' }}></span>
-              </div>
-              <div className="score-scale">
-                <span>Anti-inflammatoire</span>
-                <span>Neutre</span>
-                <span>Pro-inflammatoire</span>
-              </div>
-              <div className="score-verdict">Profil plutôt anti-inflammatoire</div>
-            </div>
-
-            <p className="doc-line">
-              Pour plus d'information sur la lecture du score{' '}
-              <Link to="/en-savoir-plus">consulter la documentation.</Link>
-            </p>
-
-            <div className="factors up">
-              <h3>Ce qui allège le score</h3>
-              <div className="tags">
-                <span className="tag pos">Oméga-3 (EPA/DHA)</span>
-                <span className="tag pos">Vitamine D</span>
-                <span className="tag pos">Sélénium</span>
-                <span className="tag pos">Protéines</span>
-              </div>
-            </div>
-
-            <div className="factors down">
-              <h3>Ce qui alourdit le score</h3>
-              <div className="tags">
-                <span className="tag neg">Acides gras saturés</span>
-              </div>
-            </div>
+        {status === 'error' && (
+          <div className="aliment-state" role="alert">
+            <img src="/assets/food_not_found.svg" alt="" aria-hidden="true" className="aliment-state-icon" />
+            <h1 className="aliment-state-title">
+              {error?.status === 404 ? 'Aliment non trouvé' : 'Score indisponible pour le moment'}
+            </h1>
+            <p>{errorText(error, isBarcode)}</p>
+            <Link to="/analyser" className="btn-primary">Rechercher un aliment</Link>
           </div>
-        </div>
+        )}
 
-        <div className="divider"></div>
-
-        <h2 className="compare-title">Autres aliments au potentiel moins inflammatoire</h2>
-        <p className="compare-sub">Même catégorie, score estimé plus bas. À vous de comparer.</p>
-
-        <div className="compare-row">
-          <div className="compare-left">
-            <p>
-              Comparaison établie sur le profil nutritionnel des aliments, à catégorie
-              équivalente. Elle ne préjuge pas de l'effet d'un aliment sur une personne donnée.
-            </p>
-            <Link to="/chatbot" className="btn-secondary">Poser une question</Link>
-          </div>
-
-          <div className="carousel">
-            <div className="cards">
-              <div className="food-card">
-                <img src="/assets/maquereau.png" alt="Maquereau" />
-                <div className="body">
-                  <div className="name">Maquereau</div>
-                  <div className="mini-bar"><span className="mini-knob" style={{ left: '16%' }}></span></div>
-                </div>
-              </div>
-              <div className="food-card">
-                <img src="/assets/sardine.png" alt="Sardine" />
-                <div className="body">
-                  <div className="name">Sardine</div>
-                  <div className="mini-bar"><span className="mini-knob" style={{ left: '19%' }}></span></div>
-                </div>
-              </div>
-              <div className="food-card">
-                <img src="/assets/truite.png" alt="Truite" />
-                <div className="body">
-                  <div className="name">Truite</div>
-                  <div className="mini-bar"><span className="mini-knob" style={{ left: '14%' }}></span></div>
-                </div>
-              </div>
-            </div>
-            <button className="carousel-next" aria-label="Suivant">
-              <img src="/assets/fleche_next.svg" alt="" />
-            </button>
-          </div>
-        </div>
-
+        {status === 'success' && <FoodScore detail={data.detail} categoryName={data.categoryName} />}
       </main>
     </Layout>
   );
