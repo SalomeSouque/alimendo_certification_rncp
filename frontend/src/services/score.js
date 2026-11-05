@@ -19,9 +19,23 @@ export function searchFoods(term, limit = 20) {
   return api.get(`/search/aliments?${params}`);
 }
 
-/** Lists food categories. GET /search/categories */
+// Categories change only with a new data import: fetched once per session.
+let categoriesPromise = null;
+
+/** Lists food categories. GET /search/categories (cached after the first success). */
 export function getCategories() {
-  return api.get('/search/categories');
+  if (!categoriesPromise) {
+    categoriesPromise = api.get('/search/categories').catch((err) => {
+      categoriesPromise = null; // retry on the next call
+      throw err;
+    });
+  }
+  return categoriesPromise;
+}
+
+/** Test helper: forget the cached categories. */
+export function resetCategoriesCache() {
+  categoriesPromise = null;
 }
 
 /**
