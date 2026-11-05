@@ -24,7 +24,7 @@ Le registre couvre les traitements de données personnelles réalisés dans la b
 | categorie | Non : catégories d'aliments | Hors registre |
 | log_vlm | Non : label reconnu, score de confiance, statut, horodatage. Aucun identifiant d'utilisateur, aucune adresse IP, aucune photo | Hors registre |
 
-Les photos envoyées à la reconnaissance d'aliments sont traitées en mémoire et ne sont jamais enregistrées. Les questions posées au chatbot ne sont pas stockées en base.
+Les photos envoyées à la reconnaissance d'aliments sont traitées en mémoire et ne sont jamais enregistrées. Les questions posées au chatbot ne sont pas stockées en base, ni journalisées (les logs ne gardent que l'intention détectée). Celles que le routeur classe dans le périmètre (`in_scope`) sont transmises à l'API Mistral AI pour générer la réponse. Un avertissement sous le champ de saisie le rappelle : « N'indiquez pas d'informations personnelles ou de santé. Vos questions ne sont pas enregistrées, mais peuvent être transmises à un service d'IA externe (Mistral AI) pour générer la réponse. »
 
 ## Choix assumés
 
