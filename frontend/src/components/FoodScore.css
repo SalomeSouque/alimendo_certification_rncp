@@ -1,0 +1,91 @@
+/* Score result (AlimentDetail). Mobile-first: one column, two from 900 px. */
+.food-score .top-row { display: flex; flex-direction: column; gap: 24px; }
+.food-score .col-left, .food-score .col-right { min-width: 0; }
+
+.food-img { width: 100%; max-width: 285px; height: auto; max-height: 248px; object-fit: contain; display: block; margin: 0 auto; }
+.food-img--placeholder { width: 96px; height: 96px; opacity: .7; }
+
+.food-kicker { font-size: 14px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.food-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400; font-size: 32px; line-height: 1.15;
+  color: var(--ink); margin-bottom: 20px; overflow-wrap: anywhere;
+}
+
+.score-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(30, 36, 35, 0.05);
+  padding: 20px;
+}
+.score-card .kicker { font-size: 13px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+.score-card .score-bar { margin-bottom: 10px; }
+.score-scale { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+.score-verdict { font-size: 20px; font-weight: 600; color: var(--ink); }
+.score-unavailable { font-size: 16px; color: var(--ink); line-height: 1.5; }
+
+.food-badges { list-style: none; padding: 0; margin: 20px 0 0; }
+.tags { display: flex; flex-wrap: wrap; gap: 12px; }
+.tag { font-size: 15px; padding: 9px 16px; border-radius: 8px; }
+.tag.pos { background: #dcebe1; color: var(--green-deep); }
+
+.doc-line { font-size: 16px; color: var(--muted); margin: 20px 0 0; }
+.doc-line a { color: var(--blue); text-decoration: underline; }
+
+.disclaimer-card {
+  margin-top: 24px;
+  background: #fff;
+  border-left: 3px solid var(--blue);
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(30, 36, 35, 0.05);
+  padding: 18px 20px;
+}
+.disclaimer-card p { font-size: 15px; color: var(--muted); line-height: 1.6; }
+.disclaimer-card p + p { margin-top: 10px; }
+.disclaimer-card p b { color: var(--ink); font-weight: 600; }
+.disclaimer-mention { font-size: 13px !important; }
+
+.divider { height: 1px; background: var(--border); margin: 40px 0 32px; }
+.compare-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400; font-size: 24px; color: var(--ink); margin-bottom: 20px;
+}
+.cards {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px;
+}
+.food-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgba(30, 36, 35, 0.05);
+}
+.food-card-link { display: block; height: 100%; color: inherit; text-decoration: none; }
+.food-card-link:focus-visible { outline: 2px solid var(--green-deep); outline-offset: 2px; border-radius: 14px; }
+.food-card-img { width: 100%; height: 96px; object-fit: contain; display: block; background: var(--footer-bg); padding: 16px; }
+.food-card .body { padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.food-card .name { font-size: 15px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.food-card-level { font-size: 13px; color: var(--muted); }
+.mini-bar {
+  height: 6px; border-radius: 3px;
+  background: linear-gradient(90deg, #3d7a5a 0%, #7fae8f 42%, #d9b48f 66%, #d68a63 100%);
+  position: relative;
+}
+.mini-knob {
+  position: absolute; top: 50%; transform: translate(-50%, -50%);
+  width: 12px; height: 12px; background: #fff; border: 2px solid var(--ink); border-radius: 50%;
+}
+.alternatives-chat { margin-top: 24px; font-size: 16px; color: var(--muted); }
+.alternatives-chat a { color: var(--green-deep); text-decoration: underline; }
+
+@media (min-width: 900px) {
+  .food-score .top-row { flex-direction: row; gap: 45px; align-items: flex-start; }
+  .food-score .col-left { width: 292px; flex: none; }
+  .food-score .col-right { flex: 1; }
+  .food-title { font-size: 46px; margin-bottom: 26px; }
+  .score-card { padding: 24px 30px 26px; }
+  .score-scale { font-size: 14px; }
+  .compare-title { font-size: 30px; }
+}
