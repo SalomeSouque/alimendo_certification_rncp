@@ -88,3 +88,24 @@ Les erreurs ont toujours la forme `{ "detail": "message" }`, ce que lit le front
 
 Mesures prises face au Top 10 OWASP API : voir [`securite_owasp.md`](securite_owasp.md).
 Accès direct à la base, hors API : voir [`acces_base.md`](acces_base.md).
+## 6. Couverture des besoins en données
+
+Correspondance entre les données que le projet doit mettre à disposition (spécifications :
+[`specs_extraction.md`](specs_extraction.md) § 3 et 4, user stories) et les routes qui les servent
+(critère C5-CR5). Le frontend consomme chacune de ces routes : voir
+[`integration_frontend.md`](integration_frontend.md).
+
+| Besoin (spécification) | Source | Route | Données renvoyées | Preuve |
+|---|---|---|---|---|
+| Trouver un aliment par son nom, même mal orthographié | CIQUAL 2020, en base (3 184 aliments importés) | `GET /search/aliments?q=` | id, nom, catégorie | capture Swagger « pome » |
+| Parcourir les catégories | CIQUAL, en base | `GET /search/categories` | id, nom, image | capture Swagger |
+| Score d'un aliment, badges fer / magnésium, alternatives de la même catégorie | CIQUAL + référentiel de score | `GET /score/aliment/{id}` | `AlimentDetail` : score, badges, alternatives, disclaimer, citation | capture Swagger + page `/aliment/:id` |
+| Score d'un produit emballé à partir de son code-barre | API Open Food Facts, à la demande, sans stockage | `GET /score/code-barre/{code}` | `AlimentDetail` : nom, image (vignette de face, avec repli), score calculé depuis les nutriments | capture de la route avec un vrai code + page `/produit/:code` |
+| Réponses documentaires sourcées sur l'endométriose et l'alimentation | Corpus RAG, index ChromaDB | `POST /ai/chat` (JWT) | réponse, sources (titre, URL), disclaimer | page `/chatbot` |
+| Score d'un aliment brut identifié sur une photo | VLM Qwen3-VL + CIQUAL | `POST /ai/vision` (JWT) | label reconnu, `AlimentDetail` | page `/aliment-frais` |
+| Compte de l'utilisatrice | table `utilisateur` | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` | jeton, id, email, rôle | `test_endpoints.py`, page `/connexion` |
+
+**Limites connues.** Beaucoup de produits Open Food Facts ont des micronutriments non renseignés :
+leur score est alors « indisponible », ce qui est le comportement prévu (`specs_extraction.md` § 4.2).
+La recherche par nom utilise `similarity()`, qui n'exploite pas l'index trigramme : la lenteur
+qui en découle est traitée comme incident technique (lot C21), volontairement pas corrigée ici.

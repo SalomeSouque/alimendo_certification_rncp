@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, within, fireEvent } from '@testing-library/react';
 import { Routes, Route } from 'react-router-dom';
 import { renderWithProviders } from '../test/renderWithProviders';
 import { mockFetch, jsonResponse } from '../test/mockFetch';
@@ -96,5 +96,22 @@ describe('Product page (GET /score/code-barre/{code})', () => {
     mockFetch(jsonResponse(503, { detail: 'Open Food Facts est momentanément injoignable.' }));
     renderAt('/produit/3017620422003');
     expect(await screen.findByRole('alert')).toHaveTextContent('Open Food Facts est momentanément injoignable.');
+  });
+});
+
+describe('Product image', () => {
+  it('broken Open Food Facts image: falls back to the pictogram', async () => {
+    const detail = foodDetail({
+      aliment: { id_aliment: null, nom: 'Biscuit', source: 'OFF', url_image: 'https://images.openfoodfacts.org/broken.jpg', id_categorie: null },
+      alternatives: [],
+    });
+    mockFetch(jsonResponse(200, detail));
+    const { container } = renderAt('/produit/3017620422003');
+    await screen.findByRole('heading', { level: 1, name: 'Biscuit' });
+
+    const img = container.querySelector('.food-img');
+    expect(img).toHaveAttribute('src', 'https://images.openfoodfacts.org/broken.jpg');
+    fireEvent.error(img);
+    expect(container.querySelector('.food-img')).toHaveAttribute('src', '/assets/couvert.svg');
   });
 });

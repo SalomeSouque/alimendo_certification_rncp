@@ -1,6 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
+import BarcodeScanner from '../components/BarcodeScanner.jsx';
 import { BARCODE_PATTERN } from '../services/score';
 import './ProduitEmballe.css';
 
@@ -33,7 +34,11 @@ export default function ProduitEmballe() {
       </p>
       <main className="emb-main">
         <h1 className="emb-title">Produit emballé</h1>
-        <p className="emb-subtitle">Saisissez les chiffres inscrits sous le code-barre.</p>
+        <p className="emb-subtitle">Scannez le code-barre, ou saisissez les chiffres inscrits dessous.</p>
+
+        <BarcodeScanner onCode={(scanned) => navigate(`/produit/${scanned}`)} />
+
+        <div className="or-sep">ou saisie manuelle</div>
 
         <form className="manual" onSubmit={handleSubmit} noValidate>
           <label htmlFor={inputId} className="sr-only">Code-barre</label>

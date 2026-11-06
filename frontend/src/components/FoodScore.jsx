@@ -5,6 +5,7 @@
 // Every medical wording comes from the API (validated texts in
 // backend/app/core/disclaimers.py): nothing medical is written here.
 
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ScoreBar from './ScoreBar';
 import './FoodScore.css';
@@ -12,8 +13,10 @@ import './FoodScore.css';
 const FALLBACK_IMAGE = '/assets/couvert.svg';
 
 function FoodImage({ food, className }) {
-  if (food.url_image) {
-    return <img className={className} src={food.url_image} alt="" />;
+  // Remote image (Open Food Facts) that fails to load: fall back to the pictogram.
+  const [broken, setBroken] = useState(false);
+  if (food.url_image && !broken) {
+    return <img className={className} src={food.url_image} alt="" loading="lazy" onError={() => setBroken(true)} />;
   }
   return <img className={`${className} food-img--placeholder`} src={FALLBACK_IMAGE} alt="" aria-hidden="true" />;
 }

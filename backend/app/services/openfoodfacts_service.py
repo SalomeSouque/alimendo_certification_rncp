@@ -22,7 +22,11 @@ from app.core.config import get_openfoodfacts_settings
 logger = logging.getLogger(__name__)
 
 # Champs demandés à l'API : seulement ce qui sert à l'application
-CHAMPS_UTILES = "code,product_name,product_name_fr,image_front_small_url,nutriments"
+# Images, de la plus adaptée à la moins adaptée : la vignette de face n'existe pas
+# pour tous les produits, on se replie alors sur l'image de face puis sur l'image principale.
+CHAMPS_IMAGE: tuple[str, ...] = ("image_front_small_url", "image_front_url", "image_url")
+
+CHAMPS_UTILES = ",".join(("code", "product_name", "product_name_fr", *CHAMPS_IMAGE, "nutriments"))
 
 # Nom logique (= colonne du modèle Aliment) : (clés OFF à essayer dans l'ordre, unité du référentiel).
 # OFF exprime toutes les valeurs <clé>_100g en grammes, on multiplie donc par FACTEUR_DEPUIS_G.
@@ -103,6 +107,19 @@ def convertir_nutriments(nutriments: dict) -> dict[str, float | None]:
     return profil
 
 
+def choisir_image(produit: dict) -> str | None:
+    """Renvoie la première URL d'image HTTPS disponible, ou None.
+
+    Seules les URL en https sont gardées : une image en http serait bloquée
+    (contenu mixte) une fois le site servi en HTTPS.
+    """
+    for champ in CHAMPS_IMAGE:
+        url = produit.get(champ)
+        if isinstance(url, str) and url.startswith("https://"):
+            return url
+    return None
+
+
 def filtrer_produit(code: str, produit: dict) -> ProduitOFF:
     """Garde uniquement les champs utiles d'un produit OFF."""
     nom = (produit.get("product_name_fr") or produit.get("product_name") or "").strip()
@@ -110,7 +127,7 @@ def filtrer_produit(code: str, produit: dict) -> ProduitOFF:
     return ProduitOFF(
         code_barre=code,
         nom=" ".join(nom.split()) or "Produit sans nom",
-        url_image=produit.get("image_front_small_url") or None,
+        url_image=choisir_image(produit),
         energie=lire_nombre(nutriments.get("energy-kcal_100g")),
         profil=convertir_nutriments(nutriments),
     )
