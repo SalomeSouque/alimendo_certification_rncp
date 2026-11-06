@@ -12,7 +12,7 @@ Tableau de correspondance entre les points de terminaison de l'API (voir `openap
 | `GET /search/categories` | public | `score.js` → `getCategories` (mis en cache) | `/aliment/:id` (libellé de catégorie) | `Aliment.test.jsx`, `score.test.js` |
 | `GET /score/aliment/{id}` | public | `score.js` → `getFoodScore` | `/aliment/:id` | `Aliment.test.jsx`, `score.test.js` |
 | `GET /score/code-barre/{code}` | public | `score.js` → `getBarcodeScore` | `/produit-emballe` (saisie) → `/produit/:code` | `Aliment.test.jsx`, `ProduitEmballe.test.jsx`, `score.test.js` |
-| `POST /ai/vision` | JWT | à venir (étape 4) | `/aliment-frais` | à venir |
+| `POST /ai/vision` | JWT | `vision.js` → `validateImage`, `identifyFood` (multipart, champ `image`, délai max. 45 s) | `/aliment-frais` (`AnalyseZone`, résultat affiché par `FoodScore`) | `AlimentFrais.test.jsx`, `vision.test.js` |
 
 Endpoints non exploités par le frontend : `GET /health` et `GET /health/detail` (sondes pour Docker et le monitorage).
 
@@ -24,6 +24,7 @@ Endpoints non exploités par le frontend : `GET /health` et `GET /health/detail`
 | 404 | état « non trouvé » propre à l'écran (aliment, code-barre) |
 | 422 | message reformulé en français |
 | 5xx, 503 | message de l'API, ou « Le service est momentanément indisponible » |
+| délai dépassé (photo) | « La réponse a pris trop de temps. Réessayez dans un instant. » |
 | serveur injoignable | « Le serveur est injoignable. Vérifiez votre connexion puis réessayez. » |
 | erreur d'affichage React | `ErrorBoundary` : page « Une erreur est survenue » au lieu d'un écran vide |
 

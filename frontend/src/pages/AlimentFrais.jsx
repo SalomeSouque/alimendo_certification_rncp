@@ -6,7 +6,7 @@ import './AlimentFrais.css';
 export default function AlimentFrais() {
   return (
     <Layout>
-      <p style={{ marginLeft: '2rem', marginTop: '2rem' }}>
+      <p className="frais-back">
           <Link to="/analyser" className="btn-back">
             &larr; Retour
           </Link>
@@ -19,8 +19,9 @@ export default function AlimentFrais() {
 
         <AnalyseZone
           dropzoneText="Déposer une photo de l'aliment"
-          dropzoneHint="Aliment brut, non emballé et non transformé — un fruit, un légume, une viande ou un poisson."
+          dropzoneHint="Un seul aliment brut, non emballé : fruit, légume, viande ou poisson. JPEG, PNG ou WebP, 5 Mo maximum."
         />
+        <p className="frais-privacy">La photo est analysée puis oubliée : elle n’est jamais enregistrée.</p>
 
         <p className="frais-note">Projet étudiant · cet outil ne remplace pas un suivi médical.</p>
       </main>
