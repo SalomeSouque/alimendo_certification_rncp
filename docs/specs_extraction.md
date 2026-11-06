@@ -72,7 +72,7 @@ Le **jeu de données final** est double, par nature des données :
 | Élément | Spécification |
 |---|---|
 | Endpoint | `GET https://world.openfoodfacts.org/api/v2/product/{code}` |
-| Paramètres | `fields=code,product_name,product_name_fr,image_front_small_url,nutriments` : seuls les champs utiles sont demandés |
+| Paramètres | `fields=code,product_name,product_name_fr,image_front_small_url,image_front_url,image_url,nutriments` : seuls les champs utiles sont demandés. Image : vignette de face, sinon image de face, sinon image principale, en HTTPS uniquement |
 | Contraintes d'usage | User-Agent personnalisé obligatoire ; **15 requêtes/min** par IP pour la lecture produit (dépassement = blocage) |
 | Licence | Base sous ODbL, contenus sous Database Contents License, images CC BY-SA. Attribution « Open Food Facts » obligatoire |
 | Unités | Les valeurs `<nutriment>_100g` sont toutes en **grammes** : conversion vers mg ou µg selon le référentiel |

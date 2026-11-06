@@ -13,6 +13,7 @@ import pytest
 from app.services.openfoodfacts_service import (
     NUTRIMENTS_OFF,
     OpenFoodFactsIndisponibleError,
+    choisir_image,
     convertir_nutriments,
     lire_nombre,
     recuperer_produit,
@@ -70,6 +71,18 @@ def test_produit_trouve_et_filtre():
     assert resultat.energie == 539
     assert resultat.profil["lipides"] == 30.9
     assert resultat.profil["fer"] == pytest.approx(4.2)
+    assert resultat.url_image == "https://img/1.jpg"
+
+
+@pytest.mark.parametrize("produit, attendu", [
+    ({"image_front_small_url": "https://img/small.jpg", "image_url": "https://img/main.jpg"}, "https://img/small.jpg"),
+    ({"image_front_url": "https://img/front.jpg", "image_url": "https://img/main.jpg"}, "https://img/front.jpg"),
+    ({"image_front_small_url": "", "image_url": "https://img/main.jpg"}, "https://img/main.jpg"),
+    ({"image_front_small_url": "http://img/insecure.jpg"}, None),
+    ({}, None),
+])
+def test_choix_de_l_image_avec_repli(produit, attendu):
+    assert choisir_image(produit) == attendu
 
 
 @pytest.mark.parametrize("status, corps", [(404, {"status": 0}), (200, {"status": 0})])
@@ -98,7 +111,9 @@ def test_user_agent_et_champs_envoyes():
         return httpx.Response(404)
     recuperer(httpx.MockTransport(espion))
     assert vues[0].headers["User-Agent"].startswith("Alimendo")
-    assert "nutriments" in vues[0].url.params["fields"]
+    champs = vues[0].url.params["fields"].split(",")
+    assert "nutriments" in champs
+    assert {"image_front_small_url", "image_front_url", "image_url"} <= set(champs)
 
 
 @pytest.mark.parametrize("code", ["123", "abcdefgh", "12345678/../x", "1" * 15])
