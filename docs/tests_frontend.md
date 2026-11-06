@@ -20,7 +20,7 @@ Les tests vérifient que chaque écran **appelle le bon point de terminaison ave
 
 ```bash
 cd frontend
-npm run test            # les 70 tests (c'est ce que lance la CI)
+npm run test            # les 72 tests (c'est ce que lance la CI)
 npm run test:coverage   # avec la couverture de code (rapport texte + coverage/index.html)
 ```
 
@@ -44,7 +44,7 @@ Le transport commun (`api.js`) a ses propres tests : jeton ajouté, `FormData` s
 
 ## 4. Résultats
 
-Exécution du 06/11/2026 (`npm run test:coverage`) : **70 tests, 15 fichiers, 70 réussis, 0 échec, 0 ignoré**. Le lint et le build passent.
+Exécution du 06/11/2026 (`npm run test:coverage`) : **72 tests, 15 fichiers, 72 réussis, 0 échec, 0 ignoré**. Le lint et le build passent.
 
 Couverture de code (instructions exécutées par les tests) :
 
@@ -59,7 +59,7 @@ Les services (`api.js`, `chat.js`, `score.js`, `vision.js`) et les écrans branc
 
 ## 5. Interprétation
 
-**Ce que les résultats permettent d'affirmer.** Tous les endpoints exploités ont au moins un test de succès et un test d'erreur serveur, et tous les endpoints protégés ont un test 401 (C10-CR6). Les 70 tests s'exécutent en entier sans erreur ni test ignoré : aucun bug dans les tests eux-mêmes (C10-CR7).
+**Ce que les résultats permettent d'affirmer.** Tous les endpoints exploités ont au moins un test de succès et un test d'erreur serveur, et tous les endpoints protégés ont un test 401 (C10-CR6). Les 72 tests s'exécutent en entier sans erreur ni test ignoré : aucun bug dans les tests eux-mêmes (C10-CR7).
 
 Les tests et la recette ont aussi permis de trouver de vrais défauts pendant le développement :
 
@@ -82,7 +82,7 @@ Les tests et la recette ont aussi permis de trouver de vrais défauts pendant le
 | `App.jsx`, `ScrollTop.jsx` | 0 % | table des routes et défilement, vérifiés par la navigation des autres tests et en manuel |
 | `auth.js` | 74 % | les lignes manquantes sont celles du mode simulé (`VITE_AUTH_MOCK=true`), désactivé en usage normal |
 | `useApiResource.js` | 50 % des branches | branche « requête obsolète ignorée », difficile à provoquer en test unitaire |
-| `barcode.js` | 21 % | enveloppe de la bibliothèque ZXing : jsdom n'a ni caméra ni décodage d'image. Le composant qui l'utilise est testé avec une lecture simulée, et la lecture réelle a été vérifiée dans Chromium avec un code EAN-13 généré : photo importée et caméra simulée (`--use-file-for-fake-video-capture`), les deux mènent à `/produit/3017620422003` |
+| `barcode.js` | 21 % | enveloppe de la bibliothèque ZXing : jsdom n'a ni caméra ni décodage d'image. Le composant qui l'utilise est testé avec une lecture simulée, et la lecture réelle a été vérifiée dans Chromium avec un code EAN-13 généré : photo importée et caméra simulée (`--use-file-for-fake-video-capture`), les deux mènent à `/produit/3017620422003`. Ce test réel a révélé un bug de `@zxing/browser` 0.2.1 : avec l'option `TRY_HARDER`, une image sans code-barre faisait planter la lecture (« Could not create a Canvas element ») et éteignait la caméra sans message. L'option est retirée, et une erreur inattendue affiche maintenant un message ; le scénario « images sans code, puis un code » a été revérifié |
 
 **Pistes d'amélioration :**
 

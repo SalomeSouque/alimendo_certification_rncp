@@ -106,3 +106,37 @@ describe('cameraErrorMessage', () => {
     expect(cameraErrorMessage({ name: 'Other' })).toMatch(/n’a pas pu démarrer/);
   });
 });
+
+describe('camera error details', () => {
+  it('camera busy (NotReadableError): explicit message with the error code', async () => {
+    barcode.isCameraSupported.mockReturnValue(true);
+    barcode.startCameraScan.mockRejectedValue(Object.assign(new Error('busy'), { name: 'NotReadableError' }));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: 'Scanner avec la caméra' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('déjà utilisée par une autre application');
+    expect(alert).toHaveTextContent('(code : NotReadableError)');
+  });
+});
+
+describe('scan stopped by the library', () => {
+  it('unexpected scan error: the camera is released and a message replaces the black preview', async () => {
+    let fail;
+    barcode.isCameraSupported.mockReturnValue(true);
+    barcode.startCameraScan.mockImplementation(async (_video, _onCode, onError) => { fail = onError; return { stop: vi.fn() }; });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: 'Scanner avec la caméra' }));
+    await screen.findByText('Visez le code-barre : la lecture est automatique.');
+    fail(Object.assign(new Error('Could not create a Canvas element.'), { name: 'ScanError' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('La lecture du code-barre s’est arrêtée');
+    expect(screen.getByRole('button', { name: 'Scanner avec la caméra' })).toBeInTheDocument();
+  });
+});

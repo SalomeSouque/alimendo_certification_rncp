@@ -19,6 +19,9 @@ export default function BarcodeScanner({ onCode }) {
   const controlsRef = useRef(null);
   const fileRef = useRef(null);
   const statusId = useId();
+  // Latest callback, without restarting the camera when the parent re-renders.
+  const onCodeRef = useRef(onCode);
+  useEffect(() => { onCodeRef.current = onCode; }, [onCode]);
   const cameraAvailable = isCameraSupported();
 
   function stopCamera() {
@@ -29,21 +32,46 @@ export default function BarcodeScanner({ onCode }) {
   // Always release the camera when leaving the page.
   useEffect(() => stopCamera, []);
 
-  async function startCamera() {
-    setError(null);
-    setStatus('starting');
-    try {
-      controlsRef.current = await startCameraScan(videoRef.current, (code) => {
+  // The camera starts once the preview is displayed: some browsers do not
+  // play a video that is hidden (display: none) when it receives its stream.
+  useEffect(() => {
+    if (status !== 'starting') return undefined;
+    let cancelled = false;
+    startCameraScan(
+      videoRef.current,
+      (code) => {
         controlsRef.current = null;
         setStatus('idle');
-        onCode(code);
+        onCodeRef.current(code);
+      },
+      (err) => {
+        console.error('Barcode scan stopped:', err);
+        controlsRef.current = null;
+        setStatus('idle');
+        setError(cameraErrorMessage(err));
+      },
+    )
+      .then((controls) => {
+        if (cancelled) {
+          controls.stop();
+          return;
+        }
+        controlsRef.current = controls;
+        setStatus('scanning');
+      })
+      .catch((err) => {
+        // Kept in the console to diagnose a camera that does not start.
+        console.error('Barcode camera error:', err);
+        if (cancelled) return;
+        setStatus('idle');
+        setError(cameraErrorMessage(err));
       });
-      setStatus('scanning');
-    } catch (err) {
-      stopCamera();
-      setStatus('idle');
-      setError(cameraErrorMessage(err));
-    }
+    return () => { cancelled = true; };
+  }, [status]);
+
+  function startCamera() {
+    setError(null);
+    setStatus('starting');
   }
 
   function cancelCamera() {
@@ -60,7 +88,7 @@ export default function BarcodeScanner({ onCode }) {
     setStatus('idle');
     if (fileRef.current) fileRef.current.value = '';
     if (code) {
-      onCode(code);
+      onCodeRef.current(code);
     } else {
       setError('Aucun code-barre lisible sur cette photo. Cadrez-le de plus près, bien net et éclairé, ou saisissez les chiffres.');
     }
