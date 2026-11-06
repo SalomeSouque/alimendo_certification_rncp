@@ -8,9 +8,9 @@
 .emb-subtitle { font-size: 18px; color: var(--muted); margin-bottom: 48px; }
 
 .or-sep {
-  width: 464px; margin: 34px auto 30px;
+  width: calc(100% - 32px); max-width: 464px; margin: 28px auto 24px;
   display: flex; align-items: center; gap: 18px;
-  color: var(--muted-2); font-size: 15px;
+  color: var(--muted); font-size: 15px;
 }
 .or-sep::before, .or-sep::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 
