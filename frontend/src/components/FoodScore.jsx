@@ -40,10 +40,13 @@ function ScoreCard({ score }) {
 }
 
 /**
- * @param {{ detail: object, categoryName?: string }} props
- *   detail: AlimentDetail returned by /score/aliment/{id} or /score/code-barre/{code}
+ * @param {{ detail: object, categoryName?: string, titleLevel?: 1|2 }} props
+ *   detail: AlimentDetail returned by /score/aliment/{id}, /score/code-barre/{code} or /ai/vision
+ *   titleLevel: 2 when the page already has its own h1 (photo result)
  */
-export default function FoodScore({ detail, categoryName }) {
+export default function FoodScore({ detail, categoryName, titleLevel = 1 }) {
+  const Title = titleLevel === 2 ? 'h2' : 'h1';
+  const SectionTitle = titleLevel === 2 ? 'h3' : 'h2';
   const { aliment, score, badges = [], alternatives = [] } = detail;
   const shownBadges = badges.filter((b) => b.libelle);
   const kicker = aliment.source === 'OFF' ? 'Produit emballé' : categoryName;
@@ -57,7 +60,7 @@ export default function FoodScore({ detail, categoryName }) {
 
         <div className="col-right">
           {kicker && <p className="food-kicker">{kicker}</p>}
-          <h1 className="food-title" id="food-title">{aliment.nom}</h1>
+          <Title className="food-title" id="food-title">{aliment.nom}</Title>
 
           <ScoreCard score={score} />
 
@@ -85,7 +88,7 @@ export default function FoodScore({ detail, categoryName }) {
       {alternatives.length > 0 && (
         <section className="alternatives" aria-labelledby="alternatives-title">
           <div className="divider" />
-          <h2 className="compare-title" id="alternatives-title">{detail.libelle_alternatives}</h2>
+          <SectionTitle className="compare-title" id="alternatives-title">{detail.libelle_alternatives}</SectionTitle>
           <ul className="cards">
             {alternatives.map(({ aliment: alt, score: altScore }) => (
               <li key={alt.id_aliment ?? alt.nom} className="food-card">

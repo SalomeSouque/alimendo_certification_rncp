@@ -1,10 +1,13 @@
-.frais-main { padding: 125px 0 120px; text-align: center; }
+.frais-main { padding: 48px 0 80px; text-align: center; }
+@media (min-width: 768px) { .frais-main { padding: 125px 0 120px; } }
 .frais-title {
   font-family: 'Bagel Fat One', system-ui, cursive;
   font-weight: 400; font-size: 46px; color: var(--ink); margin-bottom: 12px;
 }
 .frais-subtitle {
   font-size: 18px; color: var(--muted);
-  max-width: 520px; margin: 0 auto 48px; line-height: 1.5;
+  max-width: 520px; margin: 0 auto 32px; padding: 0 16px; line-height: 1.5;
 }
-.frais-note { margin-top: 34px; font-size: 15px; color: var(--muted-2); }
+.frais-note { margin-top: 34px; padding: 0 16px; font-size: 15px; color: var(--muted); }
+.frais-back { margin: 24px 16px 0; }
+.frais-privacy { margin-top: 14px; padding: 0 16px; font-size: 14px; color: var(--muted); }
