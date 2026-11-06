@@ -48,10 +48,11 @@ function messageFromDetail(detail, fallback) {
  * @param {string} method - 'GET' | 'POST' | 'PUT' | 'DELETE'
  * @param {string} path - relative path, e.g. '/auth/login'
  * @param {object|FormData} [body] - JSON body, or FormData for file uploads
+ * @param {{ timeoutMs?: number }} [options] - timeoutMs aborts a request that takes too long
  * @returns {Promise<any>}
  * @throws {ApiError}
  */
-async function request(method, path, body) {
+async function request(method, path, body, { timeoutMs } = {}) {
   const headers = {};
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
 
@@ -66,16 +67,25 @@ async function request(method, path, body) {
     headers.Authorization = `Bearer ${token}`;
   }
 
+  const controller = timeoutMs ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+
   let res;
   try {
     res = await fetch(`${BASE_URL}${path}`, {
       method,
       headers,
       body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
+      signal: controller?.signal,
     });
-  } catch {
+  } catch (err) {
+    if (err?.name === 'AbortError') {
+      throw new ApiError(0, 'La réponse a pris trop de temps. Réessayez dans un instant.');
+    }
     // Network error, CORS refusal, backend down: fetch rejects without a response.
     throw new ApiError(0, 'Le serveur est injoignable. Vérifiez votre connexion puis réessayez.');
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 
   if (!res.ok) {
@@ -107,7 +117,7 @@ async function request(method, path, body) {
 
 export const api = {
   get: (path) => request('GET', path),
-  post: (path, body) => request('POST', path, body),
+  post: (path, body, options) => request('POST', path, body, options),
   put: (path, body) => request('PUT', path, body),
   del: (path) => request('DELETE', path),
 };
