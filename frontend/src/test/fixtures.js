@@ -30,3 +30,15 @@ export function foodDetail(overrides = {}) {
 }
 
 export const CATEGORIES = [{ id_categorie: 4, nom: 'Poissons', image: null }];
+
+// Accounts as returned by GET /admin/utilisateurs (UtilisateurAdmin), most recent first.
+export const ADMIN_USER = { id: 1, email: 'admin@alimendo.fr', role: 'admin', acces_ia: true };
+
+export function adminAccounts() {
+  return [
+    { id: 12, email: 'camille.martin@exemple.fr', role: 'user', created_at: '2026-11-08T10:00:00Z', acces_ia: false },
+    { id: 11, email: 'jury.simplon@exemple.fr', role: 'user', created_at: '2026-11-06T10:00:00Z', acces_ia: false },
+    { id: 9, email: 'sophie.l@exemple.fr', role: 'user', created_at: '2026-10-28T10:00:00Z', acces_ia: true },
+    { id: 1, email: 'admin@alimendo.fr', role: 'admin', created_at: '2026-09-14T10:00:00Z', acces_ia: true },
+  ];
+}
