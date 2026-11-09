@@ -18,7 +18,7 @@ Le registre couvre les traitements de données personnelles réalisés dans la b
 
 | Table | Données personnelles | Conclusion |
 |---|---|---|
-| utilisateur | Oui : email, mot de passe haché, rôle, dates de création et de dernière connexion | Fiche ref-001 « Gestion des comptes utilisateurs » |
+| utilisateur | Oui : email, mot de passe haché, rôle, dates de création et de dernière connexion, accès IA validé ou non (`acces_ia`) | Fiche ref-001 « Gestion des comptes utilisateurs » |
 | role | Non : deux libellés techniques (user, admin) | Hors registre |
 | aliment | Non : données nutritionnelles ouvertes (CIQUAL) | Hors registre |
 | categorie | Non : catégories d'aliments | Hors registre |

@@ -10,7 +10,8 @@ Référentiels utilisés :
 - OWASP Top 10, édition 2021 (risques web généraux), en correspondance
 
 Périmètre : l'API FastAPI du dossier `backend/`. Les routes IA (`/ai/chat`,
-`/ai/vision`) sont les seules derrière un mur de connexion. La recherche
+`/ai/vision`) sont derrière un mur de connexion et ne s'ouvrent qu'après
+validation du compte par une admin. Les routes `/admin` exigent le rôle admin. La recherche
 d'aliments et le score sont publics par choix : ils ne touchent à aucune
 donnée personnelle.
 
@@ -22,8 +23,8 @@ donnée personnelle.
 | API2 Authentification défaillante | A07 | Jeton JWT signé (HS256) avec expiration (60 min par défaut). Mots de passe hachés avec bcrypt. Même message d'erreur pour email inconnu et mot de passe faux. Mot de passe de 8 caractères minimum. | `app/core/security.py`, `app/services/auth_service.py`, `app/schemas/auth.py` | `tests/test_api_access.py`, `tests/test_security.py` |
 | API3 Exposition de propriétés | A01 | Les routes IA et d'authentification déclarent un `response_model` Pydantic : seuls les champs prévus sortent de l'API. Le hash du mot de passe n'est jamais renvoyé. | `app/schemas/` | Lecture du code |
 | API4 Consommation de ressources | A04 | Question limitée à 1000 caractères, image à 5 Mo et à trois formats. Réponse Mistral bornée (800 tokens, délai de 30 s). | `app/schemas/chat.py`, `app/routers/ai.py`, `app/core/config.py` | `tests/test_chat_schema.py` |
-| API5 Contrôle d'accès au niveau fonction | A01 | Le routeur IA impose l'authentification à toutes ses routes d'un coup (dépendance au niveau du routeur), aucune route IA ne peut être oubliée. | `app/routers/ai.py` | `tests/test_api_access.py` (401 sans jeton et avec un jeton invalide) |
-| API6 Accès sans limite à un flux métier sensible | A04 | Non applicable : pas d'achat, de réservation ni d'inscription en libre accès. | | |
+| API5 Contrôle d'accès au niveau fonction | A01 | Le routeur IA impose à toutes ses routes d'un coup (dépendance au niveau du routeur) un jeton valide et un accès IA validé par une admin (`acces_ia`, relu en base à chaque appel, 403 sinon). Le routeur admin impose le rôle admin à toutes ses routes de la même façon. | `app/routers/ai.py`, `app/routers/admin.py`, `require_acces_ia`, `require_role` | `tests/test_api_access.py`, `tests/test_acces_ia.py` (403 sans accès, révocation immédiate, routes admin refusées à un compte non admin) |
+| API6 Accès sans limite à un flux métier sensible | A04 | Inscription publique, encadrée : consentement explicite obligatoire (422 sinon), mot de passe de 8 caractères minimum. Le flux coûteux (appels Mistral payants, VLM du serveur) n'est ouvert qu'aux comptes validés à la main : créer des comptes en masse ne donne pas accès à l'IA. | `app/schemas/auth.py`, `app/core/security.py` | `tests/test_endpoints.py`, `tests/test_acces_ia.py` |
 | API7 Falsification de requête côté serveur (SSRF) | A10 | L'API n'appelle que des adresses fixées dans la configuration (Mistral, Ollama, Open Food Facts). Aucune URL ne vient de la requête de l'utilisatrice. | `app/core/config.py` | Lecture du code |
 | API8 Mauvaise configuration de sécurité | A05 | CORS limité aux origines déclarées et aux méthodes utilisées. Documentation `/docs` désactivée hors environnement local. Secrets lus dans `.env`, jamais dans le code. Secrets masqués dans les logs. Caractères de contrôle retirés de la question avant le classifieur et le prompt. | `app/main.py`, `app/core/config.py`, `app/core/logging_config.py`, `app/schemas/chat.py` | `tests/test_chat_schema.py` |
 | API9 Inventaire mal géré | A05 | Une seule API, une seule version en service. Les routes sont listées par l'OpenAPI générée en local. | `app/main.py` | `/docs` en local |
@@ -35,14 +36,21 @@ Correspondances supplémentaires du Top 10 web 2021 :
   paramétrées). Côté prompt, la question est nettoyée et le prompt système
   impose de répondre uniquement à partir des extraits fournis.
 - A09 Journalisation : une ligne de log par routage d'intention, sans le texte
-  de la question (donnée de santé potentielle).
+  de la question (donnée de santé potentielle). L'échec de connexion est
+  journalisé sans l'email saisi.
+- Ancien garde-fou `X-API-Key` retiré : une clé livrée dans le frontend n'est
+  pas un secret. La protection repose sur le JWT, la validation de l'accès IA
+  et le CORS restreint.
 
 ## Limites connues
 
-- Pas de limitation du nombre de requêtes par utilisatrice (API4). Risque
-  accepté : le site n'est pas ouvert au public et les routes IA exigent un
-  compte. À ajouter avant toute ouverture publique, pour protéger le quota
-  Mistral.
+- Pas de limitation du nombre de requêtes par utilisatrice (API4, API6), ni sur
+  l'inscription, ni sur les routes IA. Risque réduit : seuls les comptes validés
+  à la main consomment le quota Mistral, et un compte abusif se révoque en une
+  commande, avec effet immédiat. Évolution V2 : limitation de débit et quota de
+  tokens par compte.
+- Le rôle admin est lu dans le jeton : un compte retiré du rôle admin garde ses
+  droits sur `/admin` jusqu'à l'expiration du jeton (60 min).
 - Le nettoyage de la question ne bloque pas toutes les injections de prompt.
   Le garde-fou principal reste le prompt système et le classifieur
   d'intention, qui écarte les questions hors sujet avant l'appel à Mistral.

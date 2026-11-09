@@ -46,20 +46,18 @@ Dans GitHub Actions, le job `backend` du workflow `ci.yml` lance la même comman
 | `GET /health/detail` | public | 200 même si une dépendance manque | `test_endpoints.py` |
 | `POST /auth/register` | public | 201, 409 email déjà pris, 422 mot de passe trop court, 422 sans consentement explicite | `test_endpoints.py` |
 | `POST /auth/login` | public | 200, 401 mauvais mot de passe, 422 email mal formé | `test_endpoints.py` |
-| `GET /auth/me` | JWT | 200, 401 sans jeton, 401 jeton expiré | `test_endpoints.py` |
+| `GET /auth/me` | JWT | 200 avec `acces_ia`, 401 sans jeton, 401 jeton expiré | `test_endpoints.py`, `test_acces_ia.py` |
 | `GET /search/aliments` | public | 200, 422 terme trop court | `test_api_access.py`, `test_endpoints.py` |
 | `GET /search/categories` | public | 200 | `test_endpoints.py` |
 | `GET /score/aliment/{id}` | public | 200 avec disclaimer, 404, 422 | `test_endpoints.py` |
 | `GET /score/code-barre/{code}` | public | 200 avec attribution OFF, 404, 503, 422 | `test_score_code_barre.py` |
-| `POST /ai/chat` | JWT | 200 RAG avec sources, 200 hors périmètre, 200 détresse, 401 sans jeton, 401 jeton invalide, 401 clé d'API manquante, 422, 503 Mistral indisponible | `test_ai_endpoints.py`, `test_api_access.py`, `test_endpoints.py` |
-| `POST /ai/vision` | JWT | 200 aliment reconnu avec score et disclaimer, 200 photo sans aliment unique avec message, 401, 413 image trop lourde, 415 mauvais format, 422 image illisible, 503 VLM indisponible | `test_ai_endpoints.py`, `test_api_access.py`, `test_endpoints.py` (logique du service : `test_vision_service.py`) |
+| `POST /ai/chat` | JWT | 200 RAG avec sources, 200 hors périmètre, 200 détresse, 401 sans jeton, 401 jeton invalide, 401 compte supprimé, 403 accès non validé, 200 après validation, 403 après révocation (même jeton), 422, 503 Mistral indisponible | `test_ai_endpoints.py`, `test_api_access.py`, `test_endpoints.py`, `test_acces_ia.py` |
+| `POST /ai/vision` | JWT | 200 aliment reconnu avec score et disclaimer, 200 photo sans aliment unique avec message, 401, 403 accès non validé, 413 image trop lourde, 415 mauvais format, 422 image illisible, 503 VLM indisponible | `test_ai_endpoints.py`, `test_api_access.py`, `test_endpoints.py` (logique du service : `test_vision_service.py`) |
 
-Les 11 routes de l'API sont couvertes.
+| `GET /admin/utilisateurs` | admin | 200 données minimales, 401 sans jeton, 403 compte non admin | `test_acces_ia.py` |
+| `PATCH /admin/utilisateurs/{id}/acces-ia` | admin | 200 ouverture et fermeture, 404 compte inconnu, 401 sans jeton, 403 compte non admin | `test_acces_ia.py` |
 
-**Pourquoi pas de test 403 :** 403 veut dire « connectée mais pas le droit ». Les spécifications ne
-prévoient aucune route réservée à un rôle : seules les features IA demandent un compte, quel que
-soit le rôle. La fonction `require_role` existe pour une future route d'administration (monitoring),
-elle sera testée avec cette route.
+Les 13 routes de l'API sont couvertes.
 
 ## 4. Résultats
 

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Alimendo : API",
-    "description": "API du projet étudiant Alimendo. Score inflammatoire des aliments et assistant documentaire sur l'endométriose.\n\nProjet étudiant à but pédagogique, sans expertise médicale.\n\nRègles d'accès : la santé, l'inscription, la connexion, la recherche et le score sont publics. `/auth/me` et les routes `/ai` exigent un jeton JWT (`Authorization: Bearer <jeton>`), obtenu par `/auth/login` ou `/auth/register` et valable 60 minutes par défaut. Détail : docs/api.md.",
+    "description": "API du projet étudiant Alimendo. Score inflammatoire des aliments et assistant documentaire sur l'endométriose.\n\nProjet étudiant à but pédagogique, sans expertise médicale.\n\nRègles d'accès : la santé, l'inscription, la connexion, la recherche et le score sont publics. `/auth/me`, `/ai` et `/admin` exigent un jeton JWT (`Authorization: Bearer <jeton>`), obtenu par `/auth/login` ou `/auth/register` et valable 60 minutes par défaut. `/ai` exige en plus un accès validé par une admin, `/admin` le rôle admin. Détail : docs/api.md.",
     "version": "0.1.0"
   },
   "paths": {
@@ -152,7 +152,7 @@
           "authentification"
         ],
         "summary": "Utilisateur courant",
-        "description": "Renvoie l'utilisateur associé au jeton fourni.\n\nLe frontend appelle cette route au chargement pour savoir si le jeton\nconservé en localStorage est encore valide. Un 401 déconnecte.",
+        "description": "Renvoie l'utilisateur associé au jeton fourni, relu en base.\n\nLe frontend appelle cette route au chargement pour savoir si le jeton\nconservé en localStorage est encore valide. Un 401 déconnecte.\nLa relecture en base donne `acces_ia` à jour (validation ou révocation).",
         "operationId": "me_auth_me_get",
         "responses": {
           "200": {
@@ -368,38 +368,15 @@
         "summary": "Poser une question au chatbot",
         "description": "Répond à une question à partir du corpus documentaire.\n\nRaises:\n    HTTPException: 503 si l'index vectoriel, le modèle d'embeddings ou le\n        service de génération est indisponible. On renvoie un message\n        explicite plutôt qu'une 500 brute.",
         "operationId": "chat_ai_chat_post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "X-API-Key",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Api-Key"
-            }
-          }
-        ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ChatRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -413,7 +390,10 @@
             }
           },
           "401": {
-            "description": "Jeton absent, invalide ou expiré, ou clé d'API invalide."
+            "description": "Jeton absent, invalide ou expiré."
+          },
+          "403": {
+            "description": "Accès IA pas encore validé par une admin."
           },
           "503": {
             "description": "Service IA (index, embeddings, Mistral ou Ollama) indisponible."
@@ -428,7 +408,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/ai/vision": {
@@ -439,38 +424,15 @@
         "summary": "Identifier un aliment sur une photo",
         "description": "Identifie un aliment brut à partir d'une photo et renvoie son score.\n\nLa réponse est toujours un 200 quand le VLM a répondu, même si aucun\naliment n'est reconnu : `statut` et `message` décrivent alors l'issue.\nL'image n'est jamais stockée.\n\nRaises:\n    HTTPException: 415 si le type de fichier n'est pas une image autorisée,\n        413 si l'image dépasse la taille maximale,\n        422 si le fichier n'est pas une image lisible,\n        503 si Ollama est injoignable, trop lent ou en erreur.",
         "operationId": "vision_ai_vision_post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "X-API-Key",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Api-Key"
-            }
-          }
-        ],
         "requestBody": {
-          "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/Body_vision_ai_vision_post"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -484,7 +446,10 @@
             }
           },
           "401": {
-            "description": "Jeton absent, invalide ou expiré, ou clé d'API invalide."
+            "description": "Jeton absent, invalide ou expiré."
+          },
+          "403": {
+            "description": "Accès IA pas encore validé par une admin."
           },
           "503": {
             "description": "Service IA (index, embeddings, Mistral ou Ollama) indisponible."
@@ -498,12 +463,135 @@
           "422": {
             "description": "Fichier illisible : ce n'est pas une image valide."
           }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/admin/utilisateurs": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Lister les comptes",
+        "description": "Liste les comptes avec leur accès IA, du plus récent au plus ancien.",
+        "operationId": "lister_utilisateurs_admin_utilisateurs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UtilisateurAdmin"
+                  },
+                  "type": "array",
+                  "title": "Response Lister Utilisateurs Admin Utilisateurs Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent, invalide ou expiré."
+          },
+          "403": {
+            "description": "Compte sans rôle admin."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/admin/utilisateurs/{id_utilisateur}/acces-ia": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Ouvrir ou fermer l'accès IA d'un compte",
+        "description": "Valide ou révoque l'accès IA. Effet immédiat sur le prochain appel /ai/*.",
+        "operationId": "modifier_acces_ia_admin_utilisateurs__id_utilisateur__acces_ia_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_utilisateur",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id Utilisateur"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccesIaUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UtilisateurAdmin"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton absent, invalide ou expiré."
+          },
+          "403": {
+            "description": "Compte sans rôle admin."
+          },
+          "404": {
+            "description": "Compte introuvable."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
         }
       }
     }
   },
   "components": {
     "schemas": {
+      "AccesIaUpdate": {
+        "properties": {
+          "acces_ia": {
+            "type": "boolean",
+            "title": "Acces Ia"
+          }
+        },
+        "type": "object",
+        "required": [
+          "acces_ia"
+        ],
+        "title": "AccesIaUpdate",
+        "description": "Corps de `PATCH /admin/utilisateurs/{id}/acces-ia`."
+      },
       "AlimentDetail": {
         "properties": {
           "aliment": {
@@ -1024,6 +1112,42 @@
         "title": "TokenResponse",
         "description": "Réponse de `POST /auth/login`"
       },
+      "UtilisateurAdmin": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "acces_ia": {
+            "type": "boolean",
+            "title": "Acces Ia"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "role",
+          "created_at",
+          "acces_ia"
+        ],
+        "title": "UtilisateurAdmin",
+        "description": "Une ligne de la liste des comptes vue par une admin."
+      },
       "UtilisateurPublic": {
         "properties": {
           "id": {
@@ -1038,6 +1162,11 @@
           "role": {
             "type": "string",
             "title": "Role"
+          },
+          "acces_ia": {
+            "type": "boolean",
+            "title": "Acces Ia",
+            "default": false
           }
         },
         "type": "object",
@@ -1200,7 +1329,11 @@
     },
     {
       "name": "intelligence artificielle",
-      "description": "Chatbot RAG et reconnaissance photo. JWT obligatoire, plus l'en-tête X-API-Key si ALIMENDO_API_KEY est configurée."
+      "description": "Chatbot RAG et reconnaissance photo. JWT obligatoire et accès validé par une admin (403 sinon)."
+    },
+    {
+      "name": "admin",
+      "description": "Validation de l'accès IA des comptes. Rôle admin obligatoire."
     }
   ]
 }
