@@ -149,4 +149,16 @@ describe('Chatbot (POST /ai/chat)', () => {
     expect(input).toHaveAccessibleDescription(/au moins 3 caractères/);
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it('403: shows the pending access card instead of the chat', async () => {
+    mockFetch(jsonResponse(403, { detail: 'Accès en attente de validation.' }));
+    const user = userEvent.setup();
+    renderChat();
+
+    await ask(user, 'Qu’est-ce que l’endométriose ?');
+
+    expect(await screen.findByRole('heading', { name: 'Accès en attente de validation' })).toBeInTheDocument();
+    expect(screen.getByText('Projet étudiant')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Poser une question')).not.toBeInTheDocument();
+  });
 });
