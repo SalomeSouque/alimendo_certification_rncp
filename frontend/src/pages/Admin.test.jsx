@@ -45,12 +45,12 @@ async function findRow(email) {
 }
 
 describe('Admin page (/admin)', () => {
-  it('shows the student project notice and lists the accounts to approve by default', async () => {
+  it('shows the student project mention and lists the accounts to approve by default', async () => {
     fakeBackend();
     renderAdmin();
 
     expect(screen.getByRole('heading', { level: 1, name: 'Espace admin' })).toBeInTheDocument();
-    expect(screen.getByText('Projet étudiant, prototype de démonstration.')).toBeInTheDocument();
+    expect(screen.getByText('Projet étudiant · Back-office')).toBeInTheDocument();
     expect(screen.getByText('Chargement des comptes…')).toBeInTheDocument();
 
     const row = await findRow('camille.martin@exemple.fr');

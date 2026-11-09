@@ -165,47 +165,41 @@ export default function Admin() {
   return (
     <Layout>
       <main className="admin-main">
-        <p className="step-label">Back-office</p>
+        <p className="admin-tag">Projet étudiant · Back-office</p>
         <h1 className="section-title admin-title">Espace admin</h1>
         <p className="section-body admin-lead">
-          Ouvrez ou fermez, compte par compte, l’accès au chatbot et à l’analyse d’un aliment
+          Ouvrir ou fermer, compte par compte, l’accès au chatbot et à l’analyse d’un aliment
           frais par photo.
         </p>
 
-        <div className="admin-notice">
-          <p className="admin-notice-title">Projet étudiant, prototype de démonstration.</p>
-          <p>
-            Chaque accès ouvert peut consommer des crédits Mistral payés par le projet :
-            ouvrez-le uniquement aux comptes que vous connaissez (jury, testeuses).
-          </p>
-        </div>
-
-        {noRights ? (
-          <StatePanel
-            withLogo
-            title="Accès réservé aux admins"
-            text="Votre compte n’a plus les droits nécessaires pour cette page."
-          >
-            <Link to="/" className="btn-secondary btn-small">Retour à l’accueil</Link>
-          </StatePanel>
-        ) : (
-          <>
-            <div className="admin-toolbar">
-              <AccountFilter value={filter} counts={counts} onChange={setFilter} />
-              <div className="admin-search">
-                <img src="/assets/loupe.svg" alt="" aria-hidden="true" />
-                <input
-                  type="search"
-                  aria-label="Rechercher un email"
-                  placeholder="Rechercher un email"
-                  value={term}
-                  onChange={(e) => setTerm(e.target.value)}
-                />
+        <div className="admin-content">
+          {noRights ? (
+            <StatePanel
+              withLogo
+              title="Accès réservé aux admins"
+              text="Votre compte n’a plus les droits nécessaires pour cette page."
+            >
+              <Link to="/" className="btn-secondary btn-small">Retour à l’accueil</Link>
+            </StatePanel>
+          ) : (
+            <>
+              <div className="admin-toolbar">
+                <AccountFilter value={filter} counts={counts} onChange={setFilter} />
+                <div className="admin-search">
+                  <img src="/assets/loupe.svg" alt="" aria-hidden="true" />
+                  <input
+                    type="search"
+                    aria-label="Rechercher un email"
+                    placeholder="Rechercher un email"
+                    value={term}
+                    onChange={(e) => setTerm(e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
-            {renderList()}
-          </>
-        )}
+              {renderList()}
+            </>
+          )}
+        </div>
       </main>
 
       {confirming && (
