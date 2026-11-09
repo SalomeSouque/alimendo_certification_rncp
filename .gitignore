@@ -2,6 +2,7 @@
 .venv/
 .env.*
 !.env.example
+!.env.prod.example
 .~lock.*#
 
 # Artefacts Python
