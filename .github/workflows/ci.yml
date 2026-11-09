@@ -95,3 +95,15 @@ jobs:
           BCRYPT_ROUNDS: "4"
         run: uv run pytest tests -q
 
+
+ # CD : IMAGES DOCKER ----
+  # Ne démarre que si les deux jobs précédents ont réussi (needs), et seulement sur
+  # un push : une pull request teste le code mais ne publie rien.
+  images:
+    name: Images Docker (CD)
+    needs: [frontend, backend]
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/cd.yml
