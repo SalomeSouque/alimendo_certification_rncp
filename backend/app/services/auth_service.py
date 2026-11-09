@@ -21,6 +21,7 @@ def _vers_public(utilisateur: Utilisateur) -> UtilisateurPublic:
         id=utilisateur.id_utilisateur,
         email=utilisateur.email,
         role=utilisateur.role.libelle,
+        acces_ia=utilisateur.acces_ia,
     )
 
 
@@ -64,8 +65,9 @@ async def authentifier(
     utilisateur = await user_repository.get_by_email(session, email)
 
     if utilisateur is None or not verify_password(password, utilisateur.password):
-        # On ne journalise jamais le mot de passe saisi, ni le hash stocké.
-        logger.warning("échec d'authentification", extra={"email_fourni": email})
+        # Ni l'email saisi, ni le mot de passe, ni le hash : l'email est une
+        # donnée personnelle et finirait dans les logs JSON (Loki).
+        logger.warning("échec d'authentification")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou mot de passe incorrect.",
@@ -77,6 +79,22 @@ async def authentifier(
     await session.commit()
 
     return _emettre_jeton(utilisateur)
+
+
+async def profil(session: AsyncSession, utilisateur_id: int) -> UtilisateurPublic:
+    """Relit le compte en base pour `/auth/me` (rôle et accès IA à jour).
+
+    Raises:
+        HTTPException: 401 si le compte n'existe plus.
+    """
+    utilisateur = await user_repository.get_by_id(session, utilisateur_id)
+    if utilisateur is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Compte introuvable, reconnectez-vous.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return _vers_public(utilisateur)
 
 
 def _emettre_jeton(utilisateur: Utilisateur) -> TokenResponse:

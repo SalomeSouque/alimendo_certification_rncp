@@ -159,23 +159,16 @@ class SecuritySettings:
     jwt_algorithm: str
     access_token_expire_minutes: int
     bcrypt_rounds: int
-    api_key: str | None
-
-    @property
-    def api_key_enabled(self) -> bool:
-        return bool(self.api_key)
 
 
 @lru_cache(maxsize=1)
 def get_security_settings() -> SecuritySettings:
     """Construit et met en cache la configuration de sécurité."""
-    raw_api_key = os.getenv("ALIMENDO_API_KEY", "").strip()
     return SecuritySettings(
         jwt_secret_key=_require("JWT_SECRET_KEY"),
         jwt_algorithm=os.getenv("JWT_ALGORITHM", "HS256").strip(),
         access_token_expire_minutes=_read_int("ACCESS_TOKEN_EXPIRE_MINUTES", "60"),
         bcrypt_rounds=_read_int("BCRYPT_ROUNDS", "12"),
-        api_key=raw_api_key or None,
     )
 
 

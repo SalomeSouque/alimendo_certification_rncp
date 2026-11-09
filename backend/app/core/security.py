@@ -9,10 +9,13 @@ from typing import Annotated, Any
 
 import bcrypt
 import jwt
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import SecuritySettings, get_security_settings
+from app.db.session import get_session
+from app.repositories import user_repository
 
 # `auto_error=False` gestion du 401 pour renvoyer un message FR
 
@@ -190,17 +193,38 @@ def require_role(*roles: str):
     return _checker
 
 
-async def verify_api_key(
-    x_api_key: Annotated[str | None, Header(alias="X-API-Key")] = None,
-) -> None:
-    """Dépendance : garde-fou X-API-Key, actif seulement si la clé est configurée.
+# Message renvoyé tant que l'accès IA n'est pas validé. Le frontend affiche
+# sa propre carte sur un 403 : ce texte sert aux autres clients et aux logs.
+MESSAGE_ACCES_IA_EN_ATTENTE = (
+    "Votre accès au chatbot et à la reconnaissance photo est en attente de "
+    "validation par l'administratrice du site."
+)
 
+
+async def require_acces_ia(
+    user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> CurrentUser:
+    """Dépendance des routes /ai/* : exige un accès IA validé.
+
+    `acces_ia` est relu en base à chaque appel, et non lu dans le JWT : une
+    révocation agit donc tout de suite, sans attendre l'expiration du jeton
+    (60 min par défaut).
+
+    Raises:
+        HTTPException: 401 si le compte n'existe plus, 403 si l'accès n'est
+            pas validé.
     """
-    settings = get_security_settings()
-    if not settings.api_key_enabled:
-        return
-    if x_api_key != settings.api_key:
+    utilisateur = await user_repository.get_by_id(session, user.id)
+    if utilisateur is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Clé d'API manquante ou invalide.",
+            detail="Compte introuvable, reconnectez-vous.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
+    if not utilisateur.acces_ia:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=MESSAGE_ACCES_IA_EN_ATTENTE,
+        )
+    return user

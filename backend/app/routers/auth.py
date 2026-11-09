@@ -64,12 +64,12 @@ async def login(
 )
 async def me(
     utilisateur: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> UtilisateurPublic:
-    """Renvoie l'utilisateur associé au jeton fourni.
+    """Renvoie l'utilisateur associé au jeton fourni, relu en base.
 
     Le frontend appelle cette route au chargement pour savoir si le jeton
     conservé en localStorage est encore valide. Un 401 déconnecte.
+    La relecture en base donne `acces_ia` à jour (validation ou révocation).
     """
-    return UtilisateurPublic(
-        id=utilisateur.id, email=utilisateur.email, role=utilisateur.role
-    )
+    return await auth_service.profil(session, utilisateur.id)
