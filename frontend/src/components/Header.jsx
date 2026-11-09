@@ -1,8 +1,9 @@
 import { useAuth } from '../context/AuthContext';
 import { NavLink, Link } from 'react-router-dom';
+import { isAdmin } from '../services/admin';
 
 export default function Header() {
-  const { isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   return (
     <header className="header">
     <div className="header-logo">
@@ -15,6 +16,7 @@ export default function Header() {
         <NavLink to="/analyser">Analyser un aliment</NavLink>
         <NavLink to="/chatbot">Chatbot</NavLink>
         <NavLink to="/en-savoir-plus">En savoir plus</NavLink>
+        {isAdmin(user) && <NavLink to="/admin">Admin</NavLink>}
         {/* <NavLink to="/connexion" className={() => 'btn-connect'}>Se connecter</NavLink> */}
         {isAuthenticated
         ? <button onClick={logout} className="btn-auth" >Se déconnecter</button>
