@@ -45,7 +45,7 @@ function messageFromDetail(detail, fallback) {
 
 /**
  * Sends an HTTP request and returns the parsed JSON body.
- * @param {string} method - 'GET' | 'POST' | 'PUT' | 'DELETE'
+ * @param {string} method - 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
  * @param {string} path - relative path, e.g. '/auth/login'
  * @param {object|FormData} [body] - JSON body, or FormData for file uploads
  * @param {{ timeoutMs?: number }} [options] - timeoutMs aborts a request that takes too long
@@ -119,5 +119,6 @@ export const api = {
   get: (path) => request('GET', path),
   post: (path, body, options) => request('POST', path, body, options),
   put: (path, body) => request('PUT', path, body),
+  patch: (path, body) => request('PATCH', path, body),
   del: (path) => request('DELETE', path),
 };

@@ -1,0 +1,45 @@
+/* Confirmation dialog (ConfirmDialog.jsx). Mobile-first. */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100; /* above the sticky header (999) and the chat FAB (1000) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(30, 36, 35, 0.38);
+}
+.dialog {
+  width: 100%;
+  max-width: 470px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(30, 36, 35, 0.18);
+  padding: 24px 20px 20px;
+}
+.dialog-title {
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.dialog-text p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.dialog-text strong { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (min-width: 640px) {
+  .dialog { padding: 30px 30px 26px; }
+}

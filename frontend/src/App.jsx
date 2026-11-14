@@ -9,7 +9,9 @@ import AlimentFrais from './pages/AlimentFrais.jsx';
 import Home from './pages/Home.jsx';
 import Chatbot from './pages/Chatbot.jsx';
 import Recherche from './pages/Recherche.jsx';
+import Admin from './pages/Admin.jsx';
 import AuthGate from './components/AuthGate';
+import AdminRoute from './components/AdminRoute';
 
 function Placeholder({ titre }) {
   return (
@@ -52,7 +54,16 @@ export default function App() {
           </AuthGate>
         } 
       />
-      
+
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <Admin />
+          </AdminRoute>
+        }
+      />
+
       {/* Routes pas encore portées : placeholder friendly au lieu d'un écran blanc */}
       <Route path="/" element={<Placeholder titre="Accueil" />} />
       <Route path="*" element={<Placeholder titre="Cette page" />} />
