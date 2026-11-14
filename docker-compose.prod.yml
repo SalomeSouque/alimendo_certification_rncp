@@ -14,11 +14,17 @@
 #   tout le reste, ou app arrêtée -> maintenance (priorité 1 = toujours perdante)
 
 name: alimendo-prod
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
   db:
     image: postgres:17-alpine
     restart: unless-stopped
+    logging: *logging
     env_file: ["${ENV_FILE:-.env}"]
     # Boucle locale uniquement : scripts d'import, sauvegardes, tunnel SSH.
     # Jamais 0.0.0.0 : Docker contourne le pare-feu de l'hôte.
@@ -36,6 +42,7 @@ services:
   chromadb:
     image: chromadb/chroma:1.5.9
     restart: unless-stopped
+    logging: *logging
     environment:
       IS_PERSISTENT: "TRUE"
       ANONYMIZED_TELEMETRY: "FALSE"
@@ -53,6 +60,7 @@ services:
     # (./deploy/deploy.sh local).
     build: ./backend
     restart: unless-stopped
+    logging: *logging
     env_file: ["${ENV_FILE:-.env}"]
     # --proxy-headers : l'API voit la vraie IP du client (logs, C20) et non celle de Traefik.
     # '*' est acceptable : l'API n'est joignable que par le réseau Traefik.
@@ -76,8 +84,10 @@ services:
       - "traefik.http.routers.alimendo-api.rule=Host(`${APP_DOMAIN}`) && PathPrefix(`/api`)"
       - "traefik.http.routers.alimendo-api.entrypoints=${TRAEFIK_ENTRYPOINT}"
       - "traefik.http.routers.alimendo-api.tls.certresolver=${TRAEFIK_CERTRESOLVER}"
-      - "traefik.http.routers.alimendo-api.middlewares=alimendo-api-strip"
+      - "traefik.http.routers.alimendo-api.middlewares=alimendo-api-strip,alimendo-api-body"
       - "traefik.http.middlewares.alimendo-api-strip.stripprefix.prefixes=/api"
+      - "traefik.http.middlewares.alimendo-api-body.buffering.maxRequestBodyBytes=6291456"
+      - "traefik.http.routers.alimendo-api.service=alimendo-api"
       - "traefik.http.services.alimendo-api.loadbalancer.server.port=8000"
 
   frontend:
@@ -90,6 +100,7 @@ services:
         VITE_API_URL: "https://${APP_DOMAIN}/api"
         VITE_AUTH_MOCK: "false"
     restart: unless-stopped
+    logging: *logging
     networks: [traefik]
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
@@ -110,6 +121,7 @@ services:
   maintenance:
     image: nginx:1.27-alpine
     restart: unless-stopped
+    logging: *logging
     volumes:
       - ./deploy/maintenance/index.html:/usr/share/nginx/html/index.html:ro
       - ./deploy/maintenance/nginx.conf:/etc/nginx/conf.d/default.conf:ro
@@ -124,6 +136,11 @@ services:
       - "traefik.http.routers.alimendo-maint.entrypoints=${TRAEFIK_ENTRYPOINT}"
       - "traefik.http.routers.alimendo-maint.tls.certresolver=${TRAEFIK_CERTRESOLVER}"
       - "traefik.http.services.alimendo-maint.loadbalancer.server.port=80"
+      # /api/health/detail : non public, renvoyé vers la page de maintenance (503)
+      - "traefik.http.routers.alimendo-health.rule=Host(`${APP_DOMAIN}`) && Path(`/api/health/detail`)"
+      - "traefik.http.routers.alimendo-health.entrypoints=${TRAEFIK_ENTRYPOINT}"
+      - "traefik.http.routers.alimendo-health.tls.certresolver=${TRAEFIK_CERTRESOLVER}"
+      - "traefik.http.routers.alimendo-health.service=alimendo-maint"
 
   # VLM : décision en attente des relevés du serveur (GPU ou non).
   # Pas de réservation GPU ici : à ajouter seulement si le serveur a une carte NVIDIA
@@ -132,6 +149,7 @@ services:
     profiles: ["ai"]
     image: ollama/ollama:0.40.12
     restart: unless-stopped
+    logging: *logging
     volumes:
       - ollama_models:/root/.ollama
     environment:
