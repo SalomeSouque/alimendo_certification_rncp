@@ -51,7 +51,7 @@ def test_features_ia_refusent_un_jeton_invalide(client, chemin):
     assert reponse.status_code == 401
 
 
-def test_jeton_valide_franchit_le_mur_dauthentification(client, monkeypatch):
+def test_jeton_valide_franchit_le_mur_dauthentification(client, compte_valide, monkeypatch):
     """Avec un jeton valide, on dépasse la couche d'authentification.
 
     Le service RAG est simulé : le test ne dépend ni de ChromaDB, ni du

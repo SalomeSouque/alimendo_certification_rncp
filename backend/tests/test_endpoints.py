@@ -5,12 +5,11 @@ par HTTP, comme le ferait le frontend, et on vérifie le code de réponse et
 le contrat de la réponse pour :
 
 - 200 / 201 : le cas nominal ;
-- 401 : jeton absent, invalide, ou clé d'API manquante ;
+- 401 : jeton absent ou invalide ;
 - 404 / 409 / 413 / 415 / 503 : les erreurs métier prévues par les specs ;
 - 422 : une entrée refusée par la validation Pydantic.
 
-403 n'est pas testé ici : aucune route n'est réservée à un rôle (seules les
-features IA demandent un compte, quel que soit le rôle). Voir docs/tests_api.md.
+403 (accès IA non validé, routes admin) est testé dans test_acces_ia.py.
 
 Ni base, ni ChromaDB, ni Mistral : la session est une doublure (conftest.py)
 et les repositories et services externes sont simulés avec monkeypatch.
@@ -49,6 +48,7 @@ def _faux_utilisateur(mot_de_passe: str = "motdepasse-correct") -> SimpleNamespa
         password=hash_password(mot_de_passe),
         role=SimpleNamespace(libelle="user"),
         last_login=None,
+        acces_ia=False,
     )
 
 
@@ -97,7 +97,9 @@ def test_register_cree_le_compte_et_renvoie_un_jeton(client_api, monkeypatch):
     assert reponse.status_code == 201
     corps = reponse.json()
     assert corps["access_token"]
-    assert corps["user"] == {"id": 7, "email": "lea@example.com", "role": "user"}
+    assert corps["user"] == {
+        "id": 7, "email": "lea@example.com", "role": "user", "acces_ia": False
+    }
 
 
 def test_register_refuse_un_email_deja_utilise(client_api, monkeypatch):
@@ -169,7 +171,9 @@ def test_me_renvoie_l_utilisatrice_du_jeton(client_api, entetes_auth):
     reponse = client_api.get("/auth/me", headers=entetes_auth)
 
     assert reponse.status_code == 200
-    assert reponse.json() == {"id": 1, "email": "test@example.com", "role": "user"}
+    assert reponse.json() == {
+        "id": 1, "email": "test@example.com", "role": "user", "acces_ia": True
+    }
 
 
 def test_me_sans_jeton_renvoie_401(client_api):
@@ -300,45 +304,6 @@ def test_chat_renvoie_503_si_mistral_est_indisponible(client_api, entetes_auth, 
     )
 
     assert reponse.status_code == 503
-
-
-@pytest.fixture
-def cle_api_active(monkeypatch):
-    """Active le garde-fou X-API-Key le temps d'un test.
-
-    La configuration est mise en cache : on vide le cache avant et après pour
-    que les autres tests retrouvent la configuration sans clé.
-    """
-    monkeypatch.setenv("ALIMENDO_API_KEY", "cle-de-test")
-    get_security_settings.cache_clear()
-    yield "cle-de-test"
-    monkeypatch.delenv("ALIMENDO_API_KEY")
-    get_security_settings.cache_clear()
-
-
-def test_chat_refuse_un_appel_sans_cle_api_quand_elle_est_configuree(
-    client_api, entetes_auth, cle_api_active
-):
-    reponse = client_api.post(
-        "/ai/chat", json={"question": "Qu'est-ce que l'endométriose ?"}, headers=entetes_auth
-    )
-
-    assert reponse.status_code == 401
-    assert reponse.json()["detail"] == "Clé d'API manquante ou invalide."
-
-
-def test_chat_accepte_un_appel_avec_la_bonne_cle_api(
-    client_api, entetes_auth, cle_api_active, monkeypatch
-):
-    _brancher_un_faux_rag(monkeypatch)
-
-    reponse = client_api.post(
-        "/ai/chat",
-        json={"question": "Qu'est-ce que l'endométriose ?"},
-        headers={**entetes_auth, "X-API-Key": cle_api_active},
-    )
-
-    assert reponse.status_code == 200
 
 
 # Vision (JWT)

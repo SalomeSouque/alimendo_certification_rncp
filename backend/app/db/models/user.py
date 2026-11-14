@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, false, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -48,6 +48,11 @@ class Utilisateur(Base):
     # (suppression après 3 ans d'inactivité). NULL = aucune connexion enregistrée.
     last_login: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+    # Accès aux routes /ai/* : ouvert à la main par une admin (migration 0004).
+    # Relu en base à chaque appel IA, pour qu'une révocation agisse tout de suite.
+    acces_ia: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=false()
     )
     id_role: Mapped[int] = mapped_column(
         ForeignKey("role.id_role", ondelete="RESTRICT"), nullable=False

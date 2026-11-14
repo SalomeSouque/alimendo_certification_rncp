@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import ROLE_USER, Role, Utilisateur
+from app.db.models import ROLE_ADMIN, ROLE_USER, Role, Utilisateur
 
 
 async def get_by_email(session: AsyncSession, email: str) -> Utilisateur | None:
@@ -78,3 +78,39 @@ async def creer(
     await session.flush()   # attribue la clé primaire sans clore la transaction
     await session.refresh(utilisateur, attribute_names=["role", "created_at"])
     return utilisateur
+
+
+async def lister(session: AsyncSession) -> list[Utilisateur]:
+    """Liste les comptes, du plus récent au plus ancien (vue admin)."""
+    requete = select(Utilisateur).order_by(Utilisateur.created_at.desc())
+    resultat = await session.execute(requete)
+    return list(resultat.scalars().all())
+
+
+async def definir_acces_ia(
+    session: AsyncSession, utilisateur: Utilisateur, acces_ia: bool
+) -> None:
+    """Ouvre ou ferme l'accès aux routes /ai/* d'un compte.
+
+    Le commit reste à la charge de l'appelant.
+    """
+    utilisateur.acces_ia = acces_ia
+    await session.flush()
+
+
+async def promouvoir_admin(session: AsyncSession, utilisateur: Utilisateur) -> None:
+    """Donne le rôle admin à un compte et lui ouvre l'accès IA.
+
+    L'accès IA est ouvert en même temps : la règle d'accès ne fait pas
+    d'exception pour le rôle admin, une admin sans accès IA ne pourrait pas
+    tester le chatbot. Le commit reste à la charge de l'appelant.
+
+    Raises:
+        ValueError: si le rôle admin est absent de la base.
+    """
+    role = await get_role_by_libelle(session, ROLE_ADMIN)
+    if role is None:
+        raise ValueError("Rôle 'admin' absent de la base (migration 0001).")
+    utilisateur.id_role = role.id_role
+    utilisateur.acces_ia = True
+    await session.flush()

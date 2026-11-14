@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header.jsx';
+import AccessPending from '../components/AccessPending.jsx';
 import {
   askChatbot,
   ACTION_REDIRECT_SCAN,
@@ -31,6 +32,7 @@ export default function Chatbot() {
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
   const [inputError, setInputError] = useState(null);
+  const [accessPending, setAccessPending] = useState(false);
   const threadEnd = useRef(null);
   const inputRef = useRef(null);
   const noticeId = useId();
@@ -58,6 +60,11 @@ export default function Chatbot() {
     } catch (err) {
       // 401 is handled by api.js / AuthProvider (redirect to /connexion).
       if (err?.status === 401) return;
+      // 403: AI access not approved yet (or revoked) by an admin.
+      if (err?.status === 403) {
+        setAccessPending(true);
+        return;
+      }
       const text =
         err?.status === 422
           ? `Votre question doit contenir entre ${QUESTION_MIN_LENGTH} et ${QUESTION_MAX_LENGTH} caractères.`
@@ -87,6 +94,18 @@ export default function Chatbot() {
     // Remove the error bubble, then ask the same question again.
     setMessages((prev) => prev.filter((m) => m.id !== message.id));
     ask(message.question);
+  }
+
+  if (accessPending) {
+    return (
+      <div className="chatbot-page">
+        <Header />
+        <main className="auth-main">
+          <h1 className="sr-only">Chatbot documentaire</h1>
+          <AccessPending />
+        </main>
+      </div>
+    );
   }
 
   return (

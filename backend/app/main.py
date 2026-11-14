@@ -17,7 +17,7 @@ from app.core.config import get_app_settings
 from app.core.logging_config import configurer_logging
 from app.db.session import dispose_engine, init_engine
 from app.domain.score import referentiel_est_pret
-from app.routers import ai, auth, health, score, search
+from app.routers import admin, ai, auth, health, score, search
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +39,13 @@ TAGS_OPENAPI = [
     {
         "name": "intelligence artificielle",
         "description": (
-            "Chatbot RAG et reconnaissance photo. JWT obligatoire, plus "
-            "l'en-tête X-API-Key si ALIMENDO_API_KEY est configurée."
+            "Chatbot RAG et reconnaissance photo. JWT obligatoire et accès "
+            "validé par une admin (403 sinon)."
         ),
+    },
+    {
+        "name": "admin",
+        "description": "Validation de l'accès IA des comptes. Rôle admin obligatoire.",
     },
 ]
 
@@ -87,10 +91,11 @@ def creer_application() -> FastAPI:
             "et assistant documentaire sur l'endométriose.\n\n"
             "Projet étudiant à but pédagogique, sans expertise médicale.\n\n"
             "Règles d'accès : la santé, l'inscription, la connexion, la recherche "
-            "et le score sont publics. `/auth/me` et les routes `/ai` exigent un "
+            "et le score sont publics. `/auth/me`, `/ai` et `/admin` exigent un "
             "jeton JWT (`Authorization: Bearer <jeton>`), obtenu par `/auth/login` "
-            "ou `/auth/register` et valable 60 minutes par défaut. Détail : "
-            "docs/api.md."
+            "ou `/auth/register` et valable 60 minutes par défaut. `/ai` exige "
+            "en plus un accès validé par une admin, `/admin` le rôle admin. "
+            "Détail : docs/api.md."
         ),
         version="0.1.0",
         openapi_tags=TAGS_OPENAPI,
@@ -106,8 +111,8 @@ def creer_application() -> FastAPI:
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),
         allow_credentials=True,
-        allow_methods=["GET", "POST", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-API-Key"],
+        allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
     )
 
     application.include_router(health.router)
@@ -115,6 +120,7 @@ def creer_application() -> FastAPI:
     application.include_router(search.router)
     application.include_router(score.router)
     application.include_router(ai.router)
+    application.include_router(admin.router)
 
     return application
 

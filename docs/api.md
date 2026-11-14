@@ -26,13 +26,16 @@ uv run python ../scripts/export_openapi.py
 | GET | `/health/detail` | public | État de chaque dépendance | |
 | POST | `/auth/register` | public | Créer un compte, renvoie un jeton. Corps : `email`, `password` (8 caractères min.), `consentement: true` obligatoire | table `utilisateur` |
 | POST | `/auth/login` | public | Se connecter, renvoie un jeton | |
-| GET | `/auth/me` | JWT | Utilisatrice du jeton | table `utilisateur` |
+| GET | `/auth/me` | JWT | Utilisatrice du jeton, relue en base (avec `acces_ia`) | table `utilisateur` |
 | GET | `/search/aliments?q=` | public | Recherche tolérante aux fautes | CIQUAL (table `aliment`) |
 | GET | `/search/categories` | public | Liste des catégories | table `categorie` |
 | GET | `/score/aliment/{id}` | public | Score, badges et alternatives | CIQUAL + référentiel de score |
 | GET | `/score/code-barre/{code}` | public | Score d'un produit scanné | API Open Food Facts, à la demande |
-| POST | `/ai/chat` | JWT | Chatbot RAG | corpus RAG (ChromaDB) + Mistral |
-| POST | `/ai/vision` | JWT | Reconnaissance photo, puis score de l'aliment reconnu | VLM Qwen3-VL (Ollama, local) + CIQUAL + référentiel de score |
+| POST | `/ai/chat` | JWT + accès IA validé | Chatbot RAG | corpus RAG (ChromaDB) + Mistral |
+| POST | `/ai/vision` | JWT + accès IA validé | Reconnaissance photo, puis score de l'aliment reconnu | VLM Qwen3-VL (Ollama, local) + CIQUAL + référentiel de score |
+
+| GET | `/admin/utilisateurs` | JWT, rôle admin | Liste des comptes (id, email, rôle, date d'inscription, accès IA) | table `utilisateur` |
+| PATCH | `/admin/utilisateurs/{id}/acces-ia` | JWT, rôle admin | Ouvrir ou fermer l'accès IA d'un compte. Corps : `{ "acces_ia": true }` | table `utilisateur` |
 
 ## 3. Règles d'authentification et d'autorisation
 
@@ -43,7 +46,7 @@ consultation est publique, sans compte. Seules les features IA et les données d
 **Obtenir un jeton.** `POST /auth/login` (ou `/auth/register`) renvoie :
 
 ```json
-{ "access_token": "eyJhbGciOi...", "token_type": "bearer", "user": { "id": 1, "email": "lea@example.com", "role": "user" } }
+{ "access_token": "eyJhbGciOi...", "token_type": "bearer", "user": { "id": 1, "email": "lea@example.com", "role": "user", "acces_ia": false } }
 ```
 
 **Utiliser le jeton.** Chaque appel à une route protégée porte l'en-tête :
@@ -58,8 +61,9 @@ Authorization: Bearer eyJhbGciOi...
 | Durée de validité | 60 minutes, pas de renouvellement automatique : l'utilisatrice se reconnecte | `ACCESS_TOKEN_EXPIRE_MINUTES` |
 | Clé de signature | secrète, jamais dans le code | `JWT_SECRET_KEY` (`.env`) |
 | Mots de passe | hachés avec bcrypt, 8 caractères minimum | `BCRYPT_ROUNDS` |
-| Garde-fou supplémentaire | en-tête `X-API-Key` exigé sur `/ai` si la variable est renseignée | `ALIMENDO_API_KEY` |
-| Rôles | `user` à l'inscription ; aucune route n'est réservée à un rôle pour l'instant | table `role` |
+| Accès IA | `/ai/*` exige `acces_ia = true`, relu en base à chaque appel : une validation ou une révocation agit au prochain appel, sans attendre l'expiration du jeton. Faux à l'inscription | colonne `utilisateur.acces_ia` |
+| Rôles | `user` à l'inscription ; `/admin/*` réservé au rôle `admin`, lu dans le jeton | table `role` |
+| Gestion sans interface | `python -m app.cli lister`, `ouvrir-ia EMAIL`, `fermer-ia EMAIL`, `promouvoir-admin EMAIL` (ouvre aussi l'accès IA), lancé dans le conteneur `api` | `backend/app/cli.py` |
 
 **Réponses en cas de refus.**
 
@@ -69,7 +73,9 @@ Authorization: Bearer eyJhbGciOi...
 | 401 | jeton expiré | « Session expirée, reconnectez-vous. » |
 | 401 | jeton invalide ou mal signé | « Jeton d'authentification invalide. » |
 | 401 | mauvais identifiants au login | « Email ou mot de passe incorrect. » (même message que l'email existe ou non) |
-| 401 | clé d'API absente ou fausse | « Clé d'API manquante ou invalide. » |
+| 401 | compte supprimé alors que le jeton est encore valide | « Compte introuvable, reconnectez-vous. » |
+| 403 | accès IA pas encore validé, ou révoqué | « Votre accès au chatbot et à la reconnaissance photo est en attente de validation par l'administratrice du site. » |
+| 403 | route `/admin` appelée sans le rôle admin | « Droits insuffisants pour accéder à cette ressource. » |
 
 ## 4. Autres codes de réponse
 

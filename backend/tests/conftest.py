@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
+from datetime import UTC, datetime
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
@@ -27,6 +29,7 @@ from app.core.security import create_access_token
 from app.db.session import get_session
 from app.domain.score.referential_v1 import COEFS, LandmarkParameter
 from app.main import app
+from app.repositories import user_repository
 
 
 @pytest.fixture
@@ -82,7 +85,26 @@ def client_api(session_factice) -> TestClient:
 
 
 @pytest.fixture
-def entetes_auth() -> dict[str, str]:
-    """En-tête d'une utilisatrice connectée (jeton valide, rôle user)."""
+def compte_valide(monkeypatch) -> SimpleNamespace:
+    """Compte n°1 en base, accès IA validé.
+
+    `get_by_id` est simulé : `/auth/me` et la dépendance des routes /ai/*
+    relisent le compte en base. Passer `acces_ia` à False dans un test
+    simule un compte en attente ou révoqué.
+    """
+    compte = SimpleNamespace(
+        id_utilisateur=1,
+        email="test@example.com",
+        role=SimpleNamespace(libelle="user"),
+        created_at=datetime(2026, 11, 1, tzinfo=UTC),
+        acces_ia=True,
+    )
+    monkeypatch.setattr(user_repository, "get_by_id", AsyncMock(return_value=compte))
+    return compte
+
+
+@pytest.fixture
+def entetes_auth(compte_valide) -> dict[str, str]:
+    """En-tête d'une utilisatrice connectée (jeton valide, rôle user, accès IA validé)."""
     jeton = create_access_token(utilisateur_id=1, email="test@example.com", role="user")
     return {"Authorization": f"Bearer {jeton}"}

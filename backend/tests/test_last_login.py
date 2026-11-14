@@ -29,6 +29,7 @@ def _faux_utilisateur(mot_de_passe: str) -> SimpleNamespace:
         password=hash_password(mot_de_passe),
         role=SimpleNamespace(libelle="user"),
         last_login=None,
+        acces_ia=False,
     )
 
 

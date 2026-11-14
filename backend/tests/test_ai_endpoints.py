@@ -37,8 +37,8 @@ def client() -> TestClient:
 
 
 @pytest.fixture
-def entetes() -> dict[str, str]:
-    """En-tête d'authentification d'une utilisatrice connectée."""
+def entetes(compte_valide) -> dict[str, str]:
+    """En-tête d'authentification d'une utilisatrice connectée, accès IA validé."""
     jeton = create_access_token(utilisateur_id=1, email="test@example.com", role="user")
     return {"Authorization": f"Bearer {jeton}"}
 

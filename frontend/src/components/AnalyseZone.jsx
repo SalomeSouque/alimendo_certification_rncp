@@ -1,10 +1,11 @@
 // src/components/AnalyseZone.jsx
 // Photo analysis: drop zone → checks → POST /ai/vision → result.
-// States: idle | loading | result (recognised food) | notFound | error.
+// States: idle | loading | result (recognised food) | notFound | error | pending (403).
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FoodScore from './FoodScore.jsx';
+import AccessPending from './AccessPending.jsx';
 import { identifyFood, validateImage, VISION_STATUS, ACCEPTED_IMAGE_TYPES } from '../services/vision';
 import './AnalyseZone.css';
 
@@ -48,6 +49,10 @@ export default function AnalyseZone({ dropzoneText, dropzoneHint }) {
       }
     } catch (err) {
       if (err?.status === 401) return; // central redirect to /connexion
+      if (err?.status === 403) {
+        setStatus('pending'); // AI access not approved yet by an admin
+        return;
+      }
       setMessage(err?.message ?? 'Une erreur est survenue. Réessayez.');
       setStatus('error');
     }
@@ -86,6 +91,8 @@ export default function AnalyseZone({ dropzoneText, dropzoneHint }) {
       </div>
     );
   }
+
+  if (status === 'pending') return <AccessPending />;
 
   if (status === 'result') {
     return (

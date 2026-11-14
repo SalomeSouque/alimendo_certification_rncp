@@ -1,8 +1,8 @@
 """Schémas Pydantic de l'authentification.
 
 
-* `POST /auth/login` -> `{ "access_token": ..., "user": { "id", "email", "role" } }`
-* `GET  /auth/me`    -> `{ "id", "email", "role" }`
+* `POST /auth/login` -> `{ "access_token": ..., "user": { "id", "email", "role", "acces_ia" } }`
+* `GET  /auth/me`    -> `{ "id", "email", "role", "acces_ia" }`
 
 Ne pas modifier ces noms de champs sans mettre à jour `services/auth.js` côté
 React : permet de basculer `VITE_AUTH_MOCK=false` sans toucher aux pages.
@@ -26,6 +26,8 @@ class UtilisateurPublic(BaseModel):
     id: int
     email: EmailStr
     role: str
+    # Vrai quand une admin a validé l'accès aux routes /ai/*.
+    acces_ia: bool = False
 
 
 class LoginRequest(BaseModel):

@@ -1,6 +1,6 @@
 # Procédure de tri des données personnelles
 
-Projet Alimendo, projet étudiant. Version 1.0 du 12/10/2026.
+Projet Alimendo, projet étudiant. Version 1.1 du 09/11/2026 (canal de suppression, champ acces_ia).
 
 Cette procédure applique les durées de conservation fixées dans le registre des traitements (docs/rgpd/registre-traitement-alimendo.ods, fiche ref-001). Elle concerne la seule table qui contient des données personnelles : `utilisateur`.
 
@@ -70,4 +70,4 @@ Les requêtes sont dans `sql/rgpd_tri.sql`. Ce fichier contient des suppressions
 
 ## 6. Limites connues
 
-Le projet n'est pas ouvert au public : aucune adresse de contact n'est publiée, les demandes sont adressées directement à l'administratrice. En cas d'ouverture au public, une adresse dédiée devra être ajoutée au registre et à la mention d'information. L'application n'envoie pas d'email : la personne n'est pas prévenue avant la suppression de son compte inactif. Si des sauvegardes de la base sont mises en place, leur durée de rétention devra être ajoutée à ce document : un compte supprimé reste présent dans les sauvegardes jusqu'à leur expiration.
+Canal de demande de suppression : choix assumé, aucune adresse de contact n'est publiée. Le dépôt est public, y écrire une adresse personnelle l'exposerait. Les demandes sont adressées à l'administratrice. Une adresse dédiée au projet, ajoutée au registre et à la mention d'information de la page Connexion, reste l'évolution prévue avant une ouverture large du site. L'application n'envoie pas d'email : la personne n'est pas prévenue avant la suppression de son compte inactif. Si des sauvegardes de la base sont mises en place, leur durée de rétention devra être ajoutée à ce document : un compte supprimé reste présent dans les sauvegardes jusqu'à leur expiration.

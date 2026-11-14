@@ -121,4 +121,15 @@ describe('Fresh food photo (POST /ai/vision)', () => {
 
     expect(await screen.findByText('Page connexion')).toBeInTheDocument();
   });
+
+  it('403: shows the pending access card', async () => {
+    mockFetch(jsonResponse(403, { detail: 'Accès en attente de validation.' }));
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.upload(fileInput(), photo());
+
+    expect(await screen.findByRole('heading', { name: 'Accès en attente de validation' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Rechercher un aliment' })).toHaveAttribute('href', '/analyser');
+  });
 });

@@ -1,6 +1,7 @@
-"""Routes des features IA : protégées par JWT.
+"""Routes des features IA : JWT obligatoire et accès validé par une admin.
 
-Ce sont les deux seules features derrière un mur de connexion.
+Ce sont les deux seules features derrière un mur de connexion. L'accès est
+ouvert compte par compte (`acces_ia`) : la clé Mistral est payante.
 
 """
 
@@ -11,7 +12,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import CurrentUser, get_current_user, verify_api_key
+from app.core.security import CurrentUser, get_current_user, require_acces_ia
 from app.db.session import get_session
 from app.schemas.chat import ChatRequest, ChatResponse, VisionResponse
 from app.services import (
@@ -25,9 +26,10 @@ from app.services import (
 router = APIRouter(
     prefix="/ai",
     tags=["intelligence artificielle"],
-    dependencies=[Depends(verify_api_key), Depends(get_current_user)],
+    dependencies=[Depends(require_acces_ia)],
     responses={
-        401: {"description": "Jeton absent, invalide ou expiré, ou clé d'API invalide."},
+        401: {"description": "Jeton absent, invalide ou expiré."},
+        403: {"description": "Accès IA pas encore validé par une admin."},
         503: {"description": "Service IA (index, embeddings, Mistral ou Ollama) indisponible."},
     },
 )
