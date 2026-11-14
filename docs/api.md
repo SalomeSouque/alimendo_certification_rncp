@@ -11,6 +11,13 @@ C5-CR3). La référence complète des routes, des paramètres et des schémas de
 | Swagger UI | `http://localhost:8000/docs` | en développement (`ENVIRONMENT=local`), désactivé ailleurs : il expose la carte complète de l'API |
 | Fichier OpenAPI 3.1 | [`docs/openapi.json`](openapi.json) | toujours, versionné dans Git, lisible dans [Swagger Editor](https://editor.swagger.io) |
 
+URL de base selon l'environnement :
+
+| Environnement | URL de base | Remarque |
+|---|---|---|
+| Développement | `http://localhost:8000` | routes appelées telles quelles (`/search/aliments`, `/ai/chat`…) |
+| Production | `https://DOMAINE/api` | Traefik retire le préfixe `/api` avant de transmettre : `https://DOMAINE/api/search/aliments` arrive à l'API comme `/search/aliments`. Voir [`deploiement.md`](deploiement.md) |
+
 Le fichier se régénère après chaque changement de route ou de schéma :
 
 ```bash
@@ -23,7 +30,7 @@ uv run python ../scripts/export_openapi.py
 | Méthode | Route | Accès | Rôle | Données servies |
 |---|---|---|---|---|
 | GET | `/health` | public | Sonde de vivacité | |
-| GET | `/health/detail` | public | État de chaque dépendance | |
+| GET | `/health/detail` | public en développement, **non routé en production** | État de chaque dépendance | |
 | POST | `/auth/register` | public | Créer un compte, renvoie un jeton. Corps : `email`, `password` (8 caractères min.), `consentement: true` obligatoire | table `utilisateur` |
 | POST | `/auth/login` | public | Se connecter, renvoie un jeton | |
 | GET | `/auth/me` | JWT | Utilisatrice du jeton, relue en base (avec `acces_ia`) | table `utilisateur` |

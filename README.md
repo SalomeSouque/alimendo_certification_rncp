@@ -49,6 +49,10 @@ guidelines) et ne sont jamais générées par le code ni par le LLM.
 
 Les deux routes IA exigent un jeton JWT (`Authorization: Bearer <jeton>`, obtenu
 via `POST /auth/login`) : sans jeton ou avec un jeton invalide, réponse `401`.
+Elles exigent aussi que l'accès IA du compte ait été validé par une admin
+(colonne `acces_ia`, relue en base à chaque appel) : sinon, réponse `403`.
+L'accès se gère depuis la page `/admin` du site ou avec le script
+`python -m app.cli` (voir [`docs/deploiement.md`](docs/deploiement.md)).
 
 | Route | Modèle(s) | Comportement |
 |---|---|---|
@@ -196,6 +200,24 @@ ne nécessite de base de données.
 
 Le service Mistral (chatbot) a sa propre documentation et ses tests de
 validation sur le vrai service : [`docs/services/mistral.md`](docs/services/mistral.md).
+
+## Déploiement en production
+
+La production tourne sur un serveur Linux, derrière le reverse proxy Traefik de
+l'hébergeur, qui gère le HTTPS. Elle utilise ses propres fichiers :
+
+| Fichier | Rôle |
+|---|---|
+| `docker-compose.prod.yml` | Stack de production : réseau privé pour les bases, routage Traefik (`/api` → API, `/` → frontend), page de maintenance de repli |
+| `.env.prod.example` | Modèle du `.env` du serveur (jamais versionné) |
+| `deploy/deploy.sh <tag>` | Déploiement, mise à jour et retour arrière |
+| `deploy/backup_db.sh`, `deploy/restore_db.sh` | Sauvegarde quotidienne et restauration de la base |
+| `deploy/maintenance/` | Page 503 affichée automatiquement quand l'application est arrêtée |
+
+À chaque push sur `develop` ou `main`, une fois les tests passés, la CI publie
+les images `alimendo-api` et `alimendo-frontend` sur GHCR, taguées
+`sha-<commit>` : c'est ce tag qu'on déploie. Procédure complète :
+[`docs/deploiement.md`](docs/deploiement.md).
 
 ## Variables d'environnement
 
