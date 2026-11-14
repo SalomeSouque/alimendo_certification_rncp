@@ -1,0 +1,170 @@
+# Compose de PRODUCTION (serveur). Le développement reste dans docker-compose.yml.
+#
+# Toutes les valeurs propres au serveur (domaine, noms Traefik, version des images)
+# viennent du fichier .env du serveur, créé à partir de .env.prod.example.
+#
+# Commandes usuelles (depuis la racine du dépôt, sur le serveur) :
+#   docker compose -f docker-compose.prod.yml config --quiet      # vérifie le fichier
+#   docker compose -f docker-compose.prod.yml up -d maintenance   # page de repli seule
+#   ./deploy/deploy.sh <tag>                                      # déploie une version
+#
+# Routage Traefik (même domaine, un seul certificat) :
+#   https://DOMAINE/api/...  -> api (préfixe /api retiré avant d'arriver à FastAPI)
+#   https://DOMAINE/...      -> frontend
+#   tout le reste, ou app arrêtée -> maintenance (priorité 1 = toujours perdante)
+
+name: alimendo-prod
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    logging: *logging
+    env_file: ["${ENV_FILE:-.env}"]
+    # Boucle locale uniquement : scripts d'import, sauvegardes, tunnel SSH.
+    # Jamais 0.0.0.0 : Docker contourne le pare-feu de l'hôte.
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chromadb:
+    image: chromadb/chroma:1.5.9
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+    # Boucle locale uniquement : ingestion RAG via tunnel SSH.
+    ports:
+      - "127.0.0.1:${CHROMADB_PORT:-8001}:8000"
+    volumes:
+      - chroma_data:/data
+    networks: [internal]
+
+  api:
+    profiles: ["app"]
+    image: ghcr.io/salomesouque/alimendo-api:${IMAGE_TAG:-develop}
+    # `build` sert de repli tant que la CD ne publie pas encore les images
+    # (./deploy/deploy.sh local).
+    build: ./backend
+    restart: unless-stopped
+    logging: *logging
+    env_file: ["${ENV_FILE:-.env}"]
+    # --proxy-headers : l'API voit la vraie IP du client (logs, C20) et non celle de Traefik.
+    # '*' est acceptable : l'API n'est joignable que par le réseau Traefik.
+    command:
+      - uvicorn
+      - app.main:app
+      - --host=0.0.0.0
+      - --port=8000
+      - --proxy-headers
+      - --forwarded-allow-ips=*
+    depends_on:
+      db:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    networks: [internal, traefik]
+    labels:
+      - "traefik.enable=true"
+      # Obligatoire : le conteneur est sur deux réseaux, Traefik doit savoir lequel utiliser.
+      - "traefik.docker.network=${TRAEFIK_NETWORK}"
+      - "traefik.http.routers.alimendo-api.rule=Host(`${APP_DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.alimendo-api.entrypoints=${TRAEFIK_ENTRYPOINT}"
+      - "traefik.http.routers.alimendo-api.tls.certresolver=${TRAEFIK_CERTRESOLVER}"
+      - "traefik.http.routers.alimendo-api.middlewares=alimendo-api-strip,alimendo-api-body"
+      - "traefik.http.middlewares.alimendo-api-strip.stripprefix.prefixes=/api"
+      - "traefik.http.middlewares.alimendo-api-body.buffering.maxRequestBodyBytes=6291456"
+      - "traefik.http.routers.alimendo-api.service=alimendo-api"
+      - "traefik.http.services.alimendo-api.loadbalancer.server.port=8000"
+
+  frontend:
+    profiles: ["app"]
+    image: ghcr.io/salomesouque/alimendo-frontend:${IMAGE_TAG:-develop}
+    build:
+      context: ./frontend
+      args:
+        # Figée dans le bundle au build : changer de domaine = reconstruire l'image.
+        VITE_API_URL: "https://${APP_DOMAIN}/api"
+        VITE_AUTH_MOCK: "false"
+    restart: unless-stopped
+    logging: *logging
+    networks: [traefik]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alimendo-front.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.alimendo-front.entrypoints=${TRAEFIK_ENTRYPOINT}"
+      - "traefik.http.routers.alimendo-front.tls.certresolver=${TRAEFIK_CERTRESOLVER}"
+      - "traefik.http.services.alimendo-front.loadbalancer.server.port=80"
+
+  # Page de repli : SANS profil, elle tourne en permanence.
+  # Priorité 1 : elle ne répond que si aucun routeur de l'app n'est disponible
+  # (app arrêtée, en redéploiement ou en échec de healthcheck).
+  # Pas de healthcheck : elle renvoie 503 exprès, un healthcheck la marquerait malade.
+  maintenance:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    logging: *logging
+    volumes:
+      - ./deploy/maintenance/index.html:/usr/share/nginx/html/index.html:ro
+      - ./deploy/maintenance/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      # Logo et trait jaune : copies propres à la page de repli, servies sous /_maintenance/.
+      # Volontairement indépendantes du frontend : la page de secours ne dépend de rien.
+      - ./deploy/maintenance/assets:/usr/share/nginx/maintenance-assets:ro
+    networks: [traefik]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alimendo-maint.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.alimendo-maint.priority=1"
+      - "traefik.http.routers.alimendo-maint.entrypoints=${TRAEFIK_ENTRYPOINT}"
+      - "traefik.http.routers.alimendo-maint.tls.certresolver=${TRAEFIK_CERTRESOLVER}"
+      - "traefik.http.services.alimendo-maint.loadbalancer.server.port=80"
+      # /api/health/detail : non public, renvoyé vers la page de maintenance (503)
+      - "traefik.http.routers.alimendo-health.rule=Host(`${APP_DOMAIN}`) && Path(`/api/health/detail`)"
+      - "traefik.http.routers.alimendo-health.entrypoints=${TRAEFIK_ENTRYPOINT}"
+      - "traefik.http.routers.alimendo-health.tls.certresolver=${TRAEFIK_CERTRESOLVER}"
+      - "traefik.http.routers.alimendo-health.service=alimendo-maint"
+
+  # VLM : décision en attente des relevés du serveur (GPU ou non).
+  # Pas de réservation GPU ici : à ajouter seulement si le serveur a une carte NVIDIA
+  # et le NVIDIA Container Toolkit. Sur CPU, mesurer le temps d'une identification avant de garder.
+  ollama:
+    profiles: ["ai"]
+    image: ollama/ollama:0.40.12
+    restart: unless-stopped
+    logging: *logging
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      OLLAMA_KEEP_ALIVE: "10m"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+    networks: [internal]
+
+networks:
+  # Réseau privé : db, chromadb et ollama ne sont jamais vus par Traefik.
+  internal: {}
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:?TRAEFIK_NETWORK doit être défini dans .env}
+
+volumes:
+  pgdata:
+  chroma_data:
+  ollama_models:

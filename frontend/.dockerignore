@@ -1,8 +1,9 @@
+# Le Dockerfile fait `COPY . .` : sans ce fichier, node_modules et un éventuel
+# .env local partiraient dans le contexte de build (lenteur, fuite de secrets).
 node_modules
 dist
 coverage
-# Les .env locaux ne doivent pas finir dans l'image : les variables VITE_*
-# sont figées au build, on les passe en build args (voir Dockerfile).
 .env
 .env.*
 !.env.example
+.git
