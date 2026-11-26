@@ -16,7 +16,7 @@ export default function AccessPending() {
       </p>
       <p>En attendant, la recherche par nom et le score des aliments restent accessibles.</p>
       <p>
-        <Link to="/analyser" className="btn-primary auth-submit">Rechercher un aliment</Link>
+        <Link to="/recherche" className="btn-primary auth-submit">Rechercher un aliment</Link>
       </p>
       <p className="disclaimer-mention">Projet étudiant</p>
     </div>

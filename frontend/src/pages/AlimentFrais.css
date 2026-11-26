@@ -11,3 +11,24 @@
 .frais-note { margin-top: 34px; padding: 0 16px; font-size: 15px; color: var(--muted); }
 .frais-back { margin: 24px 16px 0; }
 .frais-privacy { margin-top: 14px; padding: 0 16px; font-size: 14px; color: var(--muted); }
+/* Phones: loading / result / access pending in the site layout (maquettes M3f, M3g, M5d). */
+@media (max-width: 767px) {
+  .frais-main { padding: 40px 0 48px; }
+  .frais-title { font-size: 32px; margin-bottom: 8px; }
+  .frais-subtitle { font-size: 16px; padding: 0 20px; margin-bottom: 24px; }
+  .frais-note { font-size: 14px; padding: 0 20px; }
+  .frais-main .analyse-card { width: calc(100% - 40px); }
+  .frais-main .analyse-preview { display: none; }
+  .frais-main .analyse-card-title { font-size: 17px; font-weight: 500; }
+  .frais-main .analyse-card-text { font-size: 14px; }
+}
+
+/* Phones, recognised food (maquette M4b) */
+@media (max-width: 767px) {
+  .frais-main--result { padding: 16px 20px 40px; text-align: left; }
+  .frais-back-m { margin-bottom: 18px; }
+  .frais-back-m .btn-back { margin-top: 0; background: none; border: none; padding: 0; font-family: inherit; cursor: pointer; }
+  .frais-main--result .analyse-result { padding: 0; }
+  .frais-main--result .analyse-recognised { margin-bottom: 18px; font-size: 15px; }
+  .frais-main--result .analyse-recognised-actions { font-size: 13px; }
+}

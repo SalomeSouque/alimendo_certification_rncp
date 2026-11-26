@@ -53,6 +53,9 @@
 .analyse-recognised:focus-visible { outline: 2px solid var(--green-deep); outline-offset: 2px; }
 .analyse-recognised-actions { margin-top: 6px; font-size: 14px; color: var(--muted); }
 .analyse-recognised-actions a { color: var(--blue); text-decoration: underline; }
+/* On the pale green box, --blue reaches only 4.3:1: slightly darker blue (5.2:1, WCAG AA). */
+.analyse-recognised-actions a,
+.analyse-recognised-actions .link-btn { color: #3f6396; }
 
 /* Pure CSS spinner, no library */
 .spinner {
