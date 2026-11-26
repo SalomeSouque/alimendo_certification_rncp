@@ -1,5 +1,5 @@
 // playwright.config.js
-// Responsive + accessibility checks in a real browser.
+// Responsive + accessibility checks in a real browser (lot 17).
 // Unit tests stay in Vitest (jsdom, no layout); this suite needs real CSS layout.
 //
 //   npm run test:e2e            run every page at the 4 reference widths
@@ -32,6 +32,9 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     locale: 'fr-FR',
     trace: 'retain-on-failure',
+    // No animations (the menu drawer slides in): the screenshots and the overflow check
+    // see the final state, never a frame in the middle of the animation.
+    reducedMotion: 'reduce',
     launchOptions: {
       // Fake camera (moving test pattern) with permission granted: the barcode
       // tab opens its camera as on a phone.

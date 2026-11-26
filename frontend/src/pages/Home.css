@@ -163,22 +163,25 @@
    One column, 20 px margins. The desktop absolute positions are reset;
    the step 2 composition is redrawn at phone size. */
 @media (max-width: 1023px) {
-  /* Yellow line pieces (Home.jsx LinePiece): 890 px wide like the maquette line, behind
-     the section content (z-index -1 inside the section). top = offset measured on the
-     maquette from the section (or the step 2 composition) to its piece. */
+  /* Yellow line pieces (Home.jsx LinePiece), SVG cropped to the stroke. Each piece is
+     drawn at 94 % of its SVG size (the scale of the maquette line) and placed from the
+     centre of its section: left = 50% - offset, top = offset from the section top
+     (or from the step 2 composition for the orange piece), measured on the maquette. */
   .frame .home-line {
     position: absolute;
-    left: calc(50% - 501px);
-    width: 890px;
     max-width: none;
+    height: auto;
     z-index: -1;
     pointer-events: none;
   }
-  .frame .home-line--hero { top: 202px; }
-  .frame .home-line--step1 { top: 9px; }
-  .frame .home-line--step2 { top: 4px; }
-  .frame .home-line--orange { top: -18px; }
-  .frame .home-line--chatbot { top: 18px; }
+  /* hero: inside .hero-image, so it follows the picture whatever the title height */
+  .frame .home-line--hero { width: 563px; left: calc(50vw - 420px); top: 78px; }
+  .frame .home-line--step1 { width: 554px; left: calc(50% - 236px); top: 9px; }
+  /* 768x168 SVG drawn at the same scale as the other pieces (0.94). Its top-right end
+     leaves the screen up to about 630 px wide. */
+  .frame .home-line--step2 { width: 722px; left: calc(50% - 385px); top: -59px; }
+  .frame .home-line--orange { width: 468px; left: calc(50% - 326px); top: -8px; }
+  .frame .home-line--chatbot { width: 488px; left: calc(50% - 311px); top: 5px; }
 
   .frame .hero { padding: 0 20px; min-height: 0; }
   .frame .hero-tag { margin: 0 -20px 6px; padding: 8px 10px 0; font-size: 10px; text-align: center; }
@@ -190,7 +193,7 @@
     width: 341px; height: 207px;
     margin: -76px 0 0 123px; /* overlaps the end of the title, cut by the screen edge */
   }
-  .frame .hero-description { font-size: 16px; line-height: 1.4; max-width: none; margin: 56px 0 18px; }
+  .frame .hero-description { font-size: 16px; line-height: 1.4; max-width: none; margin: 72px 0 18px; }
   .frame .hero-buttons { align-items: stretch; gap: 11px; }
   .frame .hero-buttons .btn-primary,
   .frame .hero-buttons .btn-secondary { width: 100%; min-height: 50px; padding: 13px 20px; font-size: 16px; }

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
-import { COMPACT_HEADER_QUERY } from '../config/breakpoints';
+import { COMPACT_HEADER_QUERY, MOBILE_QUERY } from '../config/breakpoints';
 import { useMediaQuery } from '../components/useMediaQuery';
 import './Home.css';
 
@@ -28,6 +28,9 @@ export default function Home() {
   // Phones and tablets share the one-column home (no tablet maquette; the desktop
   // composition only works from 1024 px).
   const isMobile = useMediaQuery(COMPACT_HEADER_QUERY);
+  // The line pieces are cut where the line leaves a phone screen: on a tablet the cuts
+  // would show, so tablets get no line (and do not download the pieces).
+  const isPhone = useMediaQuery(MOBILE_QUERY);
   // Desktop: one line behind the whole page. Phones and tablets: the line of the
   // maquette is cut into pieces where it leaves the screen, and each piece is attached
   // to its section, so it follows the content whatever the text height.
@@ -37,6 +40,7 @@ export default function Home() {
   const heroImage = (
     // data-bleed: on phones the picture is cut by the screen edge on purpose (maquette).
     <div className="hero-image" data-bleed>
+      {isPhone && <LinePiece name="hero" lazy={false} />}
       <img src="/assets/img_hero_section.png" alt="Personne allongée sur un canapé" />
     </div>
   );
@@ -45,7 +49,6 @@ export default function Home() {
     <Layout wave={wave}>
       {/* Hero */}
       <section className="hero">
-        {isMobile && <LinePiece name="hero" lazy={false} />}
         <p className="hero-tag">Projet étudiant · cet outil ne remplace pas un suivi médical.</p>
         {/* .br-m: a space that becomes a line break on phones only (maquette). */}
         <h1 className="hero-title">
@@ -71,7 +74,7 @@ export default function Home() {
 
       {/* Étape 1 */}
       <section className="section-step1">
-        {isMobile && <LinePiece name="step1" />}
+        {isPhone && <LinePiece name="step1" />}
         <span className="step-label">Étape 1</span>
         <h2 className="section-title">Scannez, photographiez, ou <br />cherchez</h2>
         <p className="section-body">
@@ -94,7 +97,7 @@ export default function Home() {
 
       {/* Étape 2 */}
       <section className="section-step2">
-        {isMobile && <LinePiece name="step2" />}
+        {isPhone && <LinePiece name="step2" />}
         <div className="step2-text">
           <span className="step-label">Étape 2</span>
           <h2 className="section-title">Et vous obtenez son profil</h2>
@@ -106,7 +109,7 @@ export default function Home() {
         </div>
 
         <div className="step2-visual">
-          {isMobile && <LinePiece name="orange" />}
+          {isPhone && <LinePiece name="orange" />}
           <div className="card card-aliment">
             <div className="lbl">Aliment</div>
             <div className="val">Orange</div>
@@ -152,7 +155,7 @@ export default function Home() {
 
       {/* Chatbot */}
       <section className="section-chatbot">
-        {isMobile && <LinePiece name="chatbot" />}
+        {isPhone && <LinePiece name="chatbot" />}
         <div className="chatbot-label">Une aide accessible</div>
         <h2 className="chatbot-title">Une question ? Elle a sa place ici.</h2>
         <p className="chatbot-body">
