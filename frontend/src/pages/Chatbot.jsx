@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header.jsx';
+import Layout from '../components/Layout.jsx';
 import AccessPending from '../components/AccessPending.jsx';
 import {
   askChatbot,
@@ -96,15 +97,15 @@ export default function Chatbot() {
     ask(message.question);
   }
 
+  // Same screen as the other guard cards: site header, footer and "?" bubble (maquette M5d).
   if (accessPending) {
     return (
-      <div className="chatbot-page">
-        <Header />
+      <Layout>
         <main className="auth-main">
           <h1 className="sr-only">Chatbot documentaire</h1>
           <AccessPending />
         </main>
-      </div>
+      </Layout>
     );
   }
 

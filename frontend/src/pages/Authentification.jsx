@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PASSWORD_MIN_LENGTH } from '../services/auth';
 import Layout from '../components/Layout.jsx';
+import Wave from '../components/Wave.jsx';
 import './Authentification.css';
 
 // Simple format check, the backend (EmailStr) stays the reference.
@@ -101,17 +102,16 @@ export default function Authentification() {
   }
 
   const wave = (
-    <img
-      className="wave wave-auth"
-      src="/assets/yellow_line_identification_page.svg"
-      alt=""
-      aria-hidden="true"
+    <Wave
+      className="wave-auth"
+      desktop="/assets/yellow_line_identification_page.svg"
+      mobile="/assets/yellow_line_auth_mobile.svg"
     />
   );
 
   return (
     <Layout wave={wave}>
-      <main className="auth-main">
+      <main className="auth-main auth-main--form">
         <div className="auth-card">
           <img className="auth-logo" src="/assets/Logo.svg" alt="" aria-hidden="true" />
           <h1 className="auth-title">{isRegister ? 'Créer un compte' : 'Connexion'}</h1>

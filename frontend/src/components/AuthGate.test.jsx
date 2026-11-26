@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { Routes, Route } from 'react-router-dom';
 import { renderWithProviders } from '../test/renderWithProviders';
 import { mockFetch, jsonResponse } from '../test/mockFetch';
@@ -17,7 +17,9 @@ describe('AuthGate (access to the AI features)', () => {
   it('logged out: shows "connexion requise" with a link to the login page, not the feature', async () => {
     renderGate('chatbot');
     expect(await screen.findByRole('heading', { name: /connexion requise/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveAttribute('href', '/connexion');
+    // The card's button (the site header has its own "Se connecter" link).
+    expect(within(screen.getByRole('main')).getByRole('link', { name: 'Se connecter' })).toHaveAttribute('href', '/connexion');
+    expect(screen.getByText(/projet étudiant/i)).toBeInTheDocument();
     expect(screen.queryByText('Contenu protégé')).not.toBeInTheDocument();
   });
 
