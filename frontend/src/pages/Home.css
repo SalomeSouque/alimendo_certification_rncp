@@ -157,3 +157,109 @@
 }
 .chatbot-body { font-size: 19px; color: var(--muted); line-height: 1.55; max-width: 680px; margin-left: auto; margin-bottom: 30px; }
 .chatbot-cta { display: flex; justify-content: flex-end; }
+/* ========= Phones and tablets (maquette accueil mobile, 360 px) =========
+   ".frame" prefix: common.css is loaded after the pages CSS (see main.jsx), so the
+   phone rules need one more class to win over .section-title, .btn-primary…
+   One column, 20 px margins. The desktop absolute positions are reset;
+   the step 2 composition is redrawn at phone size. */
+@media (max-width: 1023px) {
+  /* Yellow line pieces (Home.jsx LinePiece): 890 px wide like the maquette line, behind
+     the section content (z-index -1 inside the section). top = offset measured on the
+     maquette from the section (or the step 2 composition) to its piece. */
+  .frame .home-line {
+    position: absolute;
+    left: calc(50% - 501px);
+    width: 890px;
+    max-width: none;
+    z-index: -1;
+    pointer-events: none;
+  }
+  .frame .home-line--hero { top: 202px; }
+  .frame .home-line--step1 { top: 9px; }
+  .frame .home-line--step2 { top: 4px; }
+  .frame .home-line--orange { top: -18px; }
+  .frame .home-line--chatbot { top: 18px; }
+
+  .frame .hero { padding: 0 20px; min-height: 0; }
+  .frame .hero-tag { margin: 0 -20px 6px; padding: 8px 10px 0; font-size: 10px; text-align: center; }
+  .frame .br-m { display: block; height: 0; overflow: hidden; }
+  .frame .hero-title { font-size: 34px; line-height: 1.04; max-width: none; margin-bottom: 0; }
+  .frame .hero-image {
+    position: relative;
+    top: auto; left: auto;
+    width: 341px; height: 207px;
+    margin: -76px 0 0 123px; /* overlaps the end of the title, cut by the screen edge */
+  }
+  .frame .hero-description { font-size: 16px; line-height: 1.4; max-width: none; margin: 56px 0 18px; }
+  .frame .hero-buttons { align-items: stretch; gap: 11px; }
+  .frame .hero-buttons .btn-primary,
+  .frame .hero-buttons .btn-secondary { width: 100%; min-height: 50px; padding: 13px 20px; font-size: 16px; }
+
+  .frame .section-title { font-size: 25px; line-height: 1.2; margin-bottom: 14px; }
+  .frame .section-body { font-size: 16px; line-height: 1.5; margin-bottom: 0; }
+  .frame .step-label { font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+
+  .frame .section-step1 { padding: 100px 20px 0; }
+  /* Text flows freely on a narrow screen: the desktop line breaks are dropped. */
+  .frame .section-step1 br { display: none; }
+  .frame .section-step1 .section-title { font-size: 26px; }
+  .frame .method-cards { gap: 10px; margin-top: 26px; }
+  .frame .method-card { flex: 1; min-width: 0; gap: 8px; padding: 10px 8px; border-radius: 10px; }
+  .frame .method-icon { width: 36px; height: 36px; border-radius: 8px; }
+  .frame .method-icon img { width: 18px; height: 18px; }
+  .frame .method-card-title { font-size: 13px; }
+  .frame .method-card-subtitle { font-size: 12px; }
+
+  /* Step 2: same cards, phone-sized composition */
+  .frame .section-step2 { padding: 96px 20px 0; min-height: 0; }
+  .frame .step2-text { margin-top: 0; }
+  .frame .step2-visual { position: relative; height: 385px; margin: 20px -20px 0; }
+  .frame .card { border-radius: 10px; box-shadow: 0 6px 18px rgba(30, 36, 35, 0.08); }
+  .frame .card-aliment { top: 0; left: auto; right: 42px; width: 110px; padding: 8px 12px; }
+  .frame .card-aliment .lbl { font-size: 8px; margin-bottom: 2px; }
+  .frame .card-aliment .val { font-size: 13px; font-weight: 500; }
+  .frame .card-aliment .sub { font-size: 9px; }
+  .frame .card-score { top: 94px; left: 12px; width: 225px; padding: 10px 12px 12px; }
+  .frame .card-score .lbl { font-size: 8px; margin-bottom: 6px; }
+  .frame .card-score .score-bar { margin-bottom: 8px; height: 5px; }
+  .frame .card-score .score-knob { width: 13px; height: 13px; }
+  .frame .card-score .caption { font-size: 12px; font-weight: 500; }
+  .frame .orange-img { top: 172px; right: 10px; width: 165px; height: 125px; }
+  .frame .card-micro { top: 312px; left: 40px; right: auto; width: auto; gap: 8px; padding: 8px 12px 8px 8px; }
+  .frame .card-micro .ic { width: 24px; height: 24px; border-radius: 6px; }
+  .frame .card-micro .ic img { width: 11px; height: 12px; }
+  .frame .card-micro .t { font-size: 12px; font-weight: 500; }
+  .frame .card-micro .s { font-size: 9px; }
+
+  .frame .section-pourquoi { padding: 70px 20px 0; }
+  .frame .pourquoi-card { padding: 22px 20px 20px; border-radius: 12px; }
+  .frame .pourquoi-label { font-size: 13px; font-weight: 500; margin-bottom: 14px; }
+  .frame .pourquoi-title { font-size: 26px; line-height: 1.2; margin-bottom: 14px; }
+  .frame .pourquoi-body { font-size: 16px; line-height: 1.5; margin-bottom: 20px; }
+  .frame .pourquoi-buttons { align-items: stretch; gap: 10px; }
+  .frame .pourquoi-buttons .btn-primary,
+  .frame .pourquoi-buttons .btn-secondary { width: 100%; text-align: center; min-height: 58px; padding: 10px 20px; font-size: 15px; }
+
+  .frame .section-chatbot { padding: 118px 20px 0; text-align: left; }
+  .frame .chatbot-label { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .frame .chatbot-title { font-size: 25px; line-height: 1.25; margin-bottom: 6px; }
+  .frame .chatbot-body { font-size: 16px; line-height: 1.75; max-width: 250px; margin: 0 0 20px; }
+  .frame .chatbot-cta { display: block; }
+  .frame .chatbot-cta .btn-secondary { display: flex; width: 100%; min-height: 50px; padding: 13px 20px; font-size: 16px; }
+}
+
+/* Tablets: the same column, centred. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .frame .hero,
+  .frame .section-step1,
+  .frame .section-step2,
+  .frame .section-pourquoi,
+  .frame .section-chatbot { max-width: 600px; margin-left: auto; margin-right: auto; }
+  .frame .step2-visual { width: 360px; margin: 20px auto 0; }
+}
+
+/* Very narrow phones (320 px): smaller title, method cards one under the other. */
+@media (max-width: 340px) {
+  .frame .hero-title { font-size: 30px; }
+  .frame .method-cards { flex-direction: column; }
+}

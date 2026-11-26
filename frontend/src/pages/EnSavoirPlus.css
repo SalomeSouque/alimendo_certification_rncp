@@ -1,5 +1,5 @@
 .savoir-main { padding: 84px 0 120px; }
-.savoir-col { width: 800px; margin: 0 auto; }
+.savoir-col { width: min(800px, calc(100% - 40px)); margin: 0 auto; }
 
 .savoir-title {
   font-family: 'Bagel Fat One', system-ui, cursive;
@@ -55,4 +55,23 @@
   font-weight: 500;
   color: var(--green);
   font-style: italic
+}
+/* Spacing between paragraphs and blocks (was an inline style). */
+.acc-body > * + * { margin-top: 10px; }
+
+/* Score scale: value in bold, meaning beside it. */
+.score-levels > div { display: grid; grid-template-columns: 34px 1fr; gap: 0 8px; padding: 2px 0; }
+.score-levels dt { font-weight: 600; color: var(--ink); }
+.score-levels dd { margin: 0; }
+
+/* Phones (maquette M6): left-aligned title, full-width accordion, 20 px margins. */
+@media (max-width: 767px) {
+  .wave-savoir { top: -39px; left: calc(50% - 531px); width: 770px; }
+  .savoir-main { padding: 120px 0 64px; }
+  .savoir-col { width: auto; margin: 0 20px; }
+  .savoir-title { font-size: 31px; margin-bottom: 10px; }
+  .savoir-subtitle { font-size: 16px; line-height: 1.5; max-width: 240px; margin-bottom: 0; }
+  .accordion { margin-top: 32px; border-radius: 12px; }
+  .acc-item > summary { min-height: 58px; padding: 12px 16px; font-size: 15px; }
+  .acc-body { padding: 0 16px 24px; font-size: 15px; line-height: 1.55; color: var(--ink); }
 }

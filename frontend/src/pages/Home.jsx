@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
+import { COMPACT_HEADER_QUERY } from '../config/breakpoints';
+import { useMediaQuery } from '../components/useMediaQuery';
 import './Home.css';
 
 // Données de démo de l'étape 1 (les deux méthodes d'entrée)
@@ -8,22 +10,49 @@ const methodes = [
   { icone: '/assets/camera.svg', titre: 'Photo', sousTitre: 'Aliment frais' },
 ];
 
-export default function Home() {
-  const wave = (
+/** One piece of the phone yellow line (decorative), positioned in Home.css. */
+function LinePiece({ name, lazy = true }) {
+  return (
     <img
-      className="wave wave-home"
-      src="/assets/yellow_line_home_page.svg"
+      className={`home-line home-line--${name}`}
+      src={`/assets/home_line_m_${name}.svg`}
       alt=""
       aria-hidden="true"
+      data-bleed
+      loading={lazy ? 'lazy' : 'eager'}
     />
+  );
+}
+
+export default function Home() {
+  // Phones and tablets share the one-column home (no tablet maquette; the desktop
+  // composition only works from 1024 px).
+  const isMobile = useMediaQuery(COMPACT_HEADER_QUERY);
+  // Desktop: one line behind the whole page. Phones and tablets: the line of the
+  // maquette is cut into pieces where it leaves the screen, and each piece is attached
+  // to its section, so it follows the content whatever the text height.
+  const wave = isMobile ? null : (
+    <img className="wave wave-home" src="/assets/yellow_line_home_page.svg" alt="" aria-hidden="true" />
+  );
+  const heroImage = (
+    // data-bleed: on phones the picture is cut by the screen edge on purpose (maquette).
+    <div className="hero-image" data-bleed>
+      <img src="/assets/img_hero_section.png" alt="Personne allongée sur un canapé" />
+    </div>
   );
 
   return (
     <Layout wave={wave}>
       {/* Hero */}
       <section className="hero">
+        {isMobile && <LinePiece name="hero" lazy={false} />}
         <p className="hero-tag">Projet étudiant · cet outil ne remplace pas un suivi médical.</p>
-        <h1 className="hero-title">Vivre avec<br />l'endométriose,<br />comprendre son assiette</h1>
+        {/* .br-m: a space that becomes a line break on phones only (maquette). */}
+        <h1 className="hero-title">
+          Vivre avec<br />l'endométriose,<br />comprendre<span className="br-m"> </span>son<span className="br-m"> </span>assiette
+        </h1>
+        {/* Phones: the picture sits between the title and the text (maquette accueil mobile). */}
+        {isMobile && heroImage}
         <p className="hero-description">
           Estimez le potentiel inflammatoire d'un aliment à partir d'une photo, d'un
           code-barre ou de son nom. Obtenez une information sourcée sur un aliment, cet
@@ -38,17 +67,16 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="hero-image">
-        <img src="/assets/img_hero_section.png" alt="Personne allongée sur un canapé" />
-      </div>
+      {!isMobile && heroImage}
 
       {/* Étape 1 */}
       <section className="section-step1">
+        {isMobile && <LinePiece name="step1" />}
         <span className="step-label">Étape 1</span>
-        <h2 className="section-title">Scannez, photographiez, ou<br />cherchez</h2>
+        <h2 className="section-title">Scannez, photographiez, ou <br />cherchez</h2>
         <p className="section-body">
-          Un produit emballé se reconnaît à son code-barre.<br />
-          Un aliment frais, à une photo ou simplement à son nom.<br />
+          Un produit emballé se reconnaît à son code-barre. <br />
+          Un aliment frais, à une photo ou simplement à son nom. <br />
           Deux chemins selon ce que vous avez sous la main.
         </p>
         <div className="method-cards">
@@ -66,6 +94,7 @@ export default function Home() {
 
       {/* Étape 2 */}
       <section className="section-step2">
+        {isMobile && <LinePiece name="step2" />}
         <div className="step2-text">
           <span className="step-label">Étape 2</span>
           <h2 className="section-title">Et vous obtenez son profil</h2>
@@ -77,6 +106,7 @@ export default function Home() {
         </div>
 
         <div className="step2-visual">
+          {isMobile && <LinePiece name="orange" />}
           <div className="card card-aliment">
             <div className="lbl">Aliment</div>
             <div className="val">Orange</div>
@@ -105,7 +135,7 @@ export default function Home() {
       <section className="section-pourquoi">
         <div className="pourquoi-card">
           <div className="pourquoi-label">Pourquoi Alimendo</div>
-          <h2 className="pourquoi-title">Pourquoi l'alimentation ?</h2>
+          <h2 className="pourquoi-title">Pourquoi<span className="br-m"> </span>l'alimentation&nbsp;?</h2>
           <p className="pourquoi-body">
             L'endométriose est une maladie inflammatoire chronique.
             Des travaux de recherche s'intéressent au lien entre alimentation et inflammation,
@@ -122,6 +152,7 @@ export default function Home() {
 
       {/* Chatbot */}
       <section className="section-chatbot">
+        {isMobile && <LinePiece name="chatbot" />}
         <div className="chatbot-label">Une aide accessible</div>
         <h2 className="chatbot-title">Une question ? Elle a sa place ici.</h2>
         <p className="chatbot-body">
