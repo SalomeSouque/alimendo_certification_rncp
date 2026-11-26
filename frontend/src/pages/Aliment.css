@@ -20,3 +20,8 @@
 @media (min-width: 900px) {
   .aliment-wrap { padding-top: 64px; }
 }
+@media (max-width: 767px) {
+  .aliment-wrap { padding: 16px 20px 40px; }
+  .aliment-back { margin-bottom: 18px; }
+  .aliment-back .btn-back { margin-top: 0; }
+}
