@@ -58,11 +58,35 @@ describe('Home', () => {
     expect(screen.getByText(/scientifiques et associatives/)).toBeInTheDocument();
   });
 
-  it('small laptop (1100 px): one-column home, no line', () => {
+  it('large phone (500 px): one column, no line (the cut ends of the pieces would show)', () => {
+    mockViewport(500);
+    const { container } = renderWithProviders(<Home />);
+    const hero = screen.getByRole('heading', { level: 1 }).closest('section');
+    expect(within(hero).getByRole('img', { name: 'Personne allongée sur un canapé' })).toBeInTheDocument();
+    expect(container.querySelectorAll('img.home-line')).toHaveLength(0);
+    expect(container.querySelector('.wave-home')).toBeNull();
+  });
+
+  it('tablet (1100 px): desktop structure, with its own line', () => {
     mockViewport(1100);
     const { container } = renderWithProviders(<Home />);
+    const hero = screen.getByRole('heading', { level: 1 }).closest('section');
+    expect(within(hero).queryByRole('img', { name: 'Personne allongée sur un canapé' })).not.toBeInTheDocument();
     expect(container.querySelector('.wave-home')).toBeNull();
-    expect(container.querySelector('.home-stage')).not.toHaveAttribute('style');
+    expect(container.querySelector('.wave-home-tablet')).toHaveAttribute('src', '/assets/home_line_tablet.svg');
+    expect(container.querySelectorAll('img.home-line')).toHaveLength(0);
+  });
+
+  it('tablet: the 1024 px composition is zoomed to the screen, at most 110 %', () => {
+    mockViewport(900);
+    const width = vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(900);
+    const { container, unmount } = renderWithProviders(<Home />);
+    expect(container.querySelector('.home-stage').style.zoom).toBe(String(900 / 1024));
+    unmount();
+    mockViewport(1250);
+    width.mockReturnValue(1250);
+    const again = renderWithProviders(<Home />);
+    expect(again.container.querySelector('.home-stage').style.zoom).toBe('1.1');
   });
 
   it('desktop: the 1728 px maquette is zoomed to the screen width', () => {

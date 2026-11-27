@@ -174,7 +174,7 @@
    phone rules need one more class to win over .section-title, .btn-primary…
    One column, 20 px margins. The desktop absolute positions are reset;
    the step 2 composition is redrawn at phone size. */
-@media (max-width: 1279px) {
+@media (max-width: 859px) {
   /* Yellow line pieces (Home.jsx LinePiece), SVG cropped to the stroke. Each piece is
      drawn at 94 % of its SVG size (the scale of the maquette line) and placed from the
      centre of its section: left = 50% - offset, top = offset from the section top
@@ -264,14 +264,18 @@
   .frame .chatbot-cta .btn-secondary { display: flex; width: 100%; min-height: 50px; padding: 13px 20px; font-size: 16px; }
 }
 
-/* Tablets: the same column, centred. */
-@media (min-width: 768px) and (max-width: 1279px) {
+/* Large phones, small tablets, half laptop screens (461-859 px): no line (see
+   HOME_PHONE_LINE_QUERY), the column stops
+   at 560 px and stays centred, the step 2 composition keeps its phone size. */
+@media (min-width: 461px) and (max-width: 859px) {
   .frame .hero,
   .frame .section-step1,
   .frame .section-step2,
   .frame .section-pourquoi,
-  .frame .section-chatbot { max-width: 600px; margin-left: auto; margin-right: auto; }
+  .frame .section-chatbot { max-width: 560px; margin-left: auto; margin-right: auto; }
   .frame .step2-visual { width: 360px; margin: 20px auto 0; }
+  .frame .chatbot-body { max-width: 420px; }
+  .frame .hero-description { margin-top: 24px; } /* the 72 px left room for the line */
 }
 
 /* Very narrow phones (320 px): smaller title, method cards one under the other. */
@@ -280,9 +284,9 @@
   .frame .method-cards { flex-direction: column; }
 }
 
-/* Desktop: what only applies to the desktop maquette (shared classes from common.css,
-   and rules the phone layout does not reset). */
-@media (min-width: 1280px) {
+/* Tablet and desktop (zoomed stage): shared classes from common.css, rules the phone
+   layout does not reset, minimum text sizes. */
+@media (min-width: 860px) {
   .home-stage .step-label { display: block; margin-bottom: 5px; }
   .home-stage .section-title { margin-bottom: 19px; }
   .home-stage .step2-text .section-title { margin-bottom: 23px; }
@@ -290,8 +294,9 @@
   .home-stage .card { border: 1px solid var(--border); box-shadow: 0 6px 20px rgba(30, 36, 35, 0.06); }
   .home-stage .pourquoi-buttons { display: inline-flex; align-items: stretch; gap: 22px; }
   .home-stage .pourquoi-buttons > * { width: auto; } /* both as wide as the widest */
-  /* Line breaks of the maquette, desktop only (<br className="br-d">); the phone
-     maquette keeps its blank line between the two paragraphs (<br className="br-mo">). */
+  /* Line breaks of the desktop maquette (<br className="br-d">, hidden on phones and
+     tablets); the phone maquette keeps its blank line between the two paragraphs
+     (<br className="br-mo">). */
   .home-stage br.br-mo { display: none; }
 
   /* Minimum text sizes. The zoom shrinks the maquette (at 1280 px, 74 %):
@@ -328,4 +333,52 @@
   .home-stage .card-aliment { width: max-content; min-width: 137px; }
   .home-stage .card-micro { width: max-content; min-width: 222px; }
   .home-stage .card-score { width: max-content; min-width: 289px; }
+}
+
+/* ========= Tablet, 860-1279 px (no maquette) =========
+   Composition derived from the two maquettes: the desktop structure (text on the left,
+   picture and step 2 composition on the right), drawn at 1024 px inside .home-stage
+   and zoomed to the screen like the desktop (Home.jsx: zoom = width / 1024, at most
+   1.1, then the stage is centred). Section heights are fixed so that the line, drawn by
+   Salomé on a capture at 1024 px, fits every tablet width. Texts: 18 px paragraphs,
+   38-40 px titles. Picture and step 2 composition placed on her drawing. */
+@media (min-width: 860px) and (max-width: 1279px) {
+  .home-stage { width: 1024px; margin: 0 auto; }
+  .home-stage br.br-d { display: none; }
+  /* Line drawn on the 1024 px capture: it goes 167 px past the left edge and 122 px
+     past the right one, so its ends stay off screen when the stage is centred. */
+  .home-stage .wave-home-tablet { top: 373px; left: -167px; width: 1313px; max-width: none; }
+
+  .home-stage .hero { padding: 56px 64px 0; height: 640px; }
+  .home-stage .hero-title { font-size: 40px; max-width: 500px; margin-bottom: 28px; }
+  /* px width, not em: the text must stay left of the picture. */
+  .home-stage .hero-description { font-size: max(18px, calc(15px / var(--z, 1))); max-width: 470px; margin-bottom: 36px; }
+  .home-stage .hero-image { top: 158px; left: 569px; width: 632px; height: 384px; }
+
+  .home-stage .section-title,
+  .home-stage .pourquoi-title,
+  .home-stage .chatbot-title { font-size: 38px; }
+  .home-stage .section-body,
+  .home-stage .pourquoi-body,
+  .home-stage .chatbot-body { font-size: max(18px, calc(15px / var(--z, 1))); }
+
+  .home-stage .section-step1 { padding: 40px 64px 0; height: 400px; }
+  .home-stage .method-cards { margin-top: 32px; }
+
+  /* Step 2: text on the left, the cards and the orange around the line on the right
+     (cards centred where Salomé placed them; they keep their size because of the
+     minimum text size, see "Minimum text sizes"). */
+  .home-stage .section-step2 { padding: 40px 64px 0; height: 560px; }
+  .home-stage .step2-text { max-width: 430px; }
+  .home-stage .card-aliment { top: 5px; left: 586px; }
+  .home-stage .card-micro { top: 140px; right: 24px; }
+  .home-stage .orange-img { top: 314px; right: 105px; width: 240px; height: 178px; }
+  .home-stage .card-score { top: 332px; left: 313px; }
+
+  .home-stage .section-pourquoi { padding: 40px 64px 0; height: 620px; }
+  .home-stage .pourquoi-card { max-width: 760px; padding: 30px 40px 27px; }
+
+  .home-stage .section-chatbot { padding: 40px 64px 0; height: 360px; }
+  /* The 400 px gap above the footer belongs to the desktop maquette. */
+  .home-stage ~ .footer { margin-top: 160px; }
 }

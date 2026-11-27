@@ -1,12 +1,16 @@
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
-import { COMPACT_HEADER_QUERY, MOBILE_QUERY } from '../config/breakpoints';
+import { HOME_ONE_COLUMN_QUERY, HOME_PHONE_LINE_QUERY, HOME_TABLET_QUERY } from '../config/breakpoints';
 import { useMediaQuery } from '../components/useMediaQuery';
 import { useViewportWidth } from '../components/useViewportWidth';
 import './Home.css';
 
-// Width of the desktop maquette: the stage is drawn at this size, then zoomed to the screen.
+// Widths the stage is drawn at, then zoomed to the screen: the desktop maquette, and
+// the tablet composition (no tablet maquette: derived from the phone and desktop ones).
 const DESIGN_WIDTH = 1728;
+const TABLET_WIDTH = 1024;
+// Above this zoom the tablet stage stops growing and is centred (texts would get too big).
+const TABLET_MAX_ZOOM = 1.1;
 
 // Données de démo de l'étape 1 (les deux méthodes d'entrée)
 const methodes = [
@@ -29,24 +33,28 @@ function LinePiece({ name, lazy = true }) {
 }
 
 export default function Home() {
-  // Phones, tablets and small laptops share the one-column home (no tablet maquette;
-  // below 1280 px the desktop composition no longer fits).
-  const isMobile = useMediaQuery(COMPACT_HEADER_QUERY);
-  // The line pieces are cut where the line leaves a phone screen: on a tablet the cuts
-  // would show, so tablets get no line (and do not download the pieces).
-  const isPhone = useMediaQuery(MOBILE_QUERY);
-  // Desktop: one line behind the whole stage. Phones: the line of the maquette is cut
-  // into pieces where it leaves the screen, and each piece is attached to its section,
-  // so it follows the content whatever the text height.
-  const wave = isMobile ? null : (
-    <img className="wave wave-home" src="/assets/yellow_line_home_page.svg" alt="" aria-hidden="true" />
-  );
-  // Desktop: the stage keeps the 1728 px maquette and is zoomed to the screen width,
-  // so the line, the picture, the cards and the texts keep their proportions
-  // (--z is used in Home.css for the minimum text sizes).
+  // Three layouts (breakpoints.js): one column (phone maquette), tablet, desktop.
+  const oneColumn = useMediaQuery(HOME_ONE_COLUMN_QUERY);
+  const tablet = useMediaQuery(HOME_TABLET_QUERY);
+  // The phone line pieces are cut where the line leaves a phone screen: on a wider
+  // screen the cuts would show, so the line is not displayed (nor downloaded).
+  const isPhone = useMediaQuery(HOME_PHONE_LINE_QUERY);
+  // Desktop and tablet: one line behind the whole stage (the tablet one is drawn on a
+  // capture of the 1024 px stage). Phones: the line of the maquette is cut into pieces
+  // where it leaves the screen, and each piece is attached to its section, so it
+  // follows the content whatever the text height.
+  let wave = null;
+  if (tablet) {
+    wave = <img className="wave wave-home-tablet" src="/assets/home_line_tablet.svg" alt="" aria-hidden="true" />;
+  } else if (!oneColumn) {
+    wave = <img className="wave wave-home" src="/assets/yellow_line_home_page.svg" alt="" aria-hidden="true" />;
+  }
+  // Desktop and tablet: the stage is drawn at a fixed width (1728 or 1024 px) and zoomed
+  // to the screen width, so the line, the picture, the cards and the texts keep their
+  // proportions (--z is used in Home.css for the minimum text sizes).
   const width = useViewportWidth();
-  const zoom = width / DESIGN_WIDTH;
-  const stageStyle = isMobile || !width ? undefined : { zoom, '--z': zoom };
+  const zoom = tablet ? Math.min(width / TABLET_WIDTH, TABLET_MAX_ZOOM) : width / DESIGN_WIDTH;
+  const stageStyle = oneColumn || !width ? undefined : { zoom, '--z': zoom };
   const heroImage = (
     // data-bleed: on phones the picture is cut by the screen edge on purpose (maquette).
     <div className="hero-image" data-bleed>
@@ -67,7 +75,7 @@ export default function Home() {
             Vivre avec<br />l'endométriose,<br />comprendre<span className="br-m"> </span>son<span className="br-m"> </span>assiette
           </h1>
           {/* Phones: the picture sits between the title and the text (maquette accueil mobile). */}
-          {isMobile && heroImage}
+          {oneColumn && heroImage}
           <p className="hero-description">
             Estimez le potentiel inflammatoire d'un aliment à partir d'une photo, d'un
             code-barre ou de son nom. Obtenez une information sourcée sur un aliment, cet
@@ -82,7 +90,7 @@ export default function Home() {
           </div>
         </section>
 
-        {!isMobile && heroImage}
+        {!oneColumn && heroImage}
 
         {/* Étape 1 */}
         <section className="section-step1">
