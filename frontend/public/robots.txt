@@ -1,0 +1,5 @@
+# Alimendo (projet étudiant). Without this file, nginx answers /robots.txt with
+# index.html (SPA fallback), which crawlers read as an invalid robots.txt.
+User-agent: *
+Allow: /
+Disallow: /admin
