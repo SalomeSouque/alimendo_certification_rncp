@@ -47,7 +47,12 @@
   line-height: 1.7;
 }
 
-.wave-savoir { top: 3%; left: -4%; width: 112%; }
+/* Desktop line, drawn as on the maquette (1728 px wide: 1935 px, 69 px off the left
+   edge). Below 1728 px it keeps that size and stays centred like the text column, so
+   it goes around the title the same way on every laptop; above, it grows with the
+   screen so that its ends stay off screen. Top in px: opening an accordion makes the
+   page taller and must not move the line. */
+.wave-savoir { top: 59px; left: min(-4%, calc(50% - 933px)); width: max(112%, 1935px); }
 .link-ressource {
   display: inline-block;
   margin-top: 16px;
