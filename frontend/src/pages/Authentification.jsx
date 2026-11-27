@@ -105,7 +105,11 @@ export default function Authentification() {
     <Wave
       className="wave-auth"
       desktop="/assets/yellow_line_identification_page.svg"
-      mobile="/assets/yellow_line_auth_mobile.svg"
+      mobile="/assets/yellow_line_auth_mobile.webp"
+      // The phone drawing is cut at both screen edges of a 360 px phone: its left cut
+      // shows from 421 px, so up to the tablet drawing (768 px) there is no line.
+      mobileMedia="(max-width: 420px)"
+      hiddenMedia="(min-width: 421px) and (max-width: 767px)"
     />
   );
 
