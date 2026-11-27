@@ -1,0 +1,306 @@
+/* Mobile full-screen analysis (maquettes M3a to M3e, 360 px). */
+
+.capture {
+  min-height: 100vh;
+  min-height: 100dvh; /* dvh: excludes the browser bars on mobile Safari / Chrome */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Dark: camera screens ---------- */
+.capture--dark { background: #1e2423; color: #fff; }
+
+.capture-stage {
+  position: relative;
+  flex: 1;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 72px 20px 32px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #4c524f 0%, #2a302e 55%, #1e2423 100%);
+}
+.capture-stage--warm { background: radial-gradient(circle at 50% 35%, #6b5a4b 0%, #3d3530 55%, #262220 100%); }
+
+/* Live camera behind everything */
+.capture-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Round 44 px buttons on the image (✕, torch) */
+.capture-round {
+  position: absolute;
+  top: 14px;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(20, 24, 23, 0.72);
+  color: #fff;
+  cursor: pointer;
+}
+.capture-round--left { left: 14px; }
+.capture-round--right { right: 14px; }
+.capture-round[aria-pressed="true"] { background: #fff; color: var(--ink); }
+.capture-round:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* Instruction pill */
+.capture-hint {
+  position: relative;
+  z-index: 1;
+  max-width: 300px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(20, 24, 23, 0.78);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Framing corners */
+.capture-frame {
+  position: relative;
+  z-index: 1;
+  width: min(290px, 80vw);
+  aspect-ratio: 1;
+}
+.capture-frame--barcode { width: min(260px, 76vw); aspect-ratio: 2 / 1; }
+.capture-frame span {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border: 4px solid #fff;
+}
+.capture-frame span:nth-child(1) { top: 0; left: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 12px; }
+.capture-frame span:nth-child(2) { top: 0; right: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 12px; }
+.capture-frame span:nth-child(3) { bottom: 0; left: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 12px; }
+.capture-frame span:nth-child(4) { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 12px; }
+/* Green line: the reading is active */
+.capture-scanline {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 50%;
+  height: 2px;
+  background: #6fd39a;
+  box-shadow: 0 0 8px rgba(111, 211, 154, 0.8);
+}
+
+/* Message when the camera cannot be used */
+.capture-message {
+  position: relative;
+  z-index: 1;
+  max-width: 300px;
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+  color: #fff;
+}
+.capture-message button { margin-top: 14px; }
+.capture-sub { position: relative; z-index: 1; font-size: 14px; color: #d5dbd8; text-align: center; max-width: 280px; }
+
+/* ---------- Bottom panel (dark) ---------- */
+.capture-panel {
+  flex: none;
+  padding: 16px 20px max(16px, env(safe-area-inset-bottom));
+  background: #161b1a;
+}
+.capture-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.capture-tab {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 18px;
+  border-radius: 999px;
+  color: #d5dbd8;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.capture-tab.active { background: #fff; color: var(--ink); }
+.capture-tab:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.capture-actions {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  min-height: 76px;
+}
+.capture-actions--left { grid-template-columns: auto 1fr; }
+
+/* "Importer": file input wrapped in its label */
+.capture-import {
+  justify-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #d5dbd8;
+  cursor: pointer;
+}
+.capture-import-icon {
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #3a403e;
+  color: #fff;
+}
+.capture-import:focus-within .capture-import-icon { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* Shutter: opens the phone camera (input capture="environment") */
+.capture-shutter {
+  width: 74px;
+  height: 74px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.capture-shutter::after {
+  content: '';
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #fff;
+}
+.capture-shutter:focus-within { outline: 3px solid #6fd39a; outline-offset: 3px; }
+
+.capture-status { display: flex; align-items: center; gap: 10px; font-size: 15px; color: #fff; }
+.capture-dot { width: 9px; height: 9px; border-radius: 50%; background: #6fd39a; flex: none; }
+.capture-error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #3b2422;
+  color: #ffd9d4;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.capture-note { margin-top: 12px; font-size: 12px; line-height: 1.45; color: #c3cac7; text-align: center; }
+
+/* ---------- Bottom sheet: "Aliment non reconnu" (M3e) ---------- */
+.capture-sheet-backdrop { position: fixed; inset: 0; z-index: 3; background: rgba(10, 12, 12, 0.35); pointer-events: none; }
+.capture-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  max-height: calc(100dvh - 72px); /* keeps the ✕ visible above the panel */
+  overflow-y: auto;
+  padding: 12px 20px max(20px, env(safe-area-inset-bottom));
+  border-radius: 24px 24px 0 0;
+  background: var(--bg);
+  color: var(--ink);
+  text-align: center;
+}
+.capture-sheet::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 0 auto 18px;
+  border-radius: 2px;
+  background: #cfd6d2;
+}
+.capture-sheet-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--green-soft);
+}
+.capture-sheet-icon img { width: 26px; height: 26px; }
+.capture-sheet-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400;
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+.capture-sheet-title:focus { outline: none; }
+.capture-sheet-text { font-size: 16px; line-height: 1.5; color: var(--muted); margin-bottom: 18px; }
+.capture-sheet .btn-primary,
+.capture-sheet .btn-secondary {
+  width: 100%;
+  min-height: 50px;
+  justify-content: center;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+.capture-sheet .or-sep { width: 100%; margin: 12px 0 14px; }
+.capture-sheet .manual { flex-wrap: nowrap; gap: 10px; }
+.capture-sheet .manual input { flex: 1; min-width: 0; }
+.capture-sheet .manual .btn-primary { width: auto; margin: 0; flex: none; }
+.capture-sheet-note { margin-top: 16px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+/* ---------- Light: "Écrire" tab (M3c, M3d) ---------- */
+.capture--light { background: var(--bg); }
+.capture-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.capture-bar-close {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--ink);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.capture-bar-close:focus-visible { outline: 2px solid var(--green-deep); outline-offset: -2px; }
+.capture-bar-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400;
+  font-size: 20px;
+  color: var(--ink);
+}
+.capture-content { flex: 1; padding: 24px 0 32px; }
+.capture-tabs-wrap {
+  position: sticky;
+  bottom: 0;
+  padding: 12px 20px max(12px, env(safe-area-inset-bottom));
+  background: #eef1ef;
+  border-top: 1px solid var(--border);
+}
+.capture--light .capture-tab { color: var(--muted); }
+.capture--light .capture-tab.active { background: var(--green); color: #fff; }
+.capture--light .capture-tab:focus-visible { outline-color: var(--green-deep); }

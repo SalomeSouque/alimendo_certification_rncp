@@ -50,7 +50,7 @@
   border-radius: 10px;
   padding: 0 16px;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 16px; /* below 16 px, iOS zooms the page on focus */
   color: var(--ink);
   background: #fff;
   outline: none;
@@ -117,4 +117,24 @@
 @media (min-width: 600px) {
   .auth-main { padding: 184px 0 120px; }
   .auth-card { padding: 44px 44px 40px; }
+}
+/* Phones: full-width card with 20 px margins (maquettes M5c, M5d). */
+@media (max-width: 767px) {
+  .auth-main { padding: 64px 0 40px; }
+  .auth-card { margin: 0 20px; padding: 28px 20px 24px; }
+  .auth-logo { margin-bottom: 16px; }
+  .auth-title { font-size: 24px; margin-bottom: 10px; }
+  .auth-subtitle { margin-bottom: 22px; }
+}
+
+/* Phones, login / sign-up form (maquette M7): the yellow line runs above the card. */
+@media (max-width: 767px) {
+  .wave-auth { top: 69px; left: calc(50% - 210px); width: 560px; }
+  .auth-main--form { padding-top: 141px; }
+  .auth-main--form .auth-logo { margin-bottom: 18px; }
+  .auth-main--form .auth-title { font-size: 26px; margin-bottom: 18px; }
+  .auth-main--form .field { margin-bottom: 16px; }
+  .auth-main--form .field input { height: 48px; }
+  .auth-main--form .field label { margin-bottom: 6px; }
+  .auth-main--form .auth-switch { margin: 14px 0 8px; }
 }

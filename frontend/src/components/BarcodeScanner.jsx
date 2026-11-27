@@ -1,100 +1,20 @@
 // src/components/BarcodeScanner.jsx
-// Two ways to read a barcode without typing it: live camera, or a photo.
-// Calls onCode(code) with a valid 8–14 digit code.
+// Desktop / tablet: two ways to read a barcode without typing it, live camera or a photo.
+// Calls onCode(code) with a valid 8–14 digit code. Logic in useBarcodeScanner.
 
-import { useEffect, useId, useRef, useState } from 'react';
-import {
-  cameraErrorMessage,
-  decodeBarcodeFromFile,
-  isCameraSupported,
-  startCameraScan,
-} from '../services/barcode';
+import { useId, useRef } from 'react';
+import { useBarcodeScanner } from './useBarcodeScanner';
 import './BarcodeScanner.css';
 
 export default function BarcodeScanner({ onCode }) {
-  // idle | starting | scanning | decoding
-  const [status, setStatus] = useState('idle');
-  const [error, setError] = useState(null);
-  const videoRef = useRef(null);
-  const controlsRef = useRef(null);
+  const { status, error, videoRef, cameraAvailable, cameraOn, start, cancel, readFile } = useBarcodeScanner(onCode);
   const fileRef = useRef(null);
   const statusId = useId();
-  // Latest callback, without restarting the camera when the parent re-renders.
-  const onCodeRef = useRef(onCode);
-  useEffect(() => { onCodeRef.current = onCode; }, [onCode]);
-  const cameraAvailable = isCameraSupported();
-
-  function stopCamera() {
-    controlsRef.current?.stop();
-    controlsRef.current = null;
-  }
-
-  // Always release the camera when leaving the page.
-  useEffect(() => stopCamera, []);
-
-  // The camera starts once the preview is displayed: some browsers do not
-  // play a video that is hidden (display: none) when it receives its stream.
-  useEffect(() => {
-    if (status !== 'starting') return undefined;
-    let cancelled = false;
-    startCameraScan(
-      videoRef.current,
-      (code) => {
-        controlsRef.current = null;
-        setStatus('idle');
-        onCodeRef.current(code);
-      },
-      (err) => {
-        console.error('Barcode scan stopped:', err);
-        controlsRef.current = null;
-        setStatus('idle');
-        setError(cameraErrorMessage(err));
-      },
-    )
-      .then((controls) => {
-        if (cancelled) {
-          controls.stop();
-          return;
-        }
-        controlsRef.current = controls;
-        setStatus('scanning');
-      })
-      .catch((err) => {
-        // Kept in the console to diagnose a camera that does not start.
-        console.error('Barcode camera error:', err);
-        if (cancelled) return;
-        setStatus('idle');
-        setError(cameraErrorMessage(err));
-      });
-    return () => { cancelled = true; };
-  }, [status]);
-
-  function startCamera() {
-    setError(null);
-    setStatus('starting');
-  }
-
-  function cancelCamera() {
-    stopCamera();
-    setStatus('idle');
-  }
 
   async function handleFile(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setError(null);
-    setStatus('decoding');
-    const code = await decodeBarcodeFromFile(file);
-    setStatus('idle');
+    await readFile(e.target.files?.[0]);
     if (fileRef.current) fileRef.current.value = '';
-    if (code) {
-      onCodeRef.current(code);
-    } else {
-      setError('Aucun code-barre lisible sur cette photo. Cadrez-le de plus près, bien net et éclairé, ou saisissez les chiffres.');
-    }
   }
-
-  const cameraOn = status === 'starting' || status === 'scanning';
 
   return (
     <div className="scanner">
@@ -112,12 +32,12 @@ export default function BarcodeScanner({ onCode }) {
 
       <div className="scanner-actions">
         {cameraOn ? (
-          <button type="button" className="btn-secondary" onClick={cancelCamera}>
+          <button type="button" className="btn-secondary" onClick={cancel}>
             Arrêter la caméra
           </button>
         ) : (
           cameraAvailable && (
-            <button type="button" className="btn-primary" onClick={startCamera} disabled={status === 'decoding'}>
+            <button type="button" className="btn-primary" onClick={start} disabled={status === 'decoding'}>
               Scanner avec la caméra
             </button>
           )

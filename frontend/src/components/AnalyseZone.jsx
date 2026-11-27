@@ -1,68 +1,68 @@
 // src/components/AnalyseZone.jsx
 // Photo analysis: drop zone → checks → POST /ai/vision → result.
-// States: idle | loading | result (recognised food) | notFound | error | pending (403).
+// The state lives in usePhotoAnalysis; pass `analysis` to share it with a parent
+// (the mobile page switches between this zone and the full-screen capture).
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FoodScore from './FoodScore.jsx';
 import AccessPending from './AccessPending.jsx';
-import { identifyFood, validateImage, VISION_STATUS, ACCEPTED_IMAGE_TYPES } from '../services/vision';
+import { usePhotoAnalysis } from './usePhotoAnalysis';
+import { ACCEPTED_IMAGE_TYPES } from '../services/vision';
 import './AnalyseZone.css';
 
-export default function AnalyseZone({ dropzoneText, dropzoneHint }) {
-  const [status, setStatus] = useState('idle');
-  const [inputError, setInputError] = useState(null);
-  const [message, setMessage] = useState(null);
-  const [result, setResult] = useState(null);
-  const [preview, setPreview] = useState(null);
+/** "Identification en cours…" card (maquette M3f). */
+export function AnalyseLoading({ preview }) {
+  return (
+    <div className="analyse-card" role="status">
+      {preview && <img className="analyse-preview" src={preview} alt="Photo envoyée" />}
+      <div className="spinner" aria-hidden="true" />
+      <p className="analyse-card-title">Identification en cours…</p>
+      <p className="analyse-card-text">
+        L’analyse de la photo peut prendre jusqu’à une trentaine de secondes.
+        Vous pouvez laisser cette page ouverte.
+      </p>
+    </div>
+  );
+}
+
+/** Recognised food: label + score (maquette M3g). Focus moves to it. */
+export function AnalyseResult({ result, onReset }) {
+  const ref = useRef(null);
+  useEffect(() => { ref.current?.focus(); }, []);
+  return (
+    <div className="analyse-result">
+      <div className="analyse-recognised" ref={ref} tabIndex={-1}>
+        <p>
+          Aliment identifié sur la photo : <strong>{result.label_identifie}</strong>
+        </p>
+        <p className="analyse-recognised-actions">
+          Ce n’est pas le bon aliment ? <Link to="/recherche">Rechercher par nom</Link>
+          {' · '}
+          <button type="button" className="link-btn" onClick={onReset}>Analyser une autre photo</button>
+        </p>
+      </div>
+      <FoodScore detail={result.resultat} titleLevel={2} />
+    </div>
+  );
+}
+
+export default function AnalyseZone({ dropzoneText, dropzoneHint, analysis }) {
+  const own = usePhotoAnalysis();
+  const { status, inputError, message, result, preview, analyse, reset } = analysis ?? own;
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef(null);
-  const resultRef = useRef(null);
+  const outcomeRef = useRef(null);
   const hintId = useId();
   const errorId = useId();
 
-  // Free the preview URL when it changes or when the component unmounts.
-  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
-
   // Move focus to the outcome so keyboard and screen reader users get it.
   useEffect(() => {
-    if (status !== 'idle' && status !== 'loading') resultRef.current?.focus();
+    if (status === 'notFound' || status === 'error') outcomeRef.current?.focus();
   }, [status]);
 
-  async function analyse(file) {
-    const error = validateImage(file);
-    if (error) {
-      setInputError(error);
-      return;
-    }
-    setInputError(null);
-    setPreview(URL.createObjectURL(file));
-    setStatus('loading');
-    try {
-      const response = await identifyFood(file);
-      if (response.statut === VISION_STATUS.RECOGNIZED && response.resultat) {
-        setResult(response);
-        setStatus('result');
-      } else {
-        setMessage(response.message ?? 'La photo n’a pas permis d’identifier l’aliment.');
-        setStatus('notFound');
-      }
-    } catch (err) {
-      if (err?.status === 401) return; // central redirect to /connexion
-      if (err?.status === 403) {
-        setStatus('pending'); // AI access not approved yet by an admin
-        return;
-      }
-      setMessage(err?.message ?? 'Une erreur est survenue. Réessayez.');
-      setStatus('error');
-    }
-  }
-
-  function reset() {
-    setStatus('idle');
-    setResult(null);
-    setMessage(null);
-    setPreview(null);
+  function handleReset() {
+    reset();
     if (inputRef.current) inputRef.current.value = '';
   }
 
@@ -78,51 +78,21 @@ export default function AnalyseZone({ dropzoneText, dropzoneHint }) {
     if (file) analyse(file);
   }
 
-  if (status === 'loading') {
-    return (
-      <div className="analyse-card" role="status">
-        {preview && <img className="analyse-preview" src={preview} alt="Photo envoyée" />}
-        <div className="spinner" aria-hidden="true" />
-        <p className="analyse-card-title">Identification en cours…</p>
-        <p className="analyse-card-text">
-          L’analyse de la photo peut prendre jusqu’à une trentaine de secondes.
-          Vous pouvez laisser cette page ouverte.
-        </p>
-      </div>
-    );
-  }
-
+  if (status === 'loading') return <AnalyseLoading preview={preview} />;
   if (status === 'pending') return <AccessPending />;
-
-  if (status === 'result') {
-    return (
-      <div className="analyse-result">
-        <div className="analyse-recognised" ref={resultRef} tabIndex={-1}>
-          <p>
-            Aliment identifié sur la photo : <strong>{result.label_identifie}</strong>
-          </p>
-          <p className="analyse-recognised-actions">
-            Ce n’est pas le bon aliment ? <Link to="/analyser">Rechercher par nom</Link>
-            {' · '}
-            <button type="button" className="link-btn" onClick={reset}>Analyser une autre photo</button>
-          </p>
-        </div>
-        <FoodScore detail={result.resultat} titleLevel={2} />
-      </div>
-    );
-  }
+  if (status === 'result') return <AnalyseResult result={result} onReset={handleReset} />;
 
   if (status === 'notFound' || status === 'error') {
     return (
-      <div className="analyse-card" ref={resultRef} tabIndex={-1} role={status === 'error' ? 'alert' : undefined}>
+      <div className="analyse-card" ref={outcomeRef} tabIndex={-1} role={status === 'error' ? 'alert' : undefined}>
         <img className="analyse-card-icon" src="/assets/food_not_found.svg" alt="" aria-hidden="true" />
         <h2 className="analyse-card-title">
           {status === 'error' ? 'Analyse impossible pour le moment' : 'Aliment non reconnu'}
         </h2>
         <p className="analyse-card-text">{message}</p>
         <div className="analyse-card-actions">
-          <button type="button" className="btn-primary" onClick={reset}>Réessayer avec une photo</button>
-          <Link to="/analyser" className="btn-secondary">Rechercher par nom</Link>
+          <button type="button" className="btn-primary" onClick={handleReset}>Réessayer avec une photo</button>
+          <Link to="/recherche" className="btn-secondary">Rechercher par nom</Link>
         </div>
       </div>
     );

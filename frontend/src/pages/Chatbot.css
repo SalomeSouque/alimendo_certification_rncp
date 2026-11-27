@@ -1,4 +1,4 @@
-.chatbot-page { display: flex; flex-direction: column; min-height: 100vh; }
+.chatbot-page { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
 .chatbot-page .header { flex: none; }
 
 .chat-app {
@@ -139,4 +139,20 @@
 @media (min-width: 768px) {
   .chat-thread { padding: 40px 0 24px; }
   .msg-user { font-size: 18px; padding: 13px 22px; }
+}
+/* Phones (maquettes M5a, M5b): 20 px margins, field kept at the bottom of the screen. */
+@media (max-width: 767px) {
+  .chat-banner { width: calc(100% - 40px); margin-top: 20px; font-size: 14px; padding: 16px; }
+  .chat-thread { padding: 24px 20px; gap: 24px; }
+  .msg-bot, .msg-user { font-size: 15px; }
+  .msg-sources { font-size: 14px; }
+  .chat-input-zone {
+    position: sticky;
+    bottom: 0;
+    padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+  }
+  .chat-input { width: calc(100% - 32px); }
+  .chat-privacy { margin-top: 8px; font-size: 12px; }
 }

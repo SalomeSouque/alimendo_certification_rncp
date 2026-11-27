@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
 import FoodScore from '../components/FoodScore.jsx';
 import { useApiResource } from '../components/useApiResource';
@@ -36,12 +36,22 @@ export default function Aliment() {
   const { id, code } = useParams();
   const isBarcode = Boolean(code);
   const { status, data, error } = useApiResource(() => loadFood({ id, code }), code ?? id);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // "Retour" goes back to where the user came from (search results, scan, another food).
+  // Opened directly (shared link): the search page, or the barcode page.
+  function goBack(e) {
+    if (location.key === 'default') return;
+    e.preventDefault();
+    navigate(-1);
+  }
 
   return (
     <Layout>
       <main className="aliment-wrap">
         <p className="aliment-back">
-          <Link to={isBarcode ? '/produit-emballe' : '/analyser'} className="btn-back">&larr; Retour</Link>
+          <Link to={isBarcode ? '/produit-emballe' : '/recherche'} className="btn-back" onClick={goBack}>&larr; Retour</Link>
         </p>
 
         {status === 'loading' && (
@@ -58,7 +68,7 @@ export default function Aliment() {
               {error?.status === 404 ? 'Aliment non trouvé' : 'Score indisponible pour le moment'}
             </h1>
             <p>{errorText(error, isBarcode)}</p>
-            <Link to="/analyser" className="btn-primary">Rechercher un aliment</Link>
+            <Link to="/recherche" className="btn-primary">Rechercher un aliment</Link>
           </div>
         )}
 

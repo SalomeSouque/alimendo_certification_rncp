@@ -8,6 +8,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ScoreBar from './ScoreBar';
+import { MOBILE_QUERY } from '../config/breakpoints';
+import { useMediaQuery } from './useMediaQuery';
 import './FoodScore.css';
 
 const FALLBACK_IMAGE = '/assets/couvert.svg';
@@ -21,7 +23,8 @@ function FoodImage({ food, className }) {
   return <img className={`${className} food-img--placeholder`} src={FALLBACK_IMAGE} alt="" aria-hidden="true" />;
 }
 
-function ScoreCard({ score }) {
+/** @param {{ score: object, showVerdict?: boolean }} props - phones show the verdict under the name instead */
+function ScoreCard({ score, showVerdict = true }) {
   return (
     <div className="score-card">
       <p className="kicker">Potentiel inflammatoire estimé</p>
@@ -33,7 +36,7 @@ function ScoreCard({ score }) {
             <span>Neutre</span>
             <span>Pro-inflammatoire</span>
           </div>
-          <p className="score-verdict">{score.libelle}</p>
+          {showVerdict && <p className="score-verdict">{score.libelle}</p>}
         </>
       ) : (
         <p className="score-unavailable">{score.message}</p>
@@ -53,6 +56,9 @@ export default function FoodScore({ detail, categoryName, titleLevel = 1 }) {
   const { aliment, score, badges = [], alternatives = [] } = detail;
   const shownBadges = badges.filter((b) => b.libelle);
   const kicker = aliment.source === 'OFF' ? 'Produit emballé' : categoryName;
+  // Phones (maquette M4a): picture beside the name, verdict under the name.
+  const isMobile = useMediaQuery(MOBILE_QUERY);
+  const verdictUnderName = isMobile && score.disponible;
 
   return (
     <article className="food-score" aria-labelledby="food-title">
@@ -64,8 +70,9 @@ export default function FoodScore({ detail, categoryName, titleLevel = 1 }) {
         <div className="col-right">
           {kicker && <p className="food-kicker">{kicker}</p>}
           <Title className="food-title" id="food-title">{aliment.nom}</Title>
+          {verdictUnderName && <p className="food-verdict">{score.libelle}</p>}
 
-          <ScoreCard score={score} />
+          <ScoreCard score={score} showVerdict={!verdictUnderName} />
 
           {shownBadges.length > 0 && (
             <ul className="tags food-badges" aria-label="Repères nutritionnels">

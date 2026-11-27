@@ -1,6 +1,8 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
 import FoodSearchForm from '../components/FoodSearchForm.jsx';
+import { MOBILE_QUERY } from '../config/breakpoints';
+import { useMediaQuery } from '../components/useMediaQuery';
 import './Analyser.css';
 
 // Données de démo — les deux modes d'analyse
@@ -20,6 +22,11 @@ const modes = [
 ];
 
 export default function Analyser() {
+  // Phones: no choice cards, the full-screen analysis opens on the "Code-barre" tab
+  // and the other modes are one tap away at the bottom (maquettes M3).
+  const isMobile = useMediaQuery(MOBILE_QUERY);
+  if (isMobile) return <Navigate to="/produit-emballe" replace />;
+
   return (
     <Layout>
       <main className="analyse-main">

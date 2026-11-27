@@ -8,6 +8,8 @@
 // Tu peux tout à fait déplacer ces styles dans common.css si tu préfères.
 
 import { Link, useLocation } from 'react-router-dom';
+import Layout from './Layout.jsx';
+import '../pages/Authentification.css';
 
 // Libellés lisibles par feature (fallback générique sinon).
 const FEATURE_LABELS = {
@@ -19,32 +21,33 @@ export default function LoginRequired({ feature }) {
   const location = useLocation();
   const label = FEATURE_LABELS[feature] ?? 'cette fonctionnalité';
 
+  // Inside the site layout: navigation, footer and "Projet étudiant" stay visible (maquette M5c).
   return (
-    <main className="auth-main">
-      <div className="auth-card">
-        <img className="auth-logo" src="/assets/Logo.svg" alt="Logo Alimendo" />
-        <h1 className="auth-title">
-            Oups, connexion requise
-        </h1>
-        <p className="auth-subtitle">
-          Pour utiliser {label}, il faut être connecté.e à un compte.
-        </p>
+    <Layout>
+      <main className="auth-main">
+        <div className="auth-card">
+          <img className="auth-logo" src="/assets/Logo.svg" alt="Logo Alimendo" />
+          <h1 className="auth-title">Oups, connexion requise</h1>
+          <p className="auth-subtitle">
+            Pour utiliser {label}, il faut être connecté.e à un compte.
+          </p>
 
-        <Link
-          to="/connexion"
-          // On mémorise la page d'origine pour y revenir après connexion.
-          state={{ from: location.pathname }}
-          className="btn-primary auth-submit"
-        >
-          Se connecter
-        </Link>
-
-        <p>
-          <Link to="/" className="btn-back">
-            Retour à l’accueil
+          <Link
+            to="/connexion"
+            // On mémorise la page d'origine pour y revenir après connexion.
+            state={{ from: location.pathname }}
+            className="btn-primary auth-submit"
+          >
+            Se connecter
           </Link>
-        </p>
-      </div>
-    </main>
+
+          <p>
+            <Link to="/" className="btn-back">
+              Retour à l’accueil
+            </Link>
+          </p>
+        </div>
+      </main>
+    </Layout>
   );
 }

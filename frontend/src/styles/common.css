@@ -8,7 +8,7 @@
   --bg-semi: rgb(from var(--bg) r g b / 0.6); 
   --ink: #1e2423;
   --muted: #5a6960;
-  --muted-2: #7a8a83;
+  --muted-2: #647069; /* was #7a8a83 (3.5:1), now 4.9:1 on --bg: WCAG AA */
   --green: #3d7a5a;
   --green-deep: #2a5540;
   --green-soft: #e3efe7;
@@ -245,6 +245,33 @@ button.btn-auth:hover {
   z-index: 1000;
 }
 .chat-fab img { width: 18px; height: 18px; }
+.chat-fab:focus-visible { outline: 3px solid var(--green-deep); outline-offset: 3px; }
+
+/* ---------------- Mobile (maquettes 360 px) ---------------- */
+@media (max-width: 767px) {
+  /* Round 56 px "?" bubble: covers much less content. Label kept for screen readers. */
+  .chat-fab {
+    width: 56px; height: 56px;
+    padding: 0;
+    justify-content: center;
+    right: 16px; bottom: 16px;
+  }
+  .chat-fab img { width: 26px; height: 26px; filter: none; }
+  .chat-fab-label {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .footer { margin-top: 40px; padding: 28px 20px 88px; }
+  .footer-logo { margin-bottom: 8px; }
+  .footer-logo img { width: 36px; height: 36px; }
+  .footer-brand { font-family: 'Bagel Fat One', system-ui, cursive; font-weight: 400; font-size: 15px; letter-spacing: 1px; }
+  .footer-links { gap: 20px; flex-wrap: wrap; margin-bottom: 8px; }
+  .footer-links a { display: inline-block; padding: 10px 0; font-size: 14px; }
+}
 
 /* ---- Barre de score (réutilisée sur plusieurs pages) ---- */
 .score-bar {
@@ -264,9 +291,6 @@ button.btn-auth:hover {
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
 }
 
-@media (max-width: 640px) {
-  body { overflow-x: auto; }
-}
 
 
 

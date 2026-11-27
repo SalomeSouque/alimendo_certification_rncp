@@ -22,3 +22,19 @@
   .search-main { padding-top: 96px; }
   .search-title { font-size: 40px; }
 }
+
+/* Phones: "Écrire" tab of the full-screen analysis (maquettes M3c, M3d). 20 px side margins. */
+.capture-content .search-block { width: calc(100% - 40px); max-width: none; }
+.capture-content .search-bar { padding: 3px 3px 3px 18px; }
+.capture-content .search-count { margin: 24px 20px 4px; font-size: 15px; }
+.capture-content .search-results { margin: 0 20px; border-top: none; }
+.capture-content .search-result { padding: 12px 0; font-size: 15px; }
+.capture-content .search-hint,
+.capture-content .search-status { margin: 20px 20px 0; text-align: left; }
+.search-manual { padding: 0 20px; }
+.search-manual .or-sep { width: 100%; margin: 24px 0 20px; }
+.search-manual .manual { flex-wrap: nowrap; gap: 10px; }
+.search-manual .manual input { flex: 1; min-width: 0; }
+.search-manual .manual .btn-primary { flex: none; }
+.search-manual .emb-hint { text-align: left; font-size: 13px; }
+.search-note { margin: 24px 20px 0; font-size: 13px; color: var(--muted); text-align: center; line-height: 1.5; }

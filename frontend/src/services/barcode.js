@@ -101,7 +101,8 @@ async function showStream(video, stream) {
  * gives a named error (ZXing rejects with `false` when the video does not play).
  * @param {HTMLVideoElement} video - preview element, already displayed
  * @param {(code: string) => void} onCode
- * @returns {Promise<{ stop: () => void }>} controls, to release the camera
+ * @returns {Promise<{ stop: () => void, setTorch: ((on: boolean) => Promise<void>) | null }>}
+ *   controls: release the camera, switch the torch when the device has one
  * @throws {DOMException|Error} NotAllowedError, NotFoundError, NotReadableError, NoFramesError…
  */
 export async function startCameraScan(video, onCode, onError) {
@@ -127,12 +128,16 @@ export async function startCameraScan(video, onCode, onError) {
       stopStream(stream);
       onCode(code);
     });
+    // Torch (flash) only exists on some phones (Chrome on Android): null elsewhere.
+    const [track] = stream.getVideoTracks();
+    const canTorch = Boolean(track?.getCapabilities?.()?.torch);
     return {
       stop: () => {
         done = true;
         controls.stop();
         stopStream(stream);
       },
+      setTorch: canTorch ? (on) => track.applyConstraints({ advanced: [{ torch: on }] }) : null,
     };
   } catch (err) {
     stopStream(stream);

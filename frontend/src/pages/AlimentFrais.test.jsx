@@ -71,7 +71,7 @@ describe('Fresh food photo (POST /ai/vision)', () => {
     await user.upload(fileInput(), photo('image/png'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('temporairement indisponible');
-    expect(screen.getByRole('link', { name: 'Rechercher par nom' })).toHaveAttribute('href', '/analyser');
+    expect(screen.getByRole('link', { name: 'Rechercher par nom' })).toHaveAttribute('href', '/recherche');
   });
 
   it('server-side refusal (413): API message shown', async () => {
@@ -130,6 +130,6 @@ describe('Fresh food photo (POST /ai/vision)', () => {
     await user.upload(fileInput(), photo());
 
     expect(await screen.findByRole('heading', { name: 'Accès en attente de validation' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Rechercher un aliment' })).toHaveAttribute('href', '/analyser');
+    expect(screen.getByRole('link', { name: 'Rechercher un aliment' })).toHaveAttribute('href', '/recherche');
   });
 });

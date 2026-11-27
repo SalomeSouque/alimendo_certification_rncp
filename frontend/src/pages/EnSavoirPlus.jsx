@@ -1,4 +1,5 @@
 import Layout from '../components/Layout.jsx';
+import Wave from '../components/Wave.jsx';
 import './EnSavoirPlus.css';
 
 // Données de démo — remplaceront un futur appel API / contenu éditorial validé
@@ -7,12 +8,13 @@ const sections = [
     titre: 'Comprendre le score',
     corps: [
       "Chaque aliment du site reçoit une note entre -2 et +2.",
-      <dl>
-        <dd>-2 très anti-inflammatoire</dd>
-        <dd>-1 plutôt anti-inflammatoire</dd>
-        <dd> 0 neutre, ou données trop faibles pour se prononcer</dd>
-        <dd>+1 plutôt pro-inflammatoire</dd>
-        <dd>+2 très pro-inflammatoire</dd>
+      // dt = score, dd = meaning: a valid definition list (axe "definition-list").
+      <dl className="score-levels">
+        <div><dt>-2</dt><dd>très anti-inflammatoire</dd></div>
+        <div><dt>-1</dt><dd>plutôt anti-inflammatoire</dd></div>
+        <div><dt>0</dt><dd>neutre, ou données trop faibles pour se prononcer</dd></div>
+        <div><dt>+1</dt><dd>plutôt pro-inflammatoire</dd></div>
+        <div><dt>+2</dt><dd>très pro-inflammatoire</dd></div>
       </dl>,
       "Ce score résume ce que la recherche dit du lien entre un aliment et l'inflammation en général. Il ne dit pas ce que cet aliment fera à votre endométriose. Personne ne peut le dire aujourd'hui (voir les limites de cet outils).",
       "Un aliment noté +2 n'est pas un aliment interdit. Il n'y a pas d'aliment interdit sur ce site le score est un repère.",
@@ -184,11 +186,10 @@ const sections = [
 
 export default function EnSavoirPlus() {
   const wave = (
-    <img
-      className="wave wave-savoir"
-      src="/assets/yellow_line_en_savoir_plus_page.svg"
-      alt=""
-      aria-hidden="true"
+    <Wave
+      className="wave-savoir"
+      desktop="/assets/yellow_line_en_savoir_plus_page.svg"
+      mobile="/assets/yellow_line_savoir_mobile.svg"
     />
   );
 
@@ -208,9 +209,12 @@ export default function EnSavoirPlus() {
                   {section.titre}
                   <img className="chev" src="/assets/felche_en_savoir_plus.svg" alt="" />
                 </summary>
-                <div className="acc-body">{section.corps.map((p, i) => (
-                <p key={i} Style="margin-top: 10px">{p}</p>
-              ))}</div>
+                {/* Text in <p>; lists and blocks as they are (a <dl> or <div> inside a <p> is invalid HTML). */}
+                <div className="acc-body">
+                  {section.corps.map((p, j) => (typeof p === 'string'
+                    ? <p key={j}>{p}</p>
+                    : <div key={j}>{p}</div>))}
+                </div>
               </details>
             ))}
           </div>

@@ -1,5 +1,5 @@
 import { NavLink, Link } from 'react-router-dom';
-import Header from '../components/Header.jsx';
+import Header from './Header.jsx';
 
 export default function Layout({ children, wave = null }) {
   return (
@@ -24,11 +24,12 @@ export default function Layout({ children, wave = null }) {
           Cet outil ne remplace pas un suivi médical. Consultez un professionnel de santé
           pour toute décision relative à votre pathologie.
         </p>
-        <p className="footer-copyright">© 2026 Alimendo - Projet étudiant</p>
+        <p className="footer-copyright">© 2026 Alimendo · Projet étudiant</p>
       </footer>
 
       <Link to="/chatbot" className="chat-fab">
-        <img src="/assets/interrogation.svg" alt="" />Une question ?
+        <img src="/assets/interrogation.svg" alt="" />
+        <span className="chat-fab-label">Une question ?</span>
       </Link>
     </div>
   );
