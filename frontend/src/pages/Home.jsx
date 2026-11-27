@@ -85,7 +85,8 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="home-stage" style={stageStyle}>
+      {/* <main>: the main landmark of the page (WCAG 1.3.1, skip to the content). */}
+      <main className="home-stage" style={stageStyle}>
         {wave}
         {/* Hero */}
         <section className="hero">
@@ -208,7 +209,7 @@ export default function Home() {
             <Link to="/chatbot" className="btn-secondary">Poser une question</Link>
           </div>
         </section>
-      </div>
+      </main>
     </Layout>
   );
 }

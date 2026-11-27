@@ -28,7 +28,7 @@ export default defineConfig([
 },
   {
     // Playwright: config and browser tests run in Node.
-    files: ['playwright.config.js', 'e2e/**'],
+    files: ['playwright.config.js', 'vite.config.js', 'e2e/**'],
     languageOptions: {
       globals: { ...globals.node },
     },

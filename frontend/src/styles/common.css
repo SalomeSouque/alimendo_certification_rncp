@@ -228,6 +228,7 @@ button.btn-auth:hover {
 .footer-links a { font-size: 14px; color: var(--blue); text-decoration: none; }
 .footer-disclaimer { font-size: 13px; color: var(--muted-2); max-width: 640px; margin: 0 auto 12px; line-height: 1.6; }
 .footer-copyright { font-size: 13px; color: var(--muted-2); }
+.footer-copyright a { color: inherit; text-decoration: underline; }
 
 /* ---------------- FAB ---------------- */
 .chat-fab {

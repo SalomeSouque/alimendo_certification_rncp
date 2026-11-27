@@ -235,7 +235,8 @@ export default function Authentification() {
           <p className="auth-rgpd">
             Votre email sert uniquement à vous connecter à Alimendo : il n'est ni partagé
             ni utilisé à d'autres fins. Votre compte est supprimé après 3 ans sans connexion,
-            ou plus tôt sur simple demande auprès de l'administratrice du site.
+            ou plus tôt sur simple demande auprès de l'administratrice du site.{' '}
+            <Link to="/confidentialite">Détails et vos droits</Link>.
           </p>
         </div>
       </main>

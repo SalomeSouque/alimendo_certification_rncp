@@ -92,7 +92,13 @@ export async function mockApi(page, { auth = false, aiAccess = true, vision = 'r
     const path = url.pathname;
     const json = (body, status = 200) => route.fulfill({ status, json: body });
 
-    if (path === '/auth/me') return auth ? json(user) : json({ detail: 'Non authentifié' }, 401);
+    // A request sent with a token (after a login in e2e/keyboard.spec.js) is a logged-in user.
+    const loggedIn = auth || Boolean(route.request().headers().authorization);
+    if (path === '/auth/me') return loggedIn ? json(user) : json({ detail: 'Non authentifié' }, 401);
+    // Login and registration always succeed (keyboard journey of e2e/keyboard.spec.js).
+    if (path === '/auth/login' || path === '/auth/register') {
+      return json({ access_token: 'e2e.jwt.token', token_type: 'bearer', user }, path === '/auth/register' ? 201 : 200);
+    }
     if (path === '/search/categories') return json([{ id_categorie: 4, nom: 'Poissons et produits de la mer', image: null }]);
     if (path === '/search/aliments') {
       const q = url.searchParams.get('q') ?? '';
