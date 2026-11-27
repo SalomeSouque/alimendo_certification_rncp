@@ -1,0 +1,31 @@
+/* Same column and title as "En savoir plus" (EnSavoirPlus.css). */
+.legal-main { padding: 84px 0 120px; }
+.legal-col { width: min(800px, calc(100% - 40px)); margin: 0 auto; }
+
+.legal-title {
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400;
+  font-size: 52px;
+  line-height: 1.15;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.legal-updated { font-size: 14px; color: var(--muted-2); margin-bottom: 40px; }
+
+.legal-col h2 { font-size: 22px; font-weight: 600; color: var(--ink); margin: 40px 0 12px; }
+.legal-col p,
+.legal-col li { font-size: 16px; line-height: 1.65; color: var(--muted); }
+.legal-col p + p { margin-top: 12px; }
+.legal-col ul { padding-left: 22px; margin-top: 8px; }
+.legal-col li + li { margin-top: 6px; }
+.legal-col a { color: var(--green-deep); text-decoration: underline; }
+.legal-col strong { color: var(--ink); font-weight: 600; }
+.legal-todo { color: #a33a1f; font-weight: 600; }
+
+@media (max-width: 767px) {
+  .legal-main { padding: 40px 0 64px; }
+  .legal-title { font-size: 36px; }
+  .legal-col h2 { font-size: 19px; margin-top: 32px; }
+  .legal-col p,
+  .legal-col li { font-size: 15px; }
+}
