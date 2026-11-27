@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout.jsx';
 import Aliment from './pages/Aliment.jsx';
 import EnSavoirPlus from './pages/EnSavoirPlus.jsx';
 import Authentification from './pages/Authentification.jsx';
@@ -10,18 +9,10 @@ import Home from './pages/Home.jsx';
 import Chatbot from './pages/Chatbot.jsx';
 import Recherche from './pages/Recherche.jsx';
 import Admin from './pages/Admin.jsx';
+import NotFound from './pages/NotFound.jsx';
+import { MentionsLegales, Confidentialite } from './pages/Legal.jsx';
 import AuthGate from './components/AuthGate';
 import AdminRoute from './components/AdminRoute';
-
-function Placeholder({ titre }) {
-  return (
-    <Layout>
-      <main style={{ padding: '160px 40px', textAlign: 'center' }}>
-        <h1>{titre} — page à porter</h1>
-      </main>
-    </Layout>
-  );
-}
 
 export default function App() {
   return (
@@ -33,6 +24,8 @@ export default function App() {
       <Route path="/produit/:code" element={<Aliment />} />
       <Route path="/recherche" element={<Recherche />} />
       <Route path="/en-savoir-plus" element={<EnSavoirPlus />} />
+      <Route path="/mentions-legales" element={<MentionsLegales />} />
+      <Route path="/confidentialite" element={<Confidentialite />} />
       <Route path="/connexion" element={<Authentification />} />
       <Route path="/inscription" element={<Authentification />} />
       <Route path="/analyser" element={<Analyser />} />
@@ -64,9 +57,7 @@ export default function App() {
         }
       />
 
-      {/* Routes pas encore portées : placeholder friendly au lieu d'un écran blanc */}
-      <Route path="/" element={<Placeholder titre="Accueil" />} />
-      <Route path="*" element={<Placeholder titre="Cette page" />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

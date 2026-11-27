@@ -46,6 +46,8 @@ const SCENARIOS = [
   { name: 'connexion', path: '/connexion' },
   { name: 'inscription', path: '/inscription' },
   { name: 'page-inconnue', path: '/cette-page-n-existe-pas' },
+  { name: 'mentions-legales', path: '/mentions-legales' },
+  { name: 'confidentialite', path: '/confidentialite' },
   { name: 'chatbot-deconnecte', path: '/chatbot' },
   { name: 'chatbot-vide', path: '/chatbot', auth: true },
   { name: 'chatbot-conversation', path: '/chatbot', auth: true, act: askQuestion },

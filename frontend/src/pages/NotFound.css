@@ -1,0 +1,56 @@
+/* Same values as the maintenance page (deploy/maintenance/index.html). */
+.notfound-frame {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 48px 16px;
+  overflow-x: clip;
+}
+
+/* Yellow line: same asset and placement as the maintenance page. */
+.notfound-wave {
+  position: absolute;
+  z-index: 0;
+  top: 112px;
+  left: -5%;
+  width: 112%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+.notfound-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 648px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(30, 36, 35, 0.08);
+  padding: 20px 20px 16px;
+  text-align: center;
+}
+
+.notfound-logo { display: block; width: 164px; height: 164px; margin: 0 auto; }
+.notfound-tagline { margin-top: 20px; font-size: 14px; color: var(--muted-2); }
+
+.notfound-title {
+  margin-top: 40px;
+  font-family: 'Bagel Fat One', system-ui, cursive;
+  font-weight: 400;
+  font-size: clamp(40px, 9vw, 56px);
+  line-height: 1.1;
+  color: var(--ink);
+}
+.notfound-message { margin-top: 8px; font-size: 19px; line-height: 1.55; color: var(--muted); }
+
+.notfound-button { margin: 32px auto 0; min-width: 260px; }
+
+.notfound-copyright { margin-top: 88px; font-size: 13px; color: var(--muted-2); }
+
+@media (min-width: 600px) {
+  .notfound-card { padding: 20px 44px 16px; }
+}
