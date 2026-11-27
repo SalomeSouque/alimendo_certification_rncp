@@ -59,7 +59,7 @@ const SCENARIOS = [
 
 for (const scenario of SCENARIOS) {
   test(scenario.name, async ({ page, isMobile }, testInfo) => {
-    test.skip(Boolean(scenario.compactOnly) && testInfo.project.name === 'desktop-1280', 'menu mobile uniquement');
+    test.skip(Boolean(scenario.compactOnly) && testInfo.project.name.startsWith('desktop-'), 'menu mobile uniquement');
     await mockApi(page, scenario);
     await page.goto(scenario.path);
     await page.waitForLoadState('networkidle');

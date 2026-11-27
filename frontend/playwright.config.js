@@ -13,13 +13,17 @@ import { API_URL } from './e2e/support/mockApi.js';
 const PORT = 5174;
 
 // Reference widths: 320 = WCAG 1.4.10 reflow, 360 = common Android, 390 = recent iPhone,
-// 768 = tablet portrait, 1280 = laptop. (375, 412 and 430 were also checked once.)
+// 768 = tablet portrait, 1280 = smallest desktop layout, 1366 = most common laptop,
+// 1920 = full HD screen or projector. (375, 412, 430, 1024, 1440 and 1536 were also
+// checked once.)
 const VIEWPORTS = [
   { name: 'mobile-320', width: 320, height: 640, mobile: true },
   { name: 'mobile-360', width: 360, height: 780, mobile: true },
   { name: 'mobile-390', width: 390, height: 844, mobile: true },
   { name: 'tablet-768', width: 768, height: 1024, mobile: true },
   { name: 'desktop-1280', width: 1280, height: 800, mobile: false },
+  { name: 'desktop-1366', width: 1366, height: 768, mobile: false },
+  { name: 'desktop-1920', width: 1920, height: 1080, mobile: false },
 ];
 
 export default defineConfig({
