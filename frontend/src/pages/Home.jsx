@@ -1,6 +1,12 @@
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
-import { HOME_ONE_COLUMN_QUERY, HOME_PHONE_LINE_QUERY, HOME_TABLET_QUERY } from '../config/breakpoints';
+import {
+  HOME_LARGE_PHONE_QUERY,
+  HOME_ONE_COLUMN_QUERY,
+  HOME_PHONE_LINE_QUERY,
+  HOME_SMALL_TABLET_QUERY,
+  HOME_TABLET_QUERY,
+} from '../config/breakpoints';
 import { useMediaQuery } from '../components/useMediaQuery';
 import { useViewportWidth } from '../components/useViewportWidth';
 import './Home.css';
@@ -9,6 +15,8 @@ import './Home.css';
 // the tablet composition (no tablet maquette: derived from the phone and desktop ones).
 const DESIGN_WIDTH = 1728;
 const TABLET_WIDTH = 1024;
+const SMALL_TABLET_WIDTH = 768;
+const LARGE_PHONE_WIDTH = 540;
 // Above this zoom the tablet stage stops growing and is centred (texts would get too big).
 const TABLET_MAX_ZOOM = 1.1;
 
@@ -39,22 +47,34 @@ export default function Home() {
   // The phone line pieces are cut where the line leaves a phone screen: on a wider
   // screen the cuts would show, so the line is not displayed (nor downloaded).
   const isPhone = useMediaQuery(HOME_PHONE_LINE_QUERY);
-  // Desktop and tablet: one line behind the whole stage (the tablet one is drawn on a
-  // capture of the 1024 px stage). Phones: the line of the maquette is cut into pieces
-  // where it leaves the screen, and each piece is attached to its section, so it
-  // follows the content whatever the text height.
+  // Between phones and the tablet: the one-column layout redrawn at 540 and 768 px.
+  const largePhone = useMediaQuery(HOME_LARGE_PHONE_QUERY);
+  const smallTablet = useMediaQuery(HOME_SMALL_TABLET_QUERY);
+  // Desktop, tablet, 540 and 768 px compositions: one line behind the whole stage
+  // (drawn by Salomé on a capture of the stage). Phones: the line of the maquette is
+  // cut into pieces where it leaves the screen, and each piece is attached to its
+  // section, so it follows the content whatever the text height.
   let wave = null;
-  if (tablet) {
+  if (largePhone) {
+    wave = <img className="wave wave-home-540" src="/assets/home_line_540.svg" alt="" aria-hidden="true" />;
+  } else if (smallTablet) {
+    wave = <img className="wave wave-home-768" src="/assets/home_line_768.svg" alt="" aria-hidden="true" />;
+  } else if (tablet) {
     wave = <img className="wave wave-home-tablet" src="/assets/home_line_tablet.svg" alt="" aria-hidden="true" />;
   } else if (!oneColumn) {
     wave = <img className="wave wave-home" src="/assets/yellow_line_home_page.svg" alt="" aria-hidden="true" />;
   }
-  // Desktop and tablet: the stage is drawn at a fixed width (1728 or 1024 px) and zoomed
-  // to the screen width, so the line, the picture, the cards and the texts keep their
-  // proportions (--z is used in Home.css for the minimum text sizes).
+  // Everywhere but on phones (≤ 460 px): the stage is drawn at a fixed width (540, 768,
+  // 1024 or 1728 px) and zoomed to the screen width, so the line, the picture, the
+  // cards and the texts keep their proportions (--z is used in Home.css for the
+  // minimum text sizes).
   const width = useViewportWidth();
-  const zoom = tablet ? Math.min(width / TABLET_WIDTH, TABLET_MAX_ZOOM) : width / DESIGN_WIDTH;
-  const stageStyle = oneColumn || !width ? undefined : { zoom, '--z': zoom };
+  let zoom = width / DESIGN_WIDTH;
+  if (largePhone) zoom = width / LARGE_PHONE_WIDTH;
+  else if (smallTablet) zoom = width / SMALL_TABLET_WIDTH;
+  else if (tablet) zoom = Math.min(width / TABLET_WIDTH, TABLET_MAX_ZOOM);
+  const zoomed = !oneColumn || largePhone || smallTablet;
+  const stageStyle = zoomed && width ? { zoom, '--z': zoom } : undefined;
   const heroImage = (
     // data-bleed: on phones the picture is cut by the screen edge on purpose (maquette).
     <div className="hero-image" data-bleed>

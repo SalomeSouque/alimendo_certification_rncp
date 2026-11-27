@@ -17,5 +17,14 @@ export const HOME_ONE_COLUMN_QUERY = '(max-width: 859px)';
 export const HOME_TABLET_QUERY = '(min-width: 860px) and (max-width: 1279px)';
 
 /** Home: the phone line pieces are cut where the line leaves a phone screen; above
- *  460 px their cut ends would show, so the line is not displayed. */
+ *  460 px their cut ends would show, so they are not displayed. */
 export const HOME_PHONE_LINE_QUERY = '(max-width: 460px)';
+
+/** Home, inside the one-column range: two compositions drawn by Salomé at 540 and
+ *  768 px (large phones, half laptop screens, tablets in portrait), each with its own
+ *  line and zoomed to the screen like the tablet. Boundary at 645 px, between the two.
+ *  The 540 composition starts at 490 px: below (zoom < 0.91) the minimum text size
+ *  makes the hero and step 2 paragraphs run into the line, so 461-489 px keeps the
+ *  one-column layout without a line. */
+export const HOME_LARGE_PHONE_QUERY = '(min-width: 490px) and (max-width: 644px)';
+export const HOME_SMALL_TABLET_QUERY = '(min-width: 645px) and (max-width: 859px)';
