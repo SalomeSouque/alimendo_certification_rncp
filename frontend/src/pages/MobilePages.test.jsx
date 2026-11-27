@@ -58,13 +58,36 @@ describe('Home', () => {
     expect(screen.getByText(/scientifiques et associatives/)).toBeInTheDocument();
   });
 
-  it('large phone (500 px): one column, no line (the cut ends of the pieces would show)', () => {
-    mockViewport(500);
+  it('between phones and the 540 px composition (475 px): one column, no line', () => {
+    mockViewport(475);
     const { container } = renderWithProviders(<Home />);
     const hero = screen.getByRole('heading', { level: 1 }).closest('section');
     expect(within(hero).getByRole('img', { name: 'Personne allongée sur un canapé' })).toBeInTheDocument();
     expect(container.querySelectorAll('img.home-line')).toHaveLength(0);
-    expect(container.querySelector('.wave-home')).toBeNull();
+    expect(container.querySelector('.wave')).toBeNull();
+    expect(container.querySelector('.home-stage').style.zoom).toBe('');
+  });
+
+  it('large phone (500 px): one column, the 540 px composition and its line, zoomed', () => {
+    mockViewport(500);
+    vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(500);
+    const { container } = renderWithProviders(<Home />);
+    const hero = screen.getByRole('heading', { level: 1 }).closest('section');
+    expect(within(hero).getByRole('img', { name: 'Personne allongée sur un canapé' })).toBeInTheDocument();
+    expect(container.querySelector('.wave-home-540')).toHaveAttribute('src', '/assets/home_line_540.svg');
+    expect(container.querySelectorAll('img.home-line')).toHaveLength(0);
+    expect(container.querySelector('.home-stage').style.zoom).toBe(String(500 / 540));
+  });
+
+  it('small tablet (768 px): one column, the 768 px composition and its line', () => {
+    mockViewport(768);
+    vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(768);
+    const { container } = renderWithProviders(<Home />);
+    const hero = screen.getByRole('heading', { level: 1 }).closest('section');
+    expect(within(hero).getByRole('img', { name: 'Personne allongée sur un canapé' })).toBeInTheDocument();
+    expect(container.querySelector('.wave-home-768')).toHaveAttribute('src', '/assets/home_line_768.svg');
+    expect(container.querySelector('.wave-home-540')).toBeNull();
+    expect(container.querySelector('.home-stage').style.zoom).toBe('1');
   });
 
   it('tablet (1100 px): desktop structure, with its own line', () => {
