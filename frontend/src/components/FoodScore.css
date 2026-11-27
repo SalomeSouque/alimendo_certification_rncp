@@ -63,7 +63,9 @@
   box-shadow: 0 8px 22px rgba(30, 36, 35, 0.05);
 }
 .food-card-link { display: block; height: 100%; color: inherit; text-decoration: none; }
-.food-card-link:focus-visible { outline: 2px solid var(--green-deep); outline-offset: 2px; border-radius: 14px; }
+/* Focus ring on the card itself: on the link it was cut off by the card's overflow: hidden. */
+.food-card:has(.food-card-link:focus-visible) { outline: 2px solid var(--green-deep); outline-offset: 2px; }
+.food-card-link:focus-visible { outline: none; }
 .food-card-img { width: 100%; height: 96px; object-fit: contain; display: block; background: var(--footer-bg); padding: 16px; }
 .food-card .body { padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 10px; }
 .food-card .name { font-size: 15px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
