@@ -8,7 +8,7 @@ import NavDrawer from './NavDrawer.jsx';
 import { MenuIcon, UserIcon } from './icons.jsx';
 import './Header.css';
 
-/** Site header: full navigation on desktop, burger + drawer below 1024 px (maquette M1). */
+/** Site header: full navigation on desktop, burger + drawer below 1280 px (maquette M1). */
 export default function Header() {
   const compact = useMediaQuery(COMPACT_HEADER_QUERY);
   return compact ? <MobileHeader /> : <DesktopHeader />;

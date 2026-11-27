@@ -39,10 +39,39 @@ describe('Home', () => {
     expect(container.querySelector('.wave-home')).toBeNull();
   });
 
+  it('tablet: no line pieces (the cuts would show on a wider screen)', () => {
+    mockViewport(768);
+    const { container } = renderWithProviders(<Home />);
+    expect(container.querySelectorAll('img.home-line')).toHaveLength(0);
+  });
+
   it('desktop: a single line behind the whole page', () => {
     const { container } = renderWithProviders(<Home />);
     expect(container.querySelector('.wave-home')).toHaveAttribute('src', '/assets/yellow_line_home_page.svg');
     expect(container.querySelectorAll('img.home-line')).toHaveLength(0);
+  });
+
+  it('desktop line breaks (br-d) keep a space between the words, for the phone text', () => {
+    renderWithProviders(<Home />);
+    expect(screen.getByText(/chronique\. Des travaux/)).toBeInTheDocument();
+    expect(screen.getByText(/pro-inflammatoire\. En dessous/)).toBeInTheDocument();
+    expect(screen.getByText(/scientifiques et associatives/)).toBeInTheDocument();
+  });
+
+  it('small laptop (1100 px): one-column home, no line', () => {
+    mockViewport(1100);
+    const { container } = renderWithProviders(<Home />);
+    expect(container.querySelector('.wave-home')).toBeNull();
+    expect(container.querySelector('.home-stage')).not.toHaveAttribute('style');
+  });
+
+  it('desktop: the 1728 px maquette is zoomed to the screen width', () => {
+    // jsdom has no layout: give the page a width.
+    vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(1366);
+    const { container } = renderWithProviders(<Home />);
+    const stage = container.querySelector('.home-stage');
+    expect(stage.style.zoom).toBe(String(1366 / 1728));
+    expect(stage.style.getPropertyValue('--z')).toBe(String(1366 / 1728));
   });
 });
 

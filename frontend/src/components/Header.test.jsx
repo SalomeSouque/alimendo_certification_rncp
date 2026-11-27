@@ -7,7 +7,7 @@ import Header from './Header';
 
 const USER = { id: 7, email: 'lea@exemple.fr', role: 'user', acces_ia: true };
 
-describe('Header: desktop navigation, burger menu below 1024 px (maquette M1)', () => {
+describe('Header: desktop navigation, burger menu below 1280 px (maquette M1)', () => {
   it('desktop: full navigation, no burger button', () => {
     renderWithProviders(<Header />);
     expect(screen.getByRole('link', { name: 'Analyser un aliment' })).toBeInTheDocument();

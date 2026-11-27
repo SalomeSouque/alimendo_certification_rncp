@@ -1,30 +1,41 @@
-.wave-home { top: 289px; left: -133px; width: 112%; }
+/* ========= Desktop, from 1280 px =========
+   The composition is drawn at the size of the maquette (1728 px wide) inside
+   .home-stage, and Home.jsx shrinks or enlarges the whole stage to the screen width
+   with CSS zoom (--z = screen width / 1728). The line, the picture, the cards and the
+   texts keep exactly the proportions of the maquette at every width; minimum text
+   sizes are set at the end of this file.
+   Section heights are fixed (not min-height): a text made taller by its minimum size
+   never pushes the next section down, so the line stays aligned with the page. */
+.home-stage { position: relative; }
+.home-stage > section { position: relative; z-index: 1; }
+/* Positions measured from the top of the stage (= under the 71 px header). */
+.wave-home { top: 218px; left: -133px; width: 112%; }
 
 /* Hero */
-.hero { padding: 90px 193px 0; min-height: 855px; }
-.hero-tag { font-size: 15px; color: var(--muted-2); margin-bottom: 18px; }
+.hero { padding: 86px 193px 0; height: 829px; }
+.hero-tag { font-size: 13px; color: var(--muted-2); margin-bottom: 4px; }
 .hero-title {
   font-family: 'Bagel Fat One', system-ui, cursive;
   font-weight: 400;
-  font-size: 48px;
+  font-size: 46px;
   line-height: 1.1;
   color: var(--ink);
   max-width: 640px;
-  margin-bottom: 26px;
+  margin-bottom: 38px;
 }
 .hero-description {
-  font-size: 19px;
+  font-size: 20px;
   color: var(--muted);
   max-width: 545px;
-  line-height: 1.55;
-  margin-bottom: 34px;
+  line-height: 1.4;
+  margin-bottom: 44px;
 }
-.hero-buttons { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.hero-buttons { display: flex; flex-direction: column; gap: 19px; align-items: flex-start; }
 
 .hero-image {
   position: absolute;
-  top: 222px;
-  left: 61%;
+  top: 151px;
+  left: 993px;
   width: 876px;
   height: 532px;
   pointer-events: none;
@@ -32,35 +43,35 @@
 .hero-image img { width: 100%; height: 100%; display: block; }
 
 /* Étape 1 */
-.section-step1 { padding: 100px 193px 0; }
+.section-step1 { padding: 24px 193px 0; height: 480px; }
 .section-step1 .section-title { max-width: 760px; }
-.method-cards { display: flex; gap: 16px; margin-top: 20px; }
+.method-cards { display: flex; gap: 16px; margin-top: 40px; }
 .method-card {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px 22px 14px 14px;
+  border-radius: 12px;
+  padding: 14px 20px 14px 14px;
 }
 .method-icon {
-  width: 48px; height: 48px; flex: none;
+  width: 44px; height: 44px; flex: none;
   background: var(--green-soft);
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
 }
-.method-icon img { width: 22px; height: 22px; }
-.method-card-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
-.method-card-subtitle { font-size: 14px; color: var(--muted); }
+.method-icon img { width: 20px; height: 20px; }
+.method-card-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.method-card-subtitle { font-size: 12px; color: var(--muted); }
 
 /* Étape 2 — composition libre (cartes positionnées dans la section) */
 .section-step2 {
   position: relative;      /* ancre les cartes absolues ci-dessous */
-  padding: 140px 193px 0;
-  min-height: 620px;       /* réserve la hauteur de la zone visuelle */
+  padding: 119px 193px 0;
+  height: 770px;           /* réserve la hauteur de la zone visuelle */
 }
-.step2-text { max-width: 600px; margin-top: 130px;}   /* le texte occupe la gauche */
+.step2-text { max-width: 600px; }   /* le texte occupe la gauche */
 .step2-text .section-title { max-width: 700px; }
 
 /* La zone visuelle ne pousse plus rien : chaque enfant est positionné librement */
@@ -68,17 +79,17 @@
 
 .card {
   background: #fff;
-  border-radius: 14px;
+  border-radius: 10px;
   box-shadow: 0 10px 30px rgba(30, 36, 35, 0.08);
 }
 
 /* --- Image orange : le point de repère central --- */
 .orange-img {
   position: absolute;
-  top: 400px;
-  right: 250px;
-  width: 350px;
-  height: 260px;
+  top: 181px;
+  right: 204px;
+  width: 329px;
+  height: 244px;
   z-index: 1;
 }
 .orange-img img { width: 100%; height: 100%; display: block; object-fit: contain; }
@@ -86,83 +97,84 @@
 /* --- Carte Orange (aliment) --- */
 .card-aliment {
   position: absolute;
-  top: 200px;
-  left: 55%;
-  width: 168px;
-  padding: 16px 20px;
+  top: 58px;
+  left: 1047px;
+  width: 137px;
+  padding: 13px 18px;
   z-index: 2;
 }
-.card-aliment .lbl { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted-2); margin-bottom: 6px; }
-.card-aliment .val { font-size: 20px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
-.card-aliment .sub { font-size: 14px; color: var(--muted); }
+.card-aliment .lbl { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted-2); margin-bottom: 4px; }
+.card-aliment .val { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.card-aliment .sub { font-size: 13px; color: var(--muted); }
 
 /* --- Carte Micro-nutriment --- */
 .card-micro {
   position: absolute;
-  top: 100px;
-  right: 80px;
-  width: 258px;
-  display: flex; align-items: center; gap: 14px;
-  padding: 16px 20px;
+  top: 32px;
+  right: 83px;
+  width: 222px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px;
   z-index: 2;
 }
 .card-micro .ic {
-  width: 44px; height: 44px; flex: none;
-  background: var(--green-soft); border-radius: 10px;
+  width: 36px; height: 36px; flex: none;
+  background: var(--green-soft); border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
 }
-.card-micro .ic img { width: 18px; height: 20px; }
-.card-micro .t { font-size: 16px; font-weight: 700; color: var(--ink); line-height: 1.2; white-space: nowrap; }
-.card-micro .s { font-size: 14px; color: var(--muted); }
+.card-micro .ic img { width: 16px; height: 18px; }
+.card-micro .t { font-size: 15px; font-weight: 600; color: var(--ink); line-height: 1.2; white-space: nowrap; }
+.card-micro .s { font-size: 13px; color: var(--muted); }
 
 /* --- Carte Score --- */
 .card-score {
   position: absolute;
-  top: 500px;
-  left: 42%;
-  width: 450px;
-  padding: 20px 26px;
+  top: 342px;
+  left: 833px;
+  width: 289px;
+  padding: 14px 18px 16px;
   z-index: 2;
 }
-.card-score .lbl { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted-2); margin-bottom: 14px; }
-.card-score .score-bar { margin-bottom: 14px; }
+.card-score .lbl { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted-2); margin-bottom: 10px; }
+.card-score .score-bar { height: 7px; margin-bottom: 10px; }
+.card-score .score-knob { width: 16px; height: 16px; }
 .card-score .score-knob { left: 16%; }
-.card-score .caption { font-size: 20px; font-weight: 600; color: var(--ink); }
+.card-score .caption { font-size: 14px; font-weight: 500; color: var(--ink); }
 
 /* Pourquoi */
-.section-pourquoi { padding: 330px 139px 0; }
+.section-pourquoi { padding: 42px 140px 0; height: 610px; }
 .pourquoi-card {
   position: relative;
   background: #fff;
   border-radius: 14px;
   border-left: 3px solid var(--blue);
   box-shadow: 0 10px 30px rgba(30, 36, 35, 0.05);
-  padding: 41px 41px;
-  max-width: 879px;
+  padding: 30px 47px 27px 46px;
+  max-width: 876px;
 }
-.pourquoi-label { font-size: 15px; color: var(--blue); font-weight: 600; margin-bottom: 10px; }
+.pourquoi-label { font-size: 15px; color: var(--blue); font-weight: 600; margin-bottom: 0; }
 .pourquoi-title {
   font-family: 'Bagel Fat One', system-ui, cursive;
-  font-weight: 400; font-size: 46px; color: var(--ink); margin-bottom: 22px;
+  font-weight: 400; font-size: 46px; line-height: 1.12; color: var(--ink); margin-bottom: 25px;
 }
-.pourquoi-body { font-size: 17px; color: var(--muted); line-height: 1.7; margin-bottom: 34px; max-width: 700px; }
+.pourquoi-body { font-size: 20px; color: var(--muted); line-height: 1.4; margin-bottom: 44px; max-width: 700px; }
 .pourquoi-buttons { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
 
 /* Chatbot */
-.section-chatbot { padding: 242px 204px 0; text-align: right; }
-.chatbot-label { font-size: 15px; color: var(--green); font-weight: 600; margin-bottom: 10px; }
+.section-chatbot { padding: 40px 204px 0; height: 300px; text-align: right; }
+.chatbot-label { font-size: 15px; color: var(--green); font-weight: 600; margin-bottom: 0; }
 .chatbot-title {
   font-family: 'Bagel Fat One', system-ui, cursive;
-  font-weight: 400; font-size: 46px; color: var(--ink); margin-bottom: 24px;
+  font-weight: 400; font-size: 46px; line-height: 1.12; color: var(--ink); margin-bottom: 22px;
 }
-.chatbot-body { font-size: 19px; color: var(--muted); line-height: 1.55; max-width: 680px; margin-left: auto; margin-bottom: 30px; }
+.chatbot-body { font-size: 20px; color: var(--muted); line-height: 1.4; max-width: 680px; margin-left: auto; margin-bottom: 44px; }
 .chatbot-cta { display: flex; justify-content: flex-end; }
 /* ========= Phones and tablets (maquette accueil mobile, 360 px) =========
    ".frame" prefix: common.css is loaded after the pages CSS (see main.jsx), so the
    phone rules need one more class to win over .section-title, .btn-primary…
    One column, 20 px margins. The desktop absolute positions are reset;
    the step 2 composition is redrawn at phone size. */
-@media (max-width: 1023px) {
+@media (max-width: 1279px) {
   /* Yellow line pieces (Home.jsx LinePiece), SVG cropped to the stroke. Each piece is
      drawn at 94 % of its SVG size (the scale of the maquette line) and placed from the
      centre of its section: left = 50% - offset, top = offset from the section top
@@ -183,9 +195,10 @@
   .frame .home-line--orange { width: 468px; left: calc(50% - 326px); top: -8px; }
   .frame .home-line--chatbot { width: 488px; left: calc(50% - 311px); top: 5px; }
 
-  .frame .hero { padding: 0 20px; min-height: 0; }
+  .frame .hero { padding: 0 20px; height: auto; }
   .frame .hero-tag { margin: 0 -20px 6px; padding: 8px 10px 0; font-size: 10px; text-align: center; }
   .frame .br-m { display: block; height: 0; overflow: hidden; }
+  .frame br.br-d { display: none; } /* desktop-only line breaks */
   .frame .hero-title { font-size: 34px; line-height: 1.04; max-width: none; margin-bottom: 0; }
   .frame .hero-image {
     position: relative;
@@ -202,7 +215,7 @@
   .frame .section-body { font-size: 16px; line-height: 1.5; margin-bottom: 0; }
   .frame .step-label { font-size: 14px; font-weight: 500; margin-bottom: 8px; }
 
-  .frame .section-step1 { padding: 100px 20px 0; }
+  .frame .section-step1 { padding: 100px 20px 0; height: auto; }
   /* Text flows freely on a narrow screen: the desktop line breaks are dropped. */
   .frame .section-step1 br { display: none; }
   .frame .section-step1 .section-title { font-size: 26px; }
@@ -214,7 +227,7 @@
   .frame .method-card-subtitle { font-size: 12px; }
 
   /* Step 2: same cards, phone-sized composition */
-  .frame .section-step2 { padding: 96px 20px 0; min-height: 0; }
+  .frame .section-step2 { padding: 96px 20px 0; height: auto; }
   .frame .step2-text { margin-top: 0; }
   .frame .step2-visual { position: relative; height: 385px; margin: 20px -20px 0; }
   .frame .card { border-radius: 10px; box-shadow: 0 6px 18px rgba(30, 36, 35, 0.08); }
@@ -234,7 +247,7 @@
   .frame .card-micro .t { font-size: 12px; font-weight: 500; }
   .frame .card-micro .s { font-size: 9px; }
 
-  .frame .section-pourquoi { padding: 70px 20px 0; }
+  .frame .section-pourquoi { padding: 70px 20px 0; height: auto; }
   .frame .pourquoi-card { padding: 22px 20px 20px; border-radius: 12px; }
   .frame .pourquoi-label { font-size: 13px; font-weight: 500; margin-bottom: 14px; }
   .frame .pourquoi-title { font-size: 26px; line-height: 1.2; margin-bottom: 14px; }
@@ -243,7 +256,7 @@
   .frame .pourquoi-buttons .btn-primary,
   .frame .pourquoi-buttons .btn-secondary { width: 100%; text-align: center; min-height: 58px; padding: 10px 20px; font-size: 15px; }
 
-  .frame .section-chatbot { padding: 118px 20px 0; text-align: left; }
+  .frame .section-chatbot { padding: 118px 20px 0; height: auto; text-align: left; }
   .frame .chatbot-label { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
   .frame .chatbot-title { font-size: 25px; line-height: 1.25; margin-bottom: 6px; }
   .frame .chatbot-body { font-size: 16px; line-height: 1.75; max-width: 250px; margin: 0 0 20px; }
@@ -252,7 +265,7 @@
 }
 
 /* Tablets: the same column, centred. */
-@media (min-width: 768px) and (max-width: 1023px) {
+@media (min-width: 768px) and (max-width: 1279px) {
   .frame .hero,
   .frame .section-step1,
   .frame .section-step2,
@@ -265,4 +278,54 @@
 @media (max-width: 340px) {
   .frame .hero-title { font-size: 30px; }
   .frame .method-cards { flex-direction: column; }
+}
+
+/* Desktop: what only applies to the desktop maquette (shared classes from common.css,
+   and rules the phone layout does not reset). */
+@media (min-width: 1280px) {
+  .home-stage .step-label { display: block; margin-bottom: 5px; }
+  .home-stage .section-title { margin-bottom: 19px; }
+  .home-stage .step2-text .section-title { margin-bottom: 23px; }
+  .home-stage .section-body { font-size: 20px; line-height: 1.4; margin-bottom: 0; }
+  .home-stage .card { border: 1px solid var(--border); box-shadow: 0 6px 20px rgba(30, 36, 35, 0.06); }
+  .home-stage .pourquoi-buttons { display: inline-flex; align-items: stretch; gap: 22px; }
+  .home-stage .pourquoi-buttons > * { width: auto; } /* both as wide as the widest */
+  /* Line breaks of the maquette, desktop only (<br className="br-d">); the phone
+     maquette keeps its blank line between the two paragraphs (<br className="br-mo">). */
+  .home-stage br.br-mo { display: none; }
+
+  /* Minimum text sizes. The zoom shrinks the maquette (at 1280 px, 74 %):
+     max(maquette size, minimum / --z) keeps paragraphs at 15 px and small texts at
+     12 px on screen at least. Above that, the maquette size applies. */
+  .home-stage .step-label,
+  .home-stage .pourquoi-label,
+  .home-stage .chatbot-label { font-size: max(15px, calc(12px / var(--z, 1))); }
+  .home-stage .hero-tag { font-size: max(13px, calc(12px / var(--z, 1))); }
+  .home-stage .hero-description,
+  .home-stage .section-body,
+  .home-stage .pourquoi-body,
+  .home-stage .chatbot-body { font-size: max(20px, calc(15px / var(--z, 1))); }
+  .home-stage .btn-primary,
+  .home-stage .btn-secondary { font-size: max(16px, calc(14px / var(--z, 1))); }
+  .home-stage .method-card-title,
+  .home-stage .method-card-subtitle,
+  .home-stage .card-aliment .lbl,
+  .home-stage .card-score .lbl { font-size: max(10px, calc(12px / var(--z, 1))); }
+  .home-stage .method-card-title { font-size: max(13px, calc(12px / var(--z, 1))); }
+  .home-stage .card-aliment .sub,
+  .home-stage .card-micro .s { font-size: max(13px, calc(12px / var(--z, 1))); }
+  .home-stage .card-score .caption { font-size: max(14px, calc(12px / var(--z, 1))); }
+  .home-stage .card-aliment .val,
+  .home-stage .card-micro .t { font-size: max(15px, calc(13px / var(--z, 1))); }
+  /* Text widths in em: a text set above its maquette size gets proportionally wider,
+     so it breaks its lines at the same words as on the maquette and does not grow
+     downwards onto the line (maquette width / maquette font size, 20 px). */
+  .home-stage .hero-description { max-width: 27.25em; }  /* 545 px */
+  .home-stage .section-body { max-width: 28em; }         /* 560 px */
+  .home-stage .pourquoi-body { max-width: 35em; }        /* 700 px */
+  .home-stage .chatbot-body { max-width: 34em; }         /* 680 px */
+  /* Cards: at least their maquette width, wider if their text needs it. */
+  .home-stage .card-aliment { width: max-content; min-width: 137px; }
+  .home-stage .card-micro { width: max-content; min-width: 222px; }
+  .home-stage .card-score { width: max-content; min-width: 289px; }
 }
